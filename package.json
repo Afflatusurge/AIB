@@ -12,6 +12,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.2.1",
     "@astrojs/vercel": "^10.0.4",
     "@notionhq/client": "^5.17.0",
     "@tailwindcss/vite": "^4.2.2",
