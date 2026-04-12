@@ -1,0 +1,147 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getDailyBriefs, getToolReviews, getCaseStudies } from '../../lib/notion';
+import { useTranslations, getLangFromUrl } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'ja' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+// Fetch content from Notion Client
+const dailyBriefs = await getDailyBriefs();
+const toolReviews = await getToolReviews();
+const caseStudies = await getCaseStudies();
+
+const featuredDaily = dailyBriefs.slice(0, 3);
+const featuredTools = toolReviews.slice(0, 3);
+const featuredCases = caseStudies.slice(0, 3);
+---
+
+<Layout title={t('site.name')}>
+	<section class="mb-16 text-center animate-fade-in-up">
+        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-6">{t('site.name')}</h1>
+        <p class="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+            Your comprehensive guide to building and scaling AI-powered solo businesses. Daily insights, tool reviews, and proven case studies.
+        </p>
+    </section>
+
+    <!-- Daily Briefs Section -->
+    <section class="mb-16">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h2 class="text-3xl font-bold mb-2">{t('nav.daily')}</h2>
+                <p class="text-slate-600 dark:text-slate-400">{t('section.daily.desc')}</p>
+            </div>
+            <a href={`/${lang}/daily/`} class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                View All &rarr;
+            </a>
+        </div>
+        <div class="grid gap-6 md:grid-cols-3">
+            {featuredDaily.map((brief, i) => (
+                <article class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md hover:-translate-y-1 transition-all duration-300" style={`animation-delay: ${i * 100}ms`}>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200">{brief.category}</span>
+                        <span class="text-xs font-bold text-amber-600 dark:text-amber-400">{brief.impact.toUpperCase()}</span>
+                    </div>
+                    <div class="text-xs text-slate-500 font-medium mb-2">{brief.date}</div>
+                    <h3 class="text-lg font-bold mb-3 line-clamp-2">{brief.title}</h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-3">{brief.snippet}</p>
+                    <a href={`/${lang}/daily/${brief.id}/`} class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+                        {t('read.more')} &rarr;
+                    </a>
+                </article>
+            ))}
+        </div>
+    </section>
+
+    <!-- Tool Reviews Section -->
+    <section class="mb-16">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h2 class="text-3xl font-bold mb-2">{t('nav.tools')}</h2>
+                <p class="text-slate-600 dark:text-slate-400">{t('section.tools.desc')}</p>
+            </div>
+            <a href={`/${lang}/tools/`} class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                View All &rarr;
+            </a>
+        </div>
+        <div class="grid gap-6 md:grid-cols-3">
+            {featuredTools.map((tool, i) => (
+                <article class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md hover:-translate-y-1 transition-all duration-300" style={`animation-delay: ${i * 100}ms`}>
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                                <span key={i} class={i < Math.floor(tool.rating) ? "text-yellow-400" : "text-slate-300 dark:text-slate-600"}>★</span>
+                            ))}
+                        </div>
+                        <span class={`text-xs font-semibold px-2 py-1 rounded-full ${
+                            tool.pricing === 'free' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200' :
+                            tool.pricing === 'freemium' ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200' :
+                            'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200'
+                        }`}>
+                            {tool.pricing}
+                        </span>
+                    </div>
+                    <div class="text-xs text-slate-500 font-medium mb-2">{tool.date}</div>
+                    <h3 class="text-lg font-bold mb-3 line-clamp-2">{tool.title}</h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-3">{tool.snippet}</p>
+                    <a href={`/${lang}/tools/${tool.slug}/`} class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+                        {t('read.more')} &rarr;
+                    </a>
+                </article>
+            ))}
+        </div>
+    </section>
+
+    <!-- Case Studies Section -->
+    <section class="mb-16">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h2 class="text-3xl font-bold mb-2">{t('nav.cases')}</h2>
+                <p class="text-slate-600 dark:text-slate-400">{t('section.cases.desc')}</p>
+            </div>
+            <a href={`/${lang}/cases/`} class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                View All &rarr;
+            </a>
+        </div>
+        <div class="grid gap-6 md:grid-cols-3">
+            {featuredCases.map((caseStudy, i) => (
+                <article class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md hover:-translate-y-1 transition-all duration-300" style={`animation-delay: ${i * 100}ms`}>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200">{caseStudy.industry}</span>
+                        <span class="text-xs font-bold text-green-600 dark:text-green-400">{caseStudy.revenue}</span>
+                    </div>
+                    <div class="text-xs text-slate-500 font-medium mb-2">{caseStudy.date}</div>
+                    <h3 class="text-lg font-bold mb-3 line-clamp-2">{caseStudy.title}</h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-3">{caseStudy.snippet}</p>
+                    <a href={`/${lang}/cases/${caseStudy.slug}/`} class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+                        {t('read.more')} &rarr;
+                    </a>
+                </article>
+            ))}
+        </div>
+    </section>
+</Layout>
+
+<style>
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+</style>

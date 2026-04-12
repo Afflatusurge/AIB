@@ -1,0 +1,79 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getCaseStudies } from '../../../lib/notion';
+import { useTranslations, getLangFromUrl } from '../../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'ja' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+// Fetch case studies from Notion Client
+const caseStudies = await getCaseStudies();
+---
+
+<Layout title={`${t('nav.cases')} - ${t('site.name')}`}>
+    <section class="mb-12 animate-fade-in-up">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{t('nav.cases')}</h1>
+        <p class="text-lg text-slate-600 dark:text-slate-400">
+            {t('section.cases.desc')}
+        </p>
+    </section>
+
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {caseStudies.map((caseStudy, i) => (
+            <article
+                class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                style={`animation-delay: ${i * 100}ms`}
+            >
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200">
+                        {caseStudy.industry}
+                    </span>
+                    <span class="text-xs font-bold px-2 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200">
+                        {caseStudy.revenue}
+                    </span>
+                </div>
+                <div class="text-xs text-slate-500 font-medium mb-2">{caseStudy.date}</div>
+                <h2 class="text-lg font-bold mb-3 line-clamp-2 hover:text-blue-600 transition-colors">
+                    <a href={`/${lang}/cases/${caseStudy.slug}/`}>
+                        {caseStudy.title}
+                    </a>
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-3">{caseStudy.snippet}</p>
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <a href={`/${lang}/cases/${caseStudy.slug}/`} class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+                        {t('read.more')} &rarr;
+                    </a>
+                </div>
+            </article>
+        ))}
+        {caseStudies.length === 0 && (
+            <div class="col-span-full py-12 text-center text-slate-500">
+                No case studies found.
+            </div>
+        )}
+    </div>
+</Layout>
+
+<style>
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+</style>
