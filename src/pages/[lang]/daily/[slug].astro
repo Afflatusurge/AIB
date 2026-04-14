@@ -1,7 +1,7 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import Footer from '../../../components/Footer.astro';
-import { getDailyBriefs } from '../../../lib/notion';
+import { getDailyBriefs, getPageContent } from '../../../lib/notion';
 import { useTranslations, getLangFromUrl } from '../../../i18n/utils';
 
 export async function getStaticPaths() {
@@ -30,6 +30,7 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const prevBrief = idx > 0 ? briefs[idx - 1] : null;
 const nextBrief = idx < briefs.length - 1 ? briefs[idx + 1] : null;
+const bodyHtml = await getPageContent(brief.id);
 ---
 
 <Layout title={`${brief.title} - ${t('site.name')}`}>
@@ -50,8 +51,9 @@ const nextBrief = idx < briefs.length - 1 ? briefs[idx + 1] : null;
         </header>
 
         <div class="article-body">
-          <p>{brief.snippet}</p>
-          {brief.commentary && <p>{brief.commentary}</p>}
+          {brief.snippet && <p class="lead">{brief.snippet}</p>}
+          {bodyHtml ? <Fragment set:html={bodyHtml} /> : (!brief.snippet && <p>No content yet.</p>)}
+          {brief.commentary && <blockquote>{brief.commentary}</blockquote>}
           {brief.sourceUrl && (
             <p>
               <a href={brief.sourceUrl} target="_blank" rel="noopener" style="color: var(--accent-cyan);">

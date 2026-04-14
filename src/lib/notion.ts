@@ -92,7 +92,7 @@ export async function getDailyBriefs(lang: Lang = 'en'): Promise<DailyBrief[]> {
     const response = await notion.databases.query({
       database_id: DB.daily[lang],
       sorts: [{ property: 'Date', direction: 'descending' }],
-      page_size: 20,
+      page_size: 100,
     });
 
     return response.results.map((page: any) => {
@@ -138,7 +138,7 @@ export async function getToolReviews(lang: Lang = 'en'): Promise<ToolReview[]> {
     const response = await notion.databases.query({
       database_id: DB.tools[lang],
       sorts: [{ property: 'Publish Date', direction: 'descending' }],
-      page_size: 20,
+      page_size: 100,
     });
 
     return response.results.map((page: any) => {
@@ -183,7 +183,7 @@ export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
     const response = await notion.databases.query({
       database_id: DB.cases[lang],
       sorts: [{ property: 'Publish Date', direction: 'descending' }],
-      page_size: 20,
+      page_size: 100,
     });
 
     return response.results.map((page: any) => {
@@ -202,6 +202,143 @@ export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
   } catch (err) {
     console.error(`[Notion] Failed to fetch case studies (${lang}):`, err);
     return getMockCaseStudies();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PAGE CONTENT (blocks → HTML)
+// ══════════════════════════════════════════════════════════════
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderRichText(rt: any[]): string {
+  if (!rt || !Array.isArray(rt)) return '';
+  return rt
+    .map((t: any) => {
+      let text = escapeHtml(t.plain_text || '');
+      const a = t.annotations || {};
+      if (a.code) text = `<code>${text}</code>`;
+      if (a.bold) text = `<strong>${text}</strong>`;
+      if (a.italic) text = `<em>${text}</em>`;
+      if (a.strikethrough) text = `<s>${text}</s>`;
+      if (a.underline) text = `<u>${text}</u>`;
+      if (t.href) text = `<a href="${escapeHtml(t.href)}" target="_blank" rel="noopener">${text}</a>`;
+      return text;
+    })
+    .join('');
+}
+
+function blocksToHtml(blocks: any[]): string {
+  let html = '';
+  let listBuffer: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+
+  const flushList = () => {
+    if (listBuffer.length && listType) {
+      html += `<${listType}>${listBuffer.join('')}</${listType}>`;
+      listBuffer = [];
+      listType = null;
+    }
+  };
+
+  for (const block of blocks) {
+    const type = block.type;
+    const data = block[type];
+    if (!data) continue;
+
+    const isList = type === 'bulleted_list_item' || type === 'numbered_list_item';
+    const wantedListType = type === 'numbered_list_item' ? 'ol' : 'ul';
+    if (!isList || (listType && listType !== wantedListType)) flushList();
+
+    switch (type) {
+      case 'paragraph': {
+        const content = renderRichText(data.rich_text);
+        if (content.trim()) html += `<p>${content}</p>`;
+        break;
+      }
+      case 'heading_1':
+        html += `<h2>${renderRichText(data.rich_text)}</h2>`;
+        break;
+      case 'heading_2':
+        html += `<h2>${renderRichText(data.rich_text)}</h2>`;
+        break;
+      case 'heading_3':
+        html += `<h3>${renderRichText(data.rich_text)}</h3>`;
+        break;
+      case 'bulleted_list_item':
+        listType = 'ul';
+        listBuffer.push(`<li>${renderRichText(data.rich_text)}</li>`);
+        break;
+      case 'numbered_list_item':
+        listType = 'ol';
+        listBuffer.push(`<li>${renderRichText(data.rich_text)}</li>`);
+        break;
+      case 'quote':
+        html += `<blockquote>${renderRichText(data.rich_text)}</blockquote>`;
+        break;
+      case 'code': {
+        const codeText = (data.rich_text || []).map((t: any) => t.plain_text).join('');
+        html += `<pre><code>${escapeHtml(codeText)}</code></pre>`;
+        break;
+      }
+      case 'callout':
+        html += `<div class="callout">${renderRichText(data.rich_text)}</div>`;
+        break;
+      case 'divider':
+        html += '<hr/>';
+        break;
+      case 'image': {
+        const url = data.file?.url || data.external?.url || '';
+        const caption = renderRichText(data.caption || []);
+        if (url) html += `<figure><img src="${escapeHtml(url)}" alt="${caption}"/>${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`;
+        break;
+      }
+      case 'bookmark':
+      case 'embed':
+      case 'link_preview': {
+        const url = data.url || '';
+        if (url) html += `<p><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a></p>`;
+        break;
+      }
+      case 'to_do': {
+        const checked = data.checked ? '☑' : '☐';
+        html += `<p>${checked} ${renderRichText(data.rich_text)}</p>`;
+        break;
+      }
+      case 'toggle':
+        html += `<details><summary>${renderRichText(data.rich_text)}</summary></details>`;
+        break;
+    }
+  }
+  flushList();
+  return html;
+}
+
+export async function getPageContent(pageId: string): Promise<string> {
+  if (!isConfigured()) return '';
+  try {
+    const allBlocks: any[] = [];
+    let cursor: string | undefined = undefined;
+    do {
+      const res: any = await notion.blocks.children.list({
+        block_id: pageId,
+        start_cursor: cursor,
+        page_size: 100,
+      });
+      allBlocks.push(...res.results);
+      cursor = res.has_more ? res.next_cursor : undefined;
+    } while (cursor);
+    return blocksToHtml(allBlocks);
+  } catch (err) {
+    console.error(`[Notion] Failed to fetch page content (${pageId}):`, err);
+    return '';
   }
 }
 
