@@ -1,5 +1,6 @@
 ---
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import ConsentBanner from '../components/ConsentBanner.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -52,7 +53,7 @@ const languages = ['en', 'ja', 'zh'];
 		})}
 		<link rel="alternate" hreflang="x-default" href={new URL('/en/', Astro.site)} />
 	</head>
-	<body>
+	<body class={`lang-${lang}`}>
         <header class="header">
             <div class="header-inner">
                 <div class="brand-block">
@@ -89,6 +90,7 @@ const languages = ['en', 'ja', 'zh'];
 		<main>
 			<slot />
 		</main>
+    <ConsentBanner lang={lang} />
 	</body>
 </html>
 

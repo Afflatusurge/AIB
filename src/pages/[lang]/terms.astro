@@ -1,0 +1,112 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Footer from '../../components/Footer.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'ja' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const content = {
+  en: {
+    title: 'Terms of Service',
+    dek: 'These terms govern your use of AiandBusiness.com and its editorial content.',
+    sections: [
+      ['Use of the site', 'You may browse, read, and share links to AiandBusiness.com for personal, educational, or internal business use. You agree not to misuse the site, interfere with its operation, attempt unauthorized access, or reproduce substantial portions of the content as your own publication.'],
+      ['Editorial purpose', 'AiandBusiness.com publishes commentary, reviews, research summaries, and case studies for informational purposes. Nothing on the site should be treated as legal, tax, accounting, investment, or other professional advice. You are responsible for your own decisions and due diligence.'],
+      ['Tools, vendors, and external links', 'We may discuss third-party products, companies, APIs, or services and may link to outside websites. Those third-party services are not controlled by us, and we are not responsible for their content, pricing, availability, or data practices. Always review their current terms before using them.'],
+      ['Intellectual property', 'Unless otherwise noted, the site design, editorial structure, original copy, and related materials on AiandBusiness.com are protected by applicable intellectual property laws. You may quote short excerpts with clear attribution and a link back to the source page, but you may not republish full articles or scrape the site into another product without permission.'],
+      ['Analytics and consent', 'If we enable analytics, measurement, or similar technologies that require consent under applicable law, we will seek that consent through an on-site notice or preference control before activating them where required. Your choice may be stored on your device so we can remember your preference.'],
+      ['Changes and availability', 'We may update the site, these terms, or any part of the content at any time. We do not guarantee uninterrupted availability, continued access to any specific page, or the permanent publication of any article, review, or case study.'],
+    ],
+    closing: 'By continuing to use AiandBusiness.com, you agree to these terms.',
+  },
+  zh: {
+    title: '服务条款',
+    dek: '以下条款适用于你对 AiandBusiness.com 及其内容的访问与使用。',
+    sections: [
+      ['网站使用', '你可以将 AiandBusiness.com 用于个人阅读、学习研究或内部业务参考。你同意不会滥用网站、干扰其正常运行、尝试未授权访问，或将本站的大量内容整理后冒充为自己的出版物。'],
+      ['内容性质', 'AiandBusiness.com 提供的是评论、评测、研究摘要和案例分析，目的是帮助读者理解变化与判断方向。站内内容不构成法律、税务、会计、投资或其他专业建议。任何业务与投资决策，仍应由你自行判断并完成必要的核实。'],
+      ['第三方工具与外部链接', '我们可能会讨论第三方产品、公司、API 或服务，也可能会链接到外部网站。这些第三方并不受我们控制，我们不对其内容、价格、可用性或数据处理方式负责。使用前请自行查看其最新条款。'],
+      ['知识产权', '除非另有说明，AiandBusiness.com 的页面结构、原创文字、编辑组织方式和相关素材均受适用知识产权法律保护。你可以在明确署名并附上原文链接的前提下引用简短片段，但不得未经许可转载整篇文章，或将本站内容批量抓取后用于其他产品。'],
+      ['分析工具与同意', '如果未来启用网站分析、流量统计或类似技术，并且适用法律要求事先取得同意，我们会通过站内提示或偏好设置先征求你的许可。你的选择可能会保存在本地设备上，以便网站记住你的偏好。'],
+      ['更新与可用性', '我们可能随时更新网站、修改本条款，或调整、下线任何文章与页面。我们不保证网站始终不中断，也不保证某篇文章、评测或案例会永久保留在线。'],
+    ],
+    closing: '继续使用 AiandBusiness.com，即表示你同意这些条款。',
+  },
+  ja: {
+    title: '利用規約',
+    dek: '本規約は、AiandBusiness.com および掲載コンテンツの利用条件を定めるものです。',
+    sections: [
+      ['サイトの利用について', 'AiandBusiness.com は、個人利用、学習、調査、または社内での参考目的で閲覧できます。サイトの運営を妨げる行為、不正アクセスの試み、掲載内容の大部分を自分の媒体として再公開する行為は禁止します。'],
+      ['掲載内容の性質', 'AiandBusiness.com は、解説、レビュー、リサーチ要約、ケーススタディを情報提供目的で掲載しています。法務、税務、会計、投資、その他の専門的助言を提供するものではありません。実際の判断や導入にあたっては、ご自身で確認と検討を行ってください。'],
+      ['外部サービスについて', '当サイトでは、第三者の製品、企業、API、サービスを紹介したり、外部サイトへリンクしたりすることがあります。これら第三者サービスは当サイトの管理下にはなく、その内容、価格、提供状況、データ取扱いについて責任を負いません。利用前に各サービスの最新条件をご確認ください。'],
+      ['知的財産', '別段の定めがない限り、AiandBusiness.com のデザイン、編集構成、オリジナルの文章、関連素材には適用される知的財産法が及びます。出典とリンクを明記した短い引用は可能ですが、許可なく記事全文を転載したり、サイト内容を大量取得して別サービスに流用したりすることはできません。'],
+      ['分析ツールと同意', '今後、アクセス解析や計測技術を導入し、適用法上同意が必要となる場合には、必要な地域では事前にオンサイト通知または設定画面を通じて同意を取得します。選択内容は、設定を記憶するために端末へ保存されることがあります。'],
+      ['変更と提供状況', '当サイト、本規約、掲載コンテンツはいつでも更新・変更されることがあります。サイトの継続的な可用性、特定ページへのアクセス、個別記事の恒久的な掲載を保証するものではありません。'],
+    ],
+    closing: 'AiandBusiness.com を利用し続けることで、本規約に同意したものとみなされます。',
+  },
+} as const;
+
+const c = content[lang as keyof typeof content] || content.en;
+---
+
+<Layout title={`${c.title} - ${t('site.name')}`}>
+  <section class="page-section legal-page">
+    <div class="container">
+      <div class="page-header fade-in">
+        <p class="section-kicker">Legal</p>
+        <h1>{c.title}</h1>
+        <p>{c.dek}</p>
+      </div>
+
+      <article class="legal-shell fade-in">
+        {c.sections.map(([heading, body]) => (
+          <section class="legal-section">
+            <h2>{heading}</h2>
+            <p>{body}</p>
+          </section>
+        ))}
+        <p class="legal-closing">{c.closing}</p>
+      </article>
+    </div>
+  </section>
+  <Footer lang={lang} />
+</Layout>
+
+<style>
+  .legal-shell {
+    max-width: 900px;
+    display: grid;
+    gap: 24px;
+  }
+  .legal-section {
+    padding-top: 22px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .legal-section h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 3vw, 2.8rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .legal-section p,
+  .legal-closing {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.85;
+    max-width: 54rem;
+  }
+  .legal-closing {
+    margin-top: 8px;
+  }
+</style>

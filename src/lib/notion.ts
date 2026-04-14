@@ -124,6 +124,26 @@ function hasRenderableContent(entry: { title?: string; snippet?: string; slug?: 
   return !!(entry.title && entry.slug && entry.snippet);
 }
 
+function hasDailyBriefPayload(props: Record<string, any>): boolean {
+  return !!(
+    getAnyText(props, ['Title', 'Name']) &&
+    getAnyText(props, ['Summary', 'Dek', 'Subtitle']) &&
+    getAnyText(props, ['Slug']) &&
+    getAnyText(props, ['Date', 'Publish Date'])
+  );
+}
+
+function isDailyBriefVisible(props: Record<string, any>): boolean {
+  if (isVisibleEntry(props)) return true;
+
+  const status = getStatus(props).toLowerCase();
+  if (status === 'not started' || status === 'in progress') {
+    return hasDailyBriefPayload(props);
+  }
+
+  return false;
+}
+
 function sortByEditorialPriority<T extends { featured?: boolean; date?: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     if (!!a.featured !== !!b.featured) {
@@ -171,7 +191,7 @@ export async function getDailyBriefs(lang: Lang = 'en'): Promise<DailyBrief[]> {
     });
 
     const briefs = response.results
-      .filter((page: any) => isVisibleEntry(page.properties))
+      .filter((page: any) => isDailyBriefVisible(page.properties))
       .map((page: any) => {
       const props = page.properties;
       return {

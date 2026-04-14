@@ -15,20 +15,20 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
       <p class="hero-kicker">
         {lang === 'zh' ? 'AI-FIRST MEDIA FOR SOLO BUILDERS' : lang === 'ja' ? 'AI-FIRST MEDIA FOR SOLO BUILDERS' : 'AI-FIRST MEDIA FOR SOLO BUILDERS'}
       </p>
-      <h1 class="hero-title animate-in delay-1">
+      <h1 class={`hero-title animate-in delay-1 ${lang === 'en' ? '' : 'is-cjk'}`}>
         {lang === 'zh' ? (
-          <>给想独立做成一门生意的人，<span>更像编辑部的 AI 指南。</span></>
+          <>写给想把 AI 生意做成的人。<span>一份单人公司指南。</span></>
         ) : lang === 'ja' ? (
-          <>ひとりで事業をつくる人のための、<span>編集部のようなAIガイド。</span></>
+          <>ひとりでAIビジネスを育てたい人へ。<span>編集の視点で届ける実践ガイド。</span></>
         ) : (
           <>An editorial guide to building an <span>AI-first business of one.</span></>
         )}
       </h1>
       <p class="hero-sub animate-in delay-2">
         {lang === 'zh'
-          ? '不再把工具、新闻和案例堆成目录，而是帮你判断今天该看什么、该试什么、下一步该怎么做。'
+          ? '不是把工具、新闻和案例堆成目录，而是帮你判断今天该看什么、该试什么、下一步该怎么做。'
           : lang === 'ja'
-            ? 'ニュース、ツール、事例を並べるだけではなく、今日何を見るべきか、何を試すべきかを判断しやすくします。'
+            ? 'ニュースやツールや事例を並べるだけではなく、今日どれを見るべきか、何を試すべきか、次にどう動くかまで判断しやすくします。'
             : 'Less directory, more newsroom. We filter the noise into daily briefs, practical tool reviews, and case studies built for AI solopreneurs.'}
       </p>
       <div class="hero-cta animate-in delay-3">
@@ -130,6 +130,10 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
     line-height: 0.92;
     margin-bottom: 24px;
     color: var(--text-primary);
+  }
+  .hero-title.is-cjk {
+    line-height: 1.04;
+    letter-spacing: -0.03em;
   }
   .hero-title span {
     color: var(--accent);
@@ -278,6 +282,9 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
     }
     .hero-title {
       font-size: 3.5rem;
+    }
+    .hero-title.is-cjk {
+      line-height: 1.08;
     }
     .hero-sub {
       font-size: 1rem;

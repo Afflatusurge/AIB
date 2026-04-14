@@ -20,6 +20,7 @@ const leadBrief = dailyBriefs.find((item) => item.featured) || dailyBriefs[0];
 const moreBriefs = leadBrief
   ? dailyBriefs.filter((item) => item.id !== leadBrief.id)
   : [];
+const leadBriefCopy = leadBrief?.whyItMatters || leadBrief?.commentary || leadBrief?.snippet || '';
 
 function impactClass(impact: string): string {
   const i = (impact || '').toLowerCase();
@@ -49,7 +50,7 @@ function impactClass(impact: string): string {
             <h2>
               <a href={`/${lang}/daily/${leadBrief.slug || leadBrief.id}/`}>{leadBrief.title}</a>
             </h2>
-            <p>{leadBrief.snippet}</p>
+            <p>{leadBriefCopy}</p>
             <div class="lead-entry-actions">
               <a href={`/${lang}/daily/${leadBrief.slug || leadBrief.id}/`} class="read-more">
                 {t('read.more')} →
@@ -88,7 +89,7 @@ function impactClass(impact: string): string {
             <h2>
               <a href={`/${lang}/daily/${brief.slug || brief.id}/`}>{brief.title}</a>
             </h2>
-            <p class="card-snippet">{brief.snippet}</p>
+            <p class="card-snippet">{brief.whyItMatters || brief.commentary || brief.snippet}</p>
             <div class="card-footer">
               <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="read-more">
                 {t('read.more')} →

@@ -44,6 +44,7 @@ const processedBodyHtml = headingMatches.length
       return heading ? `<h2 id="${heading.id}">` : '<h2>';
     })
   : bodyHtml;
+const hasBodyContent = !!processedBodyHtml.trim();
 
 const summaryCards = [
   {
@@ -141,8 +142,40 @@ const recommendationIntro = lang === 'zh'
               ))}
             </div>
             <div class="article-body">
-              {processedBodyHtml ? <Fragment set:html={processedBodyHtml} /> : (!brief.snippet && <p>No content yet.</p>)}
-              {brief.commentary && <blockquote>{brief.commentary}</blockquote>}
+              {hasBodyContent ? (
+                <Fragment set:html={processedBodyHtml} />
+              ) : (
+                <>
+                  {brief.snippet && (
+                    <>
+                      <h2>{lang === 'zh' ? 'Summary' : lang === 'ja' ? 'Summary' : 'Summary'}</h2>
+                      <p>{brief.snippet}</p>
+                    </>
+                  )}
+                  {brief.commentary && (
+                    <>
+                      <h2>{lang === 'zh' ? 'Editorial note' : lang === 'ja' ? 'Editorial note' : 'Editorial note'}</h2>
+                      <p>{brief.commentary}</p>
+                    </>
+                  )}
+                  {brief.whyItMatters && (
+                    <>
+                      <h2>{lang === 'zh' ? 'Why it matters' : lang === 'ja' ? 'Why it matters' : 'Why it matters'}</h2>
+                      <p>{brief.whyItMatters}</p>
+                    </>
+                  )}
+                  {brief.sourceUrl && (
+                    <>
+                      <h2>{lang === 'zh' ? 'Source' : lang === 'ja' ? 'Source' : 'Source'}</h2>
+                      <p>
+                        <a href={brief.sourceUrl} target="_blank" rel="noopener">
+                          {lang === 'zh' ? 'Read the original coverage →' : lang === 'ja' ? 'Read the original coverage →' : 'Read the original coverage →'}
+                        </a>
+                      </p>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

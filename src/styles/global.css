@@ -213,11 +213,11 @@ img { max-width: 100%; display: block; }
   margin: 0 auto;
 }
 .article-shell {
-  max-width: 1180px;
+  max-width: 1240px;
   margin: 0 auto;
 }
 .article-hero {
-  max-width: 860px;
+  max-width: 980px;
   margin-bottom: 32px;
 }
 .article-cover {
@@ -238,10 +238,10 @@ img { max-width: 100%; display: block; }
 }
 .article-hero h1 {
   font-family: var(--font-display);
-  font-size: clamp(2.8rem, 5vw, 4.8rem);
+  font-size: clamp(2.5rem, 4.2vw, 4rem);
   font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 0.98;
+  letter-spacing: -0.035em;
+  line-height: 1;
   margin-bottom: 16px;
   color: var(--text-primary);
 }
@@ -301,7 +301,7 @@ img { max-width: 100%; display: block; }
   line-height: 1.75;
 }
 .article-dek {
-  max-width: 46rem;
+  max-width: 52rem;
   color: var(--text-secondary);
   font-size: 1.08rem;
   line-height: 1.8;

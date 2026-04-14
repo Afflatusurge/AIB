@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Footer from '../../components/Footer.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'ja' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const content = {
+  en: {
+    title: 'About',
+    dek: 'AiandBusiness.com is an editorial publication for people building lean, AI-first businesses with very small teams.',
+    intro: 'We cover the tools, signals, and operating patterns that matter when one person is trying to do the work of a small company. The goal is not to overwhelm you with AI news. It is to help you decide what is worth your time, what is changing the playbook, and what can actually improve the way you build.',
+    sections: [
+      {
+        heading: 'What we publish',
+        body: 'Daily Brief turns noisy product launches and model updates into short editorial takes. Tool Reviews focus on workflow fit, tradeoffs, and real use cases. Case Studies look at how people are turning AI into revenue, leverage, and repeatable operating systems.',
+      },
+      {
+        heading: 'Who it is for',
+        body: 'Founders of one, operators, creators, consultants, and small teams using AI to move faster without adding headcount. If you care about shipping, learning, and turning AI into practical business leverage, you are the intended reader.',
+      },
+      {
+        heading: 'How we think',
+        body: 'We prefer judgment over hype, workflow over feature lists, and real business outcomes over generic trend summaries. We do not assume every launch matters. We care about what changes execution.',
+      },
+    ],
+  },
+  zh: {
+    title: '关于',
+    dek: 'AiandBusiness.com 是一个面向小团队与单人创业者的内容型网站，关注如何把 AI 真正变成业务杠杆。',
+    intro: '我们写的不是泛泛的 AI 新闻合集，而是更像一份给实干型创业者的编辑型出版物：帮你判断什么值得看、什么值得试、什么真的会改变你做业务的方式。',
+    sections: [
+      {
+        heading: '我们写什么',
+        body: 'Daily Brief 负责把杂乱的产品发布和行业信号压缩成有判断的短简报。Tool Reviews 关注真实工作流、使用门槛和取舍。Case Studies 则拆解别人如何把 AI 变成收入、效率和可复制的经营系统。',
+      },
+      {
+        heading: '我们写给谁',
+        body: '写给单人创业者、小团队操盘手、创作者、顾问，以及所有想用 AI 提高产出而不是单纯追热点的人。如果你在乎执行、效率和业务结果，这个站就是为你准备的。',
+      },
+      {
+        heading: '我们的判断标准',
+        body: '我们更看重判断而不是热闹，更看重工作流而不是功能清单，也更看重真实业务结果而不是空泛趋势。不是每次发布都重要，真正重要的是它是否改变了做事的方法。',
+      },
+    ],
+  },
+  ja: {
+    title: 'About',
+    dek: 'AiandBusiness.com は、少人数または一人でAIビジネスを育てる人のためのエディトリアルサイトです。',
+    intro: 'ここで目指しているのは、AIニュースを並べることではありません。何を見るべきか、何を試すべきか、どの変化が実際の事業運営を変えるのかを判断しやすくすることです。',
+    sections: [
+      {
+        heading: '何を届けるか',
+        body: 'Daily Brief ではリリース情報や業界の動きを、短くても判断に使える形に整理します。Tool Reviews ではワークフローへの適合性や導入のしやすさ、見落としやすいトレードオフを扱います。Case Studies では、AIを収益や効率、再現可能な運営の仕組みに変えている実例を取り上げます。',
+      },
+      {
+        heading: '誰のためのサイトか',
+        body: 'ひとり起業家、少人数チームのオペレーター、クリエイター、コンサルタントなど、AIを使って少ない人数で大きく動きたい人のためのサイトです。流行を追うより、実務に効く判断材料が欲しい人に向いています。',
+      },
+      {
+        heading: '編集方針',
+        body: '私たちは話題性より判断、機能一覧よりワークフロー、抽象的なトレンドより実際の事業成果を重視します。すべての新機能が重要とは考えません。大事なのは、実行のやり方を変えるかどうかです。',
+      },
+    ],
+  },
+} as const;
+
+const c = content[lang as keyof typeof content] || content.en;
+---
+
+<Layout title={`${c.title} - ${t('site.name')}`}>
+  <section class="page-section legal-page">
+    <div class="container">
+      <div class="page-header fade-in">
+        <p class="section-kicker">Editorial</p>
+        <h1>{c.title}</h1>
+        <p>{c.dek}</p>
+      </div>
+
+      <article class="legal-shell fade-in">
+        <p class="legal-intro">{c.intro}</p>
+        {c.sections.map((section) => (
+          <section class="legal-section">
+            <h2>{section.heading}</h2>
+            <p>{section.body}</p>
+          </section>
+        ))}
+      </article>
+    </div>
+  </section>
+  <Footer lang={lang} />
+</Layout>
+
+<style>
+  .legal-shell {
+    max-width: 860px;
+    display: grid;
+    gap: 28px;
+  }
+  .legal-intro {
+    font-size: 1.06rem;
+    color: var(--text-secondary);
+    line-height: 1.9;
+  }
+  .legal-section {
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .legal-section h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3rem);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .legal-section p {
+    color: var(--text-secondary);
+    line-height: 1.85;
+    font-size: 1rem;
+    max-width: 52rem;
+  }
+</style>

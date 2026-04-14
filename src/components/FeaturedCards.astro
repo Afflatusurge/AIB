@@ -32,6 +32,11 @@ const { lang, briefs, tools, cases } = Astro.props;
 
 const leadTool = tools[0];
 const leadCase = cases[0];
+const leadToolDetails = [
+  leadTool?.bestFor || (lang === 'zh' ? '适合对象待补齐' : lang === 'ja' ? '向いている読者を補完' : 'Audience fit'),
+  leadTool?.pricing || (lang === 'zh' ? '定价与门槛' : lang === 'ja' ? '価格と導入ハードル' : 'Pricing and setup cost'),
+  leadTool?.category || (lang === 'zh' ? '工作流位置' : lang === 'ja' ? 'ワークフロー上の位置' : 'Workflow role'),
+].filter(Boolean).slice(0, 3);
 const recentReads = [
   ...briefs.slice(0, 2).map((item) => ({ type: 'brief', href: `/${lang}/daily/${item.slug}/`, title: item.title, meta: item.category || 'Daily Brief' })),
   ...tools.slice(1, 3).map((item) => ({ type: 'tool', href: `/${lang}/tools/${item.slug}/`, title: item.title, meta: item.bestFor || item.pricing || item.category || 'Tool Review' })),
@@ -43,7 +48,7 @@ const recentReads = [
   <div class="container">
     <div class="section-label">// FEATURES</div>
     <h2 class="section-title">
-      {lang === 'zh' ? '让首页更像一本杂志，而不是一个组件清单' : lang === 'ja' ? 'ホームをコンポーネント一覧ではなく雑誌のように' : 'Give the homepage the rhythm of a magazine'}
+      {lang === 'zh' ? '首页应该像一本杂志' : lang === 'ja' ? 'ホームは雑誌のように設計する' : 'Give the homepage the rhythm of a magazine'}
     </h2>
     <p class="section-desc">
       {lang === 'zh' ? '一个内容站需要“主故事 + 辅助故事 + 最近更新”的节奏。这样读者会更自然地往下读。' : lang === 'ja' ? '主役の記事、補助記事、最近の更新というリズムがあると、読み進めやすくなります。' : 'A strong front page balances one lead story, one supporting feature, and a compact list of recent reads.'}
@@ -59,6 +64,14 @@ const recentReads = [
         <span class="story-tag">{lang === 'zh' ? '主故事 / 工具评测' : lang === 'ja' ? '主役 / ツールレビュー' : 'Lead story / Tool review'}</span>
         <h3>{leadTool?.title || (lang === 'zh' ? '优先打造一篇足够代表站点气质的标杆评测' : lang === 'ja' ? 'サイトの空気感を代表する一本のレビューを先に' : 'Start with one flagship review that sets the tone for the whole site')}</h3>
         <p>{leadTool?.snippet || (lang === 'zh' ? '首页需要一篇足够“厚”的主文章，承担品牌解释、方法论和差异化感知。' : lang === 'ja' ? '厚みのある主役記事は、ブランドの違いと方法論を最短で伝えます。' : 'A substantial lead review helps explain the site’s judgment, standards, and point of view at a glance.')}</p>
+        <div class="story-briefing">
+          <p class="story-briefing-label">{lang === 'zh' ? '这篇会回答什么' : lang === 'ja' ? 'このレビューで分かること' : 'What this review clarifies'}</p>
+          <ul class="story-points">
+            {leadToolDetails.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </div>
         <div class="story-meta">
           <span>{leadTool?.category || (lang === 'zh' ? '核心评测' : lang === 'ja' ? '基幹レビュー' : 'Cornerstone review')}</span>
           <span>{leadTool?.bestFor || leadTool?.pricing || (lang === 'zh' ? '定价 / 工作流 / 适配度' : lang === 'ja' ? '価格 / ワークフロー / 適合性' : 'Pricing / workflow / fit')}</span>
@@ -83,7 +96,7 @@ const recentReads = [
 
         <div class="reads-panel animate-in delay-2">
           <div class="reads-head">
-            <h4>{lang === 'zh' ? 'Recent reads' : lang === 'ja' ? 'Recent reads' : 'Recent reads'}</h4>
+            <h4>{lang === 'zh' ? '继续阅读' : lang === 'ja' ? '続けて読む' : 'Recent reads'}</h4>
             <a href={`/${lang}/`}>{lang === 'zh' ? '回到首页' : lang === 'ja' ? 'ホームへ' : 'Home'}</a>
           </div>
           <ul>
@@ -132,6 +145,7 @@ const recentReads = [
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.72fr);
     gap: 20px;
+    align-items: start;
   }
   .lead-story,
   .support-story,
@@ -143,6 +157,10 @@ const recentReads = [
     text-decoration: none;
     color: inherit;
     display: block;
+  }
+  .lead-story {
+    display: flex;
+    flex-direction: column;
   }
   .lead-story:hover,
   .support-story:hover {
@@ -193,6 +211,43 @@ const recentReads = [
     font-size: 0.98rem;
     line-height: 1.75;
     margin-bottom: 22px;
+  }
+  .story-briefing {
+    margin: 0 0 22px;
+    padding: 16px 0 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .story-briefing-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .story-points {
+    list-style: none;
+    display: grid;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+  }
+  .story-points li {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+  }
+  .story-points li::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--accent);
+    position: absolute;
+    left: 0;
+    top: 0.62rem;
   }
   .support-story h4,
   .reads-head h4 {

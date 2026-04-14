@@ -1,0 +1,135 @@
+---
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+
+const copy = {
+  en: {
+    text: 'We may use analytics to understand what readers find useful. Do you allow anonymous measurement cookies?',
+    yes: 'Yes',
+    no: 'No',
+  },
+  zh: {
+    text: '我们可能会使用分析工具了解哪些内容对读者更有帮助。是否允许匿名统计类 Cookie？',
+    yes: '允许',
+    no: '拒绝',
+  },
+  ja: {
+    text: '読者にとって役立つ内容を把握するため、分析ツールを使う場合があります。匿名の計測 Cookie を許可しますか？',
+    yes: '許可する',
+    no: '許可しない',
+  },
+} as const;
+
+const c = copy[lang as keyof typeof copy] || copy.en;
+---
+
+<aside class="consent-banner" data-consent-banner hidden aria-live="polite">
+  <div class="consent-inner">
+    <p>{c.text}</p>
+    <div class="consent-actions">
+      <button type="button" class="consent-btn consent-accept" data-consent-choice="yes">{c.yes}</button>
+      <button type="button" class="consent-btn consent-decline" data-consent-choice="no">{c.no}</button>
+    </div>
+  </div>
+</aside>
+
+<script is:inline>
+  (() => {
+    const storageKey = 'aib-analytics-consent';
+    const banner = document.querySelector('[data-consent-banner]');
+    if (!banner) return;
+
+    const existing = window.localStorage.getItem(storageKey);
+    if (!existing) {
+      banner.hidden = false;
+    }
+
+    banner.querySelectorAll('[data-consent-choice]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const choice = button.getAttribute('data-consent-choice');
+        window.localStorage.setItem(storageKey, choice || 'no');
+        window.dispatchEvent(new CustomEvent('aib:consent-updated', { detail: { analytics: choice === 'yes' } }));
+        banner.hidden = true;
+      });
+    });
+  })();
+</script>
+
+<style>
+  .consent-banner {
+    position: fixed;
+    left: 24px;
+    right: 24px;
+    bottom: 22px;
+    z-index: 80;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .consent-inner {
+    width: min(760px, 100%);
+    background: rgba(251, 248, 241, 0.96);
+    border: 1px solid var(--border-subtle);
+    border-radius: 22px;
+    box-shadow: 0 20px 42px rgba(32, 27, 24, 0.12);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    pointer-events: auto;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  .consent-inner p {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .consent-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .consent-btn {
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    padding: 10px 16px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .consent-btn:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+  }
+  .consent-accept {
+    background: var(--text-primary);
+    color: var(--bg-primary);
+  }
+  @media (max-width: 720px) {
+    .consent-banner {
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+    }
+    .consent-inner {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .consent-actions {
+      width: 100%;
+    }
+    .consent-btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+</style>
