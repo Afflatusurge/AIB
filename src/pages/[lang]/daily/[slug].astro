@@ -1,110 +1,88 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import Footer from '../../../components/Footer.astro';
 import { getDailyBriefs } from '../../../lib/notion';
 import { useTranslations, getLangFromUrl } from '../../../i18n/utils';
 
 export async function getStaticPaths() {
-  const dailyBriefs = await getDailyBriefs();
-
-  return [
-    ...dailyBriefs.flatMap(brief => [
-      { params: { lang: 'en', slug: brief.id }, props: { brief } },
-      { params: { lang: 'ja', slug: brief.id }, props: { brief } },
-      { params: { lang: 'zh', slug: brief.id }, props: { brief } },
-    ])
-  ];
+  const langs: Array<'en' | 'ja' | 'zh'> = ['en', 'ja', 'zh'];
+  const all: any[] = [];
+  for (const l of langs) {
+    const briefs = await getDailyBriefs(l);
+    briefs.forEach((brief, idx) => {
+      all.push({
+        params: { lang: l, slug: brief.slug || brief.id },
+        props: { brief, briefs, idx },
+      });
+    });
+  }
+  return all;
 }
 
 interface Props {
   brief: any;
+  briefs: any[];
+  idx: number;
 }
 
-const { brief } = Astro.props;
+const { brief, briefs, idx } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
-const allBriefs = await getDailyBriefs();
-const briefIndex = allBriefs.findIndex(b => b.id === brief.id);
-const prevBrief = briefIndex > 0 ? allBriefs[briefIndex - 1] : null;
-const nextBrief = briefIndex < allBriefs.length - 1 ? allBriefs[briefIndex + 1] : null;
+const prevBrief = idx > 0 ? briefs[idx - 1] : null;
+const nextBrief = idx < briefs.length - 1 ? briefs[idx + 1] : null;
 ---
 
 <Layout title={`${brief.title} - ${t('site.name')}`}>
-    <article class="max-w-3xl mx-auto">
-        <header class="mb-8">
-            <div class="flex gap-3 mb-4">
-                <span class="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200">
-                    {brief.category}
-                </span>
-                <span class={`text-xs font-bold px-3 py-1 rounded-full ${
-                    brief.impact === 'high' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200' :
-                    brief.impact === 'medium' ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200' :
-                    'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200'
-                }`}>
-                    {brief.impact.toUpperCase()} IMPACT
-                </span>
-            </div>
-            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{brief.title}</h1>
-            <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm">
-                <time datetime={brief.date}>{brief.date}</time>
-                <span>·</span>
-                <span>{brief.category}</span>
-            </div>
+  <section class="page-section">
+    <div class="container">
+      <article class="article fade-in">
+        <header class="article-header">
+          <div class="article-tags">
+            <span class="card-badge">{brief.category || 'AI'}</span>
+            {brief.impact && <span class="card-badge impact-major">{brief.impact}</span>}
+          </div>
+          <h1>{brief.title}</h1>
+          <div class="article-meta">
+            <time datetime={brief.date}>{brief.date}</time>
+            <span>·</span>
+            <span>{brief.category}</span>
+          </div>
         </header>
 
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 mb-8">
-            <div class="prose dark:prose-invert max-w-none">
-                <p class="text-lg leading-relaxed text-slate-700 dark:text-slate-300 mb-6">
-                    {brief.snippet}
-                </p>
-                <h2 class="text-2xl font-bold mt-8 mb-4">Key Takeaways</h2>
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-start gap-3">
-                        <span class="text-blue-600 dark:text-blue-400 mt-1">•</span>
-                        <span>This {brief.category.toLowerCase()} represents a significant opportunity for soloprenuers to improve their business operations.</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <span class="text-blue-600 dark:text-blue-400 mt-1">•</span>
-                        <span>The impact level of {brief.impact} suggests this should be prioritized in your business strategy.</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <span class="text-blue-600 dark:text-blue-400 mt-1">•</span>
-                        <span>Early adoption of these insights can provide a competitive advantage in the AI-powered solopreneur space.</span>
-                    </li>
-                </ul>
-                <h2 class="text-2xl font-bold mt-8 mb-4">What This Means for You</h2>
-                <p class="text-slate-700 dark:text-slate-300 mb-6">
-                    As a solopreneur in the AI space, staying updated with these {brief.category.toLowerCase()} insights is crucial. This daily brief highlights emerging trends, tools, and opportunities that can help you scale your business more efficiently.
-                </p>
-            </div>
+        <div class="article-body">
+          <p>{brief.snippet}</p>
+          {brief.commentary && <p>{brief.commentary}</p>}
+          {brief.sourceUrl && (
+            <p>
+              <a href={brief.sourceUrl} target="_blank" rel="noopener" style="color: var(--accent-cyan);">
+                {lang === 'zh' ? '查看原文 →' : lang === 'ja' ? 'ソースを見る →' : 'View source →'}
+              </a>
+            </p>
+          )}
         </div>
 
-        <!-- Navigation -->
         {(prevBrief || nextBrief) && (
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                {prevBrief ? (
-                    <a href={`/${lang}/daily/${prevBrief.id}/`} class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left">
-                        <div class="text-sm text-slate-500 dark:text-slate-400 mb-1">← Previous</div>
-                        <div class="font-semibold line-clamp-2 hover:text-blue-600">{prevBrief.title}</div>
-                    </a>
-                ) : (
-                    <div />
-                )}
-                {nextBrief ? (
-                    <a href={`/${lang}/daily/${nextBrief.id}/`} class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-right">
-                        <div class="text-sm text-slate-500 dark:text-slate-400 mb-1">Next →</div>
-                        <div class="font-semibold line-clamp-2 hover:text-blue-600">{nextBrief.title}</div>
-                    </a>
-                ) : (
-                    <div />
-                )}
-            </div>
+          <div class="article-nav">
+            {prevBrief ? (
+              <a href={`/${lang}/daily/${prevBrief.slug || prevBrief.id}/`} class="prev">
+                <div class="nav-label">← {lang === 'zh' ? '上一篇' : lang === 'ja' ? '前へ' : 'Previous'}</div>
+                <div class="nav-title">{prevBrief.title}</div>
+              </a>
+            ) : <div />}
+            {nextBrief ? (
+              <a href={`/${lang}/daily/${nextBrief.slug || nextBrief.id}/`} class="next">
+                <div class="nav-label">{lang === 'zh' ? '下一篇' : lang === 'ja' ? '次へ' : 'Next'} →</div>
+                <div class="nav-title">{nextBrief.title}</div>
+              </a>
+            ) : <div />}
+          </div>
         )}
 
-        <!-- Back Link -->
-        <div class="text-center">
-            <a href={`/${lang}/daily/`} class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-                ← Back to {t('nav.daily')}
-            </a>
+        <div class="article-back">
+          <a href={`/${lang}/daily/`}>← {t('nav.daily')}</a>
         </div>
-    </article>
+      </article>
+    </div>
+  </section>
+  <Footer lang={lang} />
 </Layout>

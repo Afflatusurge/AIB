@@ -1,156 +1,79 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import Footer from '../../../components/Footer.astro';
 import { getCaseStudies } from '../../../lib/notion';
 import { useTranslations, getLangFromUrl } from '../../../i18n/utils';
 
 export async function getStaticPaths() {
-  const caseStudies = await getCaseStudies();
-
-  return [
-    ...caseStudies.flatMap(caseStudy => [
-      { params: { lang: 'en', slug: caseStudy.slug }, props: { caseStudy } },
-      { params: { lang: 'ja', slug: caseStudy.slug }, props: { caseStudy } },
-      { params: { lang: 'zh', slug: caseStudy.slug }, props: { caseStudy } },
-    ])
-  ];
+  const langs: Array<'en' | 'ja' | 'zh'> = ['en', 'ja', 'zh'];
+  const all: any[] = [];
+  for (const l of langs) {
+    const cases = await getCaseStudies(l);
+    cases.forEach((cs, idx) => {
+      all.push({
+        params: { lang: l, slug: cs.slug || cs.id },
+        props: { cs, cases, idx },
+      });
+    });
+  }
+  return all;
 }
 
 interface Props {
-  caseStudy: any;
+  cs: any;
+  cases: any[];
+  idx: number;
 }
 
-const { caseStudy } = Astro.props;
+const { cs, cases, idx } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
-const allCases = await getCaseStudies();
-const caseIndex = allCases.findIndex(c => c.slug === caseStudy.slug);
-const prevCase = caseIndex > 0 ? allCases[caseIndex - 1] : null;
-const nextCase = caseIndex < allCases.length - 1 ? allCases[caseIndex + 1] : null;
+const prevCase = idx > 0 ? cases[idx - 1] : null;
+const nextCase = idx < cases.length - 1 ? cases[idx + 1] : null;
 ---
 
-<Layout title={`${caseStudy.title} - ${t('site.name')}`}>
-    <article class="max-w-3xl mx-auto">
-        <header class="mb-8">
-            <div class="flex gap-3 mb-4">
-                <span class="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200">
-                    {caseStudy.industry}
-                </span>
-                <span class="text-xs font-bold px-3 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200">
-                    {caseStudy.revenue}
-                </span>
-            </div>
-            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{caseStudy.title}</h1>
-            <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm">
-                <time datetime={caseStudy.date}>{caseStudy.date}</time>
-                <span>·</span>
-                <span>{caseStudy.industry}</span>
-            </div>
+<Layout title={`${cs.title} - ${t('site.name')}`}>
+  <section class="page-section">
+    <div class="container">
+      <article class="article fade-in">
+        <header class="article-header">
+          <div class="article-tags">
+            {cs.industry && <span class="card-badge">{cs.industry}</span>}
+            {cs.revenue && <span class="card-badge impact-routine">{cs.revenue}</span>}
+          </div>
+          <h1>{cs.title}</h1>
+          <div class="article-meta">
+            <time datetime={cs.date}>{cs.date}</time>
+            {cs.tags && <><span>·</span><span>{cs.tags}</span></>}
+          </div>
         </header>
 
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 mb-8">
-            <div class="prose dark:prose-invert max-w-none">
-                <p class="text-lg leading-relaxed text-slate-700 dark:text-slate-300 mb-6">
-                    {caseStudy.snippet}
-                </p>
-
-                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-8">
-                    <h3 class="font-bold text-blue-900 dark:text-blue-100 mb-2">Key Metrics</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <div class="text-sm text-blue-700 dark:text-blue-300">Revenue Achieved</div>
-                            <div class="text-2xl font-bold text-blue-900 dark:text-blue-100">{caseStudy.revenue}</div>
-                        </div>
-                        <div>
-                            <div class="text-sm text-blue-700 dark:text-blue-300">Industry</div>
-                            <div class="text-2xl font-bold text-blue-900 dark:text-blue-100">{caseStudy.industry}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <h2 class="text-2xl font-bold mt-8 mb-4">The Challenge</h2>
-                <p class="text-slate-700 dark:text-slate-300 mb-6">
-                    This solopreneur faced the common challenge of scaling a business with limited time and resources. By strategically leveraging AI tools and automation, they were able to overcome these constraints and achieve significant growth.
-                </p>
-
-                <h2 class="text-2xl font-bold mt-8 mb-4">The Solution</h2>
-                <p class="text-slate-700 dark:text-slate-300 mb-6">
-                    The key to success was identifying repetitive, high-value tasks and automating them using AI-powered tools. This allowed the solopreneur to focus on core business activities that drive revenue growth.
-                </p>
-
-                <h2 class="text-2xl font-bold mt-8 mb-4">Key Strategies</h2>
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-start gap-3">
-                        <span class="text-green-600 dark:text-green-400 mt-1">✓</span>
-                        <span>Implemented AI-powered workflow automation to save 15+ hours per week</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <span class="text-green-600 dark:text-green-400 mt-1">✓</span>
-                        <span>Used AI writing and content generation tools to scale content production</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <span class="text-green-600 dark:text-green-400 mt-1">✓</span>
-                        <span>Leveraged AI analytics to identify high-value customer segments</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <span class="text-green-600 dark:text-green-400 mt-1">✓</span>
-                        <span>Built scalable systems that don't require additional hiring</span>
-                    </li>
-                </ul>
-
-                <h2 class="text-2xl font-bold mt-8 mb-4">Results</h2>
-                <p class="text-slate-700 dark:text-slate-300 mb-6">
-                    Within a focused time frame, the solopreneur achieved {caseStudy.revenue} in revenue. This case study demonstrates that with the right AI tools and strategies, solo entrepreneurs can compete with much larger teams.
-                </p>
-
-                <h2 class="text-2xl font-bold mt-8 mb-4">Key Takeaways</h2>
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-start gap-3">
-                        <span class="text-indigo-600 dark:text-indigo-400 mt-1">→</span>
-                        <span>AI automation is not just about technology—it's about strategic business growth</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <span class="text-indigo-600 dark:text-indigo-400 mt-1">→</span>
-                        <span>Soloprenuers can achieve enterprise-level results through smart tool selection</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <span class="text-indigo-600 dark:text-indigo-400 mt-1">→</span>
-                        <span>Continuous learning and adaptation are critical for sustained growth</span>
-                    </li>
-                    <li class="flex items-start gap-3">
-                        <span class="text-indigo-600 dark:text-indigo-400 mt-1">→</span>
-                        <span>Community and knowledge-sharing accelerate success in the AI solopreneur space</span>
-                    </li>
-                </ul>
-            </div>
+        <div class="article-body">
+          <p>{cs.snippet}</p>
         </div>
 
-        <!-- Navigation -->
         {(prevCase || nextCase) && (
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                {prevCase ? (
-                    <a href={`/${lang}/cases/${prevCase.slug}/`} class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left">
-                        <div class="text-sm text-slate-500 dark:text-slate-400 mb-1">← Previous</div>
-                        <div class="font-semibold line-clamp-2 hover:text-blue-600">{prevCase.title}</div>
-                    </a>
-                ) : (
-                    <div />
-                )}
-                {nextCase ? (
-                    <a href={`/${lang}/cases/${nextCase.slug}/`} class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-right">
-                        <div class="text-sm text-slate-500 dark:text-slate-400 mb-1">Next →</div>
-                        <div class="font-semibold line-clamp-2 hover:text-blue-600">{nextCase.title}</div>
-                    </a>
-                ) : (
-                    <div />
-                )}
-            </div>
+          <div class="article-nav">
+            {prevCase ? (
+              <a href={`/${lang}/cases/${prevCase.slug || prevCase.id}/`} class="prev">
+                <div class="nav-label">← {lang === 'zh' ? '上一个' : lang === 'ja' ? '前へ' : 'Previous'}</div>
+                <div class="nav-title">{prevCase.title}</div>
+              </a>
+            ) : <div />}
+            {nextCase ? (
+              <a href={`/${lang}/cases/${nextCase.slug || nextCase.id}/`} class="next">
+                <div class="nav-label">{lang === 'zh' ? '下一个' : lang === 'ja' ? '次へ' : 'Next'} →</div>
+                <div class="nav-title">{nextCase.title}</div>
+              </a>
+            ) : <div />}
+          </div>
         )}
 
-        <!-- Back Link -->
-        <div class="text-center">
-            <a href={`/${lang}/cases/`} class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-                ← Back to {t('nav.cases')}
-            </a>
+        <div class="article-back">
+          <a href={`/${lang}/cases/`}>← {t('nav.cases')}</a>
         </div>
-    </article>
+      </article>
+    </div>
+  </section>
+  <Footer lang={lang} />
 </Layout>

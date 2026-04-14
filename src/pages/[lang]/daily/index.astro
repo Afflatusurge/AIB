@@ -1,5 +1,6 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import Footer from '../../../components/Footer.astro';
 import { getDailyBriefs } from '../../../lib/notion';
 import { useTranslations, getLangFromUrl } from '../../../i18n/utils';
 
@@ -14,70 +15,48 @@ export function getStaticPaths() {
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-// Fetch daily briefs from Notion Client
-const dailyBriefs = await getDailyBriefs();
+const dailyBriefs = await getDailyBriefs(lang as 'en' | 'zh' | 'ja');
+
+function impactClass(impact: string): string {
+  const i = (impact || '').toLowerCase();
+  if (i.includes('major') || i === 'high') return 'impact-major';
+  if (i.includes('notable') || i === 'medium') return 'impact-notable';
+  return 'impact-routine';
+}
 ---
 
 <Layout title={`${t('nav.daily')} - ${t('site.name')}`}>
-    <section class="mb-12 animate-fade-in-up">
-        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">{t('nav.daily')}</h1>
-        <p class="text-lg text-slate-600 dark:text-slate-400">
-            {t('section.daily.desc')}
-        </p>
-    </section>
+  <section class="page-section">
+    <div class="container">
+      <div class="page-header fade-in">
+        <h1>{t('nav.daily')}</h1>
+        <p>{t('section.daily.desc')}</p>
+      </div>
 
-    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div class="card-grid">
         {dailyBriefs.map((brief, i) => (
-            <article
-                class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                style={`animation-delay: ${i * 100}ms`}
-            >
-                <div class="flex justify-between items-start mb-3">
-                    <span class="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200">
-                        {brief.category}
-                    </span>
-                    <span class={`text-xs font-bold px-2 py-1 rounded-full ${
-                        brief.impact === 'high' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200' :
-                        brief.impact === 'medium' ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200' :
-                        'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200'
-                    }`}>
-                        {brief.impact.toUpperCase()}
-                    </span>
-                </div>
-                <div class="text-xs text-slate-500 font-medium mb-2">{brief.date}</div>
-                <h2 class="text-lg font-bold mb-3 line-clamp-2 hover:text-blue-600 transition-colors">
-                    <a href={`/${lang}/daily/${brief.id}/`}>
-                        {brief.title}
-                    </a>
-                </h2>
-                <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-3">{brief.snippet}</p>
-                <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
-                    <a href={`/${lang}/daily/${brief.id}/`} class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
-                        {t('read.more')} &rarr;
-                    </a>
-                </div>
-            </article>
+          <article class="content-card fade-in" style={`animation-delay: ${i * 60}ms`}>
+            <div class="card-meta">
+              <span class="card-badge">{brief.category || 'AI'}</span>
+              {brief.impact && <span class={`card-badge ${impactClass(brief.impact)}`}>{brief.impact}</span>}
+            </div>
+            <div class="card-date">{brief.date}</div>
+            <h2>
+              <a href={`/${lang}/daily/${brief.slug || brief.id}/`}>{brief.title}</a>
+            </h2>
+            <p class="card-snippet">{brief.snippet}</p>
+            <div class="card-footer">
+              <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="read-more">
+                {t('read.more')} →
+              </a>
+            </div>
+          </article>
         ))}
         {dailyBriefs.length === 0 && (
-            <div class="col-span-full py-12 text-center text-slate-500">
-                No daily briefs found.
-            </div>
+          <div class="empty-state">No daily briefs yet.</div>
         )}
+      </div>
     </div>
+  </section>
+  <Footer lang={lang} />
 </Layout>
-
-<style>
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-.animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
-}
-</style>
