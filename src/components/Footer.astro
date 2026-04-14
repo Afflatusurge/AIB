@@ -1,0 +1,53 @@
+---
+interface Props {
+  lang: string;
+}
+const { lang } = Astro.props;
+---
+
+<footer class="footer">
+  <div class="max-w-[1200px] mx-auto px-6">
+    <div class="footer-inner">
+      <div class="footer-copy">
+        © {new Date().getFullYear()} AI Solopreneur Guide.
+        {lang === 'zh' ? ' 用AI构建，为AI创业者服务。' : lang === 'ja' ? ' AIで構築、AIソロプレナーのために。' : ' Built with AI, for AI solopreneurs.'}
+      </div>
+      <div class="footer-links">
+        <a href="#">Twitter</a>
+        <a href="#">GitHub</a>
+        <a href={`/${lang}/daily/`}>RSS</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border-subtle);
+    padding: 48px 0;
+    margin-top: 20px;
+  }
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-copy {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .footer-links {
+    display: flex;
+    gap: 24px;
+  }
+  .footer-links a {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text-secondary); }
+  @media (max-width: 768px) {
+    .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>

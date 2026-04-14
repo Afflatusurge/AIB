@@ -8,7 +8,7 @@ interface Props {
   ogImage?: string;
 }
 
-const { title, description = 'AI Solopreneur Guide - Your comprehensive guide to building and scaling AI-powered solo businesses. Daily insights, tool reviews, and proven case studies.', ogImage } = Astro.props;
+const { title, description = 'AI Solopreneur Guide - Your operating system for building and scaling an AI-powered solo business.', ogImage } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
@@ -24,6 +24,11 @@ const languages = ['en', 'ja', 'zh'];
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+
+		<!-- Fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
 		<!-- Canonical URL -->
 		<link rel="canonical" href={canonicalURL} />
@@ -47,37 +52,132 @@ const languages = ['en', 'ja', 'zh'];
 		})}
 		<link rel="alternate" hreflang="x-default" href={new URL('/en/', Astro.site)} />
 	</head>
-	<body class="bg-slate-50 text-slate-900 min-h-screen dark:bg-slate-900 dark:text-slate-50 transition-colors duration-300">
-        <header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-10">
-            <div class="max-w-5xl mx-auto px-6 py-4">
-                <div class="flex justify-between items-center mb-4">
-                    <a href={`/${lang}/`} class="text-2xl font-extrabold bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
-                        {t('site.name')}
-                    </a>
-                    <nav class="flex space-x-4 border border-slate-200 dark:border-slate-700 rounded-full p-1 bg-slate-50 dark:bg-slate-800">
-                        <a href={`/en/`} class={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${lang === 'en' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}>EN</a>
-                        <a href={`/ja/`} class={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${lang === 'ja' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}>JA</a>
-                        <a href={`/zh/`} class={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${lang === 'zh' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}>ZH</a>
-                    </nav>
-                </div>
-                <nav class="flex gap-1 flex-wrap">
-                    <a href={`/${lang}/`} class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${Astro.url.pathname === `/${lang}/` ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+	<body>
+        <header class="header">
+            <div class="header-inner">
+                <a href={`/${lang}/`} class="logo">
+                    AI Solopreneur Guide
+                </a>
+                <nav class="nav-links">
+                    <a href={`/${lang}/`} class={Astro.url.pathname === `/${lang}/` ? 'active' : ''}>
                         {t('nav.home')}
                     </a>
-                    <a href={`/${lang}/daily/`} class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${Astro.url.pathname.startsWith(`/${lang}/daily`) ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    <a href={`/${lang}/daily/`} class={Astro.url.pathname.startsWith(`/${lang}/daily`) ? 'active' : ''}>
                         {t('nav.daily')}
                     </a>
-                    <a href={`/${lang}/tools/`} class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${Astro.url.pathname.startsWith(`/${lang}/tools`) ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    <a href={`/${lang}/tools/`} class={Astro.url.pathname.startsWith(`/${lang}/tools`) ? 'active' : ''}>
                         {t('nav.tools')}
                     </a>
-                    <a href={`/${lang}/cases/`} class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${Astro.url.pathname.startsWith(`/${lang}/cases`) ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                    <a href={`/${lang}/cases/`} class={Astro.url.pathname.startsWith(`/${lang}/cases`) ? 'active' : ''}>
                         {t('nav.cases')}
                     </a>
                 </nav>
+                <div class="lang-switch">
+                    <a href={`/en/`} class={lang === 'en' ? 'active' : ''}>EN</a>
+                    <a href={`/ja/`} class={lang === 'ja' ? 'active' : ''}>JA</a>
+                    <a href={`/zh/`} class={lang === 'zh' ? 'active' : ''}>ZH</a>
+                </div>
             </div>
         </header>
-		<main class="max-w-5xl mx-auto p-6 py-12">
+		<main>
 			<slot />
 		</main>
 	</body>
 </html>
+
+<style is:global>
+  /* Header */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(11,15,26,0.85);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo {
+    font-size: 20px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover,
+  .nav-links a.active {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.06);
+  }
+  .lang-switch {
+    display: flex;
+    gap: 2px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 20px;
+    padding: 3px;
+    border: 1px solid var(--border-subtle);
+  }
+  .lang-switch a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 16px;
+    transition: all 0.2s;
+  }
+  .lang-switch a.active {
+    color: var(--text-primary);
+    background: rgba(139,92,246,0.2);
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  /* Section divider */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .header-inner { flex-wrap: wrap; gap: 12px; }
+  }
+</style>

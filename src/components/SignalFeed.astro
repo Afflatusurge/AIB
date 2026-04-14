@@ -1,0 +1,232 @@
+---
+interface Brief {
+  id: string;
+  title: string;
+  snippet: string;
+  category: string;
+  impact: string;
+  date: string;
+}
+
+interface Props {
+  lang: string;
+  t: (key: string) => string;
+  briefs: Brief[];
+}
+
+const { lang, t, briefs } = Astro.props;
+
+const categoryClass: Record<string, string> = {
+  'LLM': 'llm',
+  'Agent': 'agent',
+  'Business': 'business',
+  'Coding': 'coding',
+  'Hardware': 'hardware',
+  'Image': 'image',
+  'Video': 'video',
+};
+
+const today = new Date().toISOString().split('T')[0];
+const dayNames: Record<string, string[]> = {
+  en: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+  zh: ['周日','周一','周二','周三','周四','周五','周六'],
+  ja: ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
+};
+const dayOfWeek = dayNames[lang]?.[new Date().getDay()] || dayNames.en[new Date().getDay()];
+---
+
+<section class="section-block">
+  <div class="max-w-[1200px] mx-auto px-6">
+    <div class="section-label">// SIGNAL FEED</div>
+    <h2 class="section-title">
+      {lang === 'zh' ? '今日情报' : lang === 'ja' ? '本日のインテリジェンス' : "Today's Intelligence"}
+    </h2>
+    <p class="section-desc">
+      {lang === 'zh' ? '过去24小时AI领域动态 — 按对一人公司的影响排序。' : lang === 'ja' ? '過去24時間のAI動向 — ソロプレナーへの影響度でランキング。' : "What happened in AI in the last 24 hours — ranked by impact on solopreneurs."}
+    </p>
+
+    <div class="signal-feed animate-in">
+      <div class="signal-header">
+        <div class="signal-header-left">
+          <span class="signal-live"><span class="dot"></span> LIVE</span>
+          <span class="signal-title">{t('nav.daily')}</span>
+        </div>
+        <span class="signal-date">{today} · {dayOfWeek}</span>
+      </div>
+      <div class="signal-items">
+        {briefs.length > 0 ? briefs.slice(0, 6).map((brief, i) => (
+          <a href={`/${lang}/daily/${brief.id}/`} class="signal-item">
+            <span class="signal-time">{brief.date?.split('T')[1]?.slice(0,5) || `0${7-i}:00`}</span>
+            <span class={`signal-category ${categoryClass[brief.category] || 'llm'}`}>{brief.category}</span>
+            <div class="signal-text">
+              <h4>{brief.title}</h4>
+              <p>{brief.snippet}</p>
+            </div>
+            <span class={`signal-impact ${brief.impact.toLowerCase()}`}>{brief.impact.toUpperCase()}</span>
+          </a>
+        )) : (
+          <div class="signal-empty">
+            <p>{lang === 'zh' ? '暂无信号数据。连接 Notion 后将显示实时内容。' : lang === 'ja' ? 'シグナルデータがありません。Notion接続後にライブコンテンツが表示されます。' : 'No signal data yet. Live content will appear once Notion is connected.'}</p>
+          </div>
+        )}
+      </div>
+      <div class="signal-footer">
+        <a href={`/${lang}/daily/`}>
+          {lang === 'zh' ? '查看完整简报 →' : lang === 'ja' ? 'フルブリーフを見る →' : 'View Full Brief →'}
+          {briefs.length > 6 && ` ${briefs.length - 6} more signals`}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .section-block { padding: 80px 0; }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-purple);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin-bottom: 40px;
+    max-width: 500px;
+  }
+  .signal-feed {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .signal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.02);
+  }
+  .signal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .signal-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-green);
+  }
+  .signal-live .dot {
+    width: 6px; height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+  .signal-title { font-size: 16px; font-weight: 700; }
+  .signal-date {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .signal-items { padding: 8px; }
+  .signal-item {
+    display: grid;
+    grid-template-columns: 80px 72px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .signal-item:hover { background: rgba(255,255,255,0.03); }
+  .signal-time {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .signal-category {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .signal-category.llm { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+  .signal-category.agent { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+  .signal-category.business { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+  .signal-category.coding { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+  .signal-category.hardware { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
+  .signal-category.image { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+  .signal-category.video { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+  .signal-text h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    line-height: 1.4;
+  }
+  .signal-text p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .signal-impact {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .signal-impact.major { background: rgba(239,68,68,0.15); color: #EF4444; }
+  .signal-impact.notable { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
+  .signal-impact.routine { background: rgba(100,116,139,0.1); color: var(--text-muted); }
+  .signal-empty {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .signal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-subtle);
+    text-align: center;
+  }
+  .signal-footer a {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-purple);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .signal-footer a:hover { color: var(--accent-cyan); }
+  @media (max-width: 768px) {
+    .signal-item {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .signal-time { display: none; }
+  }
+</style>

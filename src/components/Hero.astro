@@ -1,0 +1,153 @@
+---
+interface Props {
+  lang: string;
+  t: (key: string) => string;
+}
+const { lang, t } = Astro.props;
+---
+
+<section class="hero relative py-24 md:py-32 text-center overflow-hidden">
+  <div class="hero-glow"></div>
+  <div class="max-w-4xl mx-auto px-6 relative z-10">
+    <div class="animate-in">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        {lang === 'zh' ? '每日AI策展洞察更新' : lang === 'ja' ? 'AI厳選インサイトを毎日更新' : 'Updated daily with AI-curated insights'}
+      </div>
+    </div>
+    <h1 class="animate-in delay-1 text-5xl md:text-7xl font-black tracking-tighter leading-[1.05] mb-6">
+      {lang === 'zh' ? (
+        <>打造你的<br/><span class="gradient-text">AI一人公司</span></>
+      ) : lang === 'ja' ? (
+        <>AIで始める<br/><span class="gradient-text">ひとり起業</span></>
+      ) : (
+        <>Build a One-Person<br/><span class="gradient-text">AI Business</span></>
+      )}
+    </h1>
+    <p class="animate-in delay-2 text-lg text-[var(--text-secondary)] max-w-xl mx-auto mb-10 leading-relaxed">
+      {lang === 'zh' ? '一站式AI创业操作系统。每日信号、精选工具、验证过的商业路径。' : lang === 'ja' ? 'AIソロビジネスのためのオペレーティングシステム。毎日のシグナル、厳選ツール、検証済みのプレイブック。' : 'Your operating system for building and scaling an AI-powered solo business. Daily signals, vetted tools, and proven playbooks.'}
+    </p>
+    <div class="animate-in delay-3 flex gap-4 justify-center flex-wrap">
+      <a href={`/${lang}/daily/`} class="btn-primary">
+        {lang === 'zh' ? '今日简报 →' : lang === 'ja' ? '今日のブリーフ →' : "Today's Brief →"}
+      </a>
+      <a href={`/${lang}/tools/`} class="btn-secondary">
+        {lang === 'zh' ? '浏览工具' : lang === 'ja' ? 'ツールを見る' : 'Browse Tools'}
+      </a>
+    </div>
+    <div class="animate-in delay-4 hero-stats">
+      <div class="hero-stat">
+        <div class="stat-number">150+</div>
+        <div class="stat-label">{lang === 'zh' ? '追踪信号' : lang === 'ja' ? 'シグナル追跡' : 'Signals Tracked'}</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-number">50+</div>
+        <div class="stat-label">{lang === 'zh' ? 'AI工具评测' : lang === 'ja' ? 'ツールレビュー' : 'Tools Reviewed'}</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-number">30+</div>
+        <div class="stat-label">{lang === 'zh' ? '实战案例' : lang === 'ja' ? 'ケーススタディ' : 'Case Studies'}</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-number">3</div>
+        <div class="stat-label">{lang === 'zh' ? '种语言' : lang === 'ja' ? '言語' : 'Languages'}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 0%, rgba(139,92,246,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 0%, rgba(59,130,246,0.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(139,92,246,0.3);
+    background: rgba(139,92,246,0.08);
+    color: var(--accent-purple);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 28px;
+  }
+  .pulse-dot {
+    width: 8px; height: 8px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    margin-top: 56px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .stat-number {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+  }
+  .stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(139,92,246,0.3);
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: transparent;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s;
+    border: 1px solid var(--border-subtle);
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent-purple);
+    background: rgba(139,92,246,0.06);
+  }
+  @media (max-width: 768px) {
+    .hero-stats { gap: 24px; flex-wrap: wrap; }
+  }
+</style>
