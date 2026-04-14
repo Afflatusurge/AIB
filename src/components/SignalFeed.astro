@@ -37,12 +37,12 @@ const dayOfWeek = dayNames[lang]?.[new Date().getDay()] || dayNames.en[new Date(
 
 <section class="section-block">
   <div class="container">
-    <div class="section-label">// DAILY DESK</div>
+    <div class="section-label">{lang === 'zh' ? '// DAILY BRIEFING' : lang === 'ja' ? '// DAILY BRIEFING' : '// DAILY BRIEFING'}</div>
     <h2 class="section-title">
-      {lang === 'zh' ? '把“新闻流”改成真正可读的简报流' : lang === 'ja' ? 'ニュースの羅列ではなく、読めるブリーフに' : 'Turn the news feed into a readable briefing'}
+      {lang === 'zh' ? '把每天的重要变化整理成简报' : lang === 'ja' ? '毎日の変化を、読めるブリーフに整理する' : 'A daily brief, not a noisy feed'}
     </h2>
     <p class="section-desc">
-      {lang === 'zh' ? '这里保留“快”和“新”，但语气应该更像编辑整理过的版面，而不是实时行情屏。' : lang === 'ja' ? '速さと新しさは保ちつつ、ティッカーではなく編集済みの紙面のように見せます。' : 'Keep the speed of a feed, but present it with the hierarchy and calm of an editorial desk.'}
+      {lang === 'zh' ? '这里保留“快”和“新”，但读起来应该像编辑整理过的版面，而不是信息流。' : lang === 'ja' ? '速さと新しさは保ちつつ、読む体験は情報流ではなく編集済みの紙面に近づけます。' : 'Keep the speed of the news cycle, but present it with the hierarchy and calm of an editorial desk.'}
     </p>
 
     <div class="signal-feed animate-in">
@@ -98,7 +98,7 @@ const dayOfWeek = dayNames[lang]?.[new Date().getDay()] || dayNames.en[new Date(
     font-family: var(--font-display);
     font-size: clamp(2.1rem, 4vw, 3.8rem);
     font-weight: 600;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
     margin-bottom: 16px;
     line-height: 1;
     white-space: nowrap;

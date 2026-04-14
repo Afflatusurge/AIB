@@ -11,12 +11,12 @@ const { lang, briefs, tools, cases } = Astro.props;
 
 <section class="section-block">
   <div class="container">
-    <div class="section-label">// START HERE</div>
+    <div class="section-label">{lang === 'zh' ? '// READING PATHS' : lang === 'ja' ? '// READING PATHS' : '// READING PATHS'}</div>
     <h2 class="section-title">
-      {lang === 'zh' ? '先读哪里，一眼就知道' : lang === 'ja' ? 'どこから読むべきかが一目でわかる' : 'A front page that tells readers where to start'}
+      {lang === 'zh' ? '从哪里开始读，一眼就清楚' : lang === 'ja' ? 'どこから読み始めるかがすぐ分かる' : 'Three ways into the site'}
     </h2>
     <p class="section-desc">
-      {lang === 'zh' ? '内容站首页最重要的任务不是解释功能，而是把不同栏目组织成清晰的阅读路线。' : lang === 'ja' ? 'コンテンツサイトのトップで大事なのは機能説明より、読む導線を見せることです。' : 'A content site should orient before it persuades. These three desks define what readers will find, how often it updates, and why it matters.'}
+      {lang === 'zh' ? '首页最重要的不是解释功能，而是把不同内容组织成清晰的阅读路径。' : lang === 'ja' ? 'トップで大切なのは機能説明ではなく、読む導線をはっきり見せることです。' : 'The homepage should help readers choose a starting point fast: what is new, what is worth evaluating, and what is working in practice.'}
     </p>
 
     <div class="desk-grid">
@@ -99,11 +99,11 @@ const { lang, briefs, tools, cases } = Astro.props;
   }
   .section-title {
     font-family: var(--font-display);
-    font-size: clamp(2.6rem, 5vw, 4.6rem);
+    font-size: clamp(2.1rem, 4vw, 3.4rem);
     font-weight: 600;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
     margin-bottom: 16px;
-    line-height: 0.98;
+    line-height: 1;
   }
   .section-desc {
     color: var(--text-secondary);

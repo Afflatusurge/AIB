@@ -39,20 +39,6 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
           {lang === 'zh' ? '查看案例库' : lang === 'ja' ? 'ケースを探す' : 'Browse case studies'}
         </a>
       </div>
-      <dl class="hero-stats animate-in delay-4">
-        <div class="hero-stat">
-          <dt>{lang === 'zh' ? '内容支柱' : lang === 'ja' ? '柱' : 'Pillars'}</dt>
-          <dd>3</dd>
-        </div>
-        <div class="hero-stat">
-          <dt>{lang === 'zh' ? '更新节奏' : lang === 'ja' ? '更新頻度' : 'Cadence'}</dt>
-          <dd>{lang === 'zh' ? '每日 / 每周' : lang === 'ja' ? '毎日 / 毎週' : 'Daily / Weekly'}</dd>
-        </div>
-        <div class="hero-stat">
-          <dt>{lang === 'zh' ? '语言' : lang === 'ja' ? '言語' : 'Languages'}</dt>
-          <dd>EN / JA / ZH</dd>
-        </div>
-      </dl>
     </div>
 
     <aside class="edition-panel animate-in delay-2">
@@ -87,10 +73,10 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
       </div>
       <p class="edition-note">
         {lang === 'zh'
-          ? '首页应该像编辑精选页，帮助读者在 30 秒内理解站点价值和最新入口。'
+          ? '先从一条 brief、一篇评测、一个案例进入，就能很快读懂这个站。'
           : lang === 'ja'
-            ? 'トップページは編集部の目線で、30秒で読む価値と入口が伝わるべきです。'
-            : 'The homepage should work like a front page: clear value, clear sections, clear next read in under 30 seconds.'}
+            ? 'まずはブリーフ、レビュー、ケースを1本ずつ読むと、このサイトの全体像がつかめます。'
+            : 'Start with one brief, one review, and one case study to understand the shape of the site quickly.'}
       </p>
     </aside>
   </div>
@@ -109,7 +95,7 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.78fr);
     gap: 32px;
-    align-items: end;
+    align-items: start;
   }
   .hero-copy {
     max-width: 760px;
@@ -149,31 +135,6 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 36px;
-  }
-  .hero-stats {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .hero-stat {
-    min-width: 170px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .hero-stat dt {
-    font-size: 0.74rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-bottom: 10px;
-  }
-  .hero-stat dd {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.8rem;
-    line-height: 1;
-    color: var(--text-primary);
   }
   .btn-primary {
     display: inline-flex;
@@ -288,9 +249,6 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
     }
     .hero-sub {
       font-size: 1rem;
-    }
-    .hero-stat {
-      min-width: min(44%, 180px);
     }
     .edition-panel {
       border-radius: 22px;

@@ -46,12 +46,12 @@ const recentReads = [
 
 <section class="section-block">
   <div class="container">
-    <div class="section-label">// FEATURES</div>
+    <div class="section-label">{lang === 'zh' ? '// FEATURED READS' : lang === 'ja' ? '// FEATURED READS' : '// FEATURED READS'}</div>
     <h2 class="section-title">
-      {lang === 'zh' ? '首页应该像一本杂志' : lang === 'ja' ? 'ホームは雑誌のように設計する' : 'Give the homepage the rhythm of a magazine'}
+      {lang === 'zh' ? '今天值得先读的内容' : lang === 'ja' ? '今日まず読むべき記事' : 'Featured reads for today'}
     </h2>
     <p class="section-desc">
-      {lang === 'zh' ? '一个内容站需要“主故事 + 辅助故事 + 最近更新”的节奏。这样读者会更自然地往下读。' : lang === 'ja' ? '主役の記事、補助記事、最近の更新というリズムがあると、読み進めやすくなります。' : 'A strong front page balances one lead story, one supporting feature, and a compact list of recent reads.'}
+      {lang === 'zh' ? '把最值得花时间的一篇评测、一则案例和几条延伸阅读放在一起，读者会更容易继续往下读。' : lang === 'ja' ? '時間をかけて読む価値のあるレビュー、ケース、関連読みに自然につながる並びにします。' : 'Pair one substantial review, one supporting case, and a few related reads so the front page feels edited rather than scattered.'}
     </p>
 
     <div class="feature-grid">
@@ -130,11 +130,11 @@ const recentReads = [
   }
   .section-title {
     font-family: var(--font-display);
-    font-size: clamp(2.4rem, 5vw, 4.4rem);
+    font-size: clamp(2rem, 3.8vw, 3.2rem);
     font-weight: 600;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
     margin-bottom: 16px;
-    line-height: 0.98;
+    line-height: 1;
   }
   .section-desc {
     color: var(--text-secondary);

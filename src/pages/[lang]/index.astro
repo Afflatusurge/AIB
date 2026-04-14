@@ -1,7 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Hero from '../../components/Hero.astro';
-import EditorialPulse from '../../components/EditorialPulse.astro';
 import BentoGrid from '../../components/BentoGrid.astro';
 import SignalFeed from '../../components/SignalFeed.astro';
 import FeaturedCards from '../../components/FeaturedCards.astro';
@@ -48,12 +47,6 @@ const prioritizedCases = leadCase
     leadBrief={leadBrief}
     leadTool={leadTool}
     leadCase={leadCase}
-  />
-  <EditorialPulse
-    lang={lang}
-    briefs={prioritizedBriefs}
-    tools={prioritizedTools}
-    cases={prioritizedCases}
   />
   <div class="section-divider"></div>
   <BentoGrid
