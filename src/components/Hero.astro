@@ -6,16 +6,16 @@ interface Props {
 const { lang, t } = Astro.props;
 ---
 
-<section class="hero relative py-24 md:py-32 text-center overflow-hidden">
+<section class="hero">
   <div class="hero-glow"></div>
-  <div class="max-w-4xl mx-auto px-6 relative z-10">
+  <div class="hero-inner">
     <div class="animate-in">
       <div class="hero-badge">
         <span class="pulse-dot"></span>
         {lang === 'zh' ? '每日AI策展洞察更新' : lang === 'ja' ? 'AI厳選インサイトを毎日更新' : 'Updated daily with AI-curated insights'}
       </div>
     </div>
-    <h1 class="animate-in delay-1 text-5xl md:text-7xl font-black tracking-tighter leading-[1.05] mb-6">
+    <h1 class="hero-title animate-in delay-1">
       {lang === 'zh' ? (
         <>打造你的<br/><span class="gradient-text">AI一人公司</span></>
       ) : lang === 'ja' ? (
@@ -24,10 +24,10 @@ const { lang, t } = Astro.props;
         <>Build a One-Person<br/><span class="gradient-text">AI Business</span></>
       )}
     </h1>
-    <p class="animate-in delay-2 text-lg text-[var(--text-secondary)] max-w-xl mx-auto mb-10 leading-relaxed">
+    <p class="hero-sub animate-in delay-2">
       {lang === 'zh' ? '一站式AI创业操作系统。每日信号、精选工具、验证过的商业路径。' : lang === 'ja' ? 'AIソロビジネスのためのオペレーティングシステム。毎日のシグナル、厳選ツール、検証済みのプレイブック。' : 'Your operating system for building and scaling an AI-powered solo business. Daily signals, vetted tools, and proven playbooks.'}
     </p>
-    <div class="animate-in delay-3 flex gap-4 justify-center flex-wrap">
+    <div class="hero-cta animate-in delay-3">
       <a href={`/${lang}/daily/`} class="btn-primary">
         {lang === 'zh' ? '今日简报 →' : lang === 'ja' ? '今日のブリーフ →' : "Today's Brief →"}
       </a>
@@ -57,6 +57,44 @@ const { lang, t } = Astro.props;
 </section>
 
 <style>
+  .hero {
+    position: relative;
+    padding: 96px 0;
+    overflow: hidden;
+  }
+  @media (min-width: 768px) {
+    .hero { padding: 128px 0; }
+  }
+  .hero-inner {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+  }
+  .hero-title {
+    font-size: clamp(44px, 7vw, 88px);
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+  }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 560px;
+    margin: 0 auto 40px;
+    line-height: 1.65;
+  }
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
   .hero-glow {
     position: absolute;
     inset: 0;
