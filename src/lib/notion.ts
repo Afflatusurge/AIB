@@ -124,6 +124,18 @@ function hasRenderableContent(entry: { title?: string; snippet?: string; slug?: 
   return !!(entry.title && entry.slug && entry.snippet);
 }
 
+function sortByEditorialPriority<T extends { featured?: boolean; date?: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    if (!!a.featured !== !!b.featured) {
+      return a.featured ? -1 : 1;
+    }
+
+    const aTime = a.date ? new Date(a.date).getTime() : 0;
+    const bTime = b.date ? new Date(b.date).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
 // ── Check if Notion is configured ──────────────────────────
 function isConfigured(): boolean {
   return !!(import.meta.env.NOTION_API_KEY);
@@ -158,7 +170,7 @@ export async function getDailyBriefs(lang: Lang = 'en'): Promise<DailyBrief[]> {
       page_size: 100,
     });
 
-    return response.results
+    const briefs = response.results
       .filter((page: any) => isVisibleEntry(page.properties))
       .map((page: any) => {
       const props = page.properties;
@@ -178,6 +190,8 @@ export async function getDailyBriefs(lang: Lang = 'en'): Promise<DailyBrief[]> {
       };
       })
       .filter(hasRenderableContent);
+
+    return sortByEditorialPriority(briefs);
   } catch (err) {
     console.error(`[Notion] Failed to fetch daily briefs (${lang}):`, err);
     return getMockDailyBriefs();
@@ -217,7 +231,7 @@ export async function getToolReviews(lang: Lang = 'en'): Promise<ToolReview[]> {
       page_size: 100,
     });
 
-    return response.results
+    const reviews = response.results
       .filter((page: any) => isVisibleEntry(page.properties))
       .map((page: any) => {
       const props = page.properties;
@@ -241,6 +255,8 @@ export async function getToolReviews(lang: Lang = 'en'): Promise<ToolReview[]> {
       };
       })
       .filter(hasRenderableContent);
+
+    return sortByEditorialPriority(reviews);
   } catch (err) {
     console.error(`[Notion] Failed to fetch tool reviews (${lang}):`, err);
     return getMockToolReviews();
@@ -279,7 +295,7 @@ export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
       page_size: 100,
     });
 
-    return response.results
+    const studies = response.results
       .filter((page: any) => isVisibleEntry(page.properties))
       .map((page: any) => {
       const props = page.properties;
@@ -302,6 +318,8 @@ export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
       };
       })
       .filter(hasRenderableContent);
+
+    return sortByEditorialPriority(studies);
   } catch (err) {
     console.error(`[Notion] Failed to fetch case studies (${lang}):`, err);
     return getMockCaseStudies();
