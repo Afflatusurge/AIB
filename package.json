@@ -14,7 +14,7 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.2",
     "@astrojs/vercel": "^10.0.4",
-    "@notionhq/client": "^5.17.0",
+    "@notionhq/client": "^2.3.0",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.1.5",
     "tailwindcss": "^4.2.2"
