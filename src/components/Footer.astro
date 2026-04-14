@@ -9,13 +9,16 @@ const { lang } = Astro.props;
   <div class="container">
     <div class="footer-inner">
       <div class="footer-copy">
-        © {new Date().getFullYear()} AI Solopreneur Guide.
-        {lang === 'zh' ? ' 用AI构建，为AI创业者服务。' : lang === 'ja' ? ' AIで構築、AIソロプレナーのために。' : ' Built with AI, for AI solopreneurs.'}
+        <strong>{lang === 'zh' ? 'AI一人公司指南' : lang === 'ja' ? 'AIソロプレナーガイド' : 'AI Solopreneur Guide'}</strong>
+        <p>
+          © {new Date().getFullYear()}
+          {lang === 'zh' ? ' 一个关于 AI 一人公司、工具评测与真实案例的内容型网站。' : lang === 'ja' ? ' AIソロプレナーのためのデイリーブリーフ、レビュー、ケーススタディ。' : ' Daily briefs, tool reviews, and case studies for AI-first independent builders.'}
+        </p>
       </div>
       <div class="footer-links">
-        <a href="#">Twitter</a>
-        <a href="#">GitHub</a>
-        <a href={`/${lang}/daily/`}>RSS</a>
+        <a href={`/${lang}/daily/`}>{lang === 'zh' ? 'Daily Brief' : lang === 'ja' ? 'Daily Brief' : 'Daily Brief'}</a>
+        <a href={`/${lang}/tools/`}>{lang === 'zh' ? 'Tool Reviews' : lang === 'ja' ? 'Tool Reviews' : 'Tool Reviews'}</a>
+        <a href={`/${lang}/cases/`}>{lang === 'zh' ? 'Case Studies' : lang === 'ja' ? 'Case Studies' : 'Case Studies'}</a>
       </div>
     </div>
   </div>
@@ -30,24 +33,38 @@ const { lang } = Astro.props;
   .footer-inner {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: end;
+    gap: 20px;
   }
-  .footer-copy {
-    font-size: 13px;
+  .footer-copy strong {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+  .footer-copy p {
+    font-size: 0.86rem;
     color: var(--text-muted);
+    margin-top: 8px;
+    max-width: 34rem;
+    line-height: 1.7;
   }
   .footer-links {
     display: flex;
     gap: 24px;
+    flex-wrap: wrap;
   }
   .footer-links a {
-    font-size: 13px;
+    font-size: 0.82rem;
     color: var(--text-muted);
     text-decoration: none;
     transition: color 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: var(--font-mono);
   }
-  .footer-links a:hover { color: var(--text-secondary); }
+  .footer-links a:hover { color: var(--text-primary); }
   @media (max-width: 768px) {
-    .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+    .footer-inner { flex-direction: column; gap: 16px; align-items: start; }
   }
 </style>

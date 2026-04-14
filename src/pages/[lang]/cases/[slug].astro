@@ -31,27 +31,130 @@ const t = useTranslations(lang);
 const prevCase = idx > 0 ? cases[idx - 1] : null;
 const nextCase = idx < cases.length - 1 ? cases[idx + 1] : null;
 const bodyHtml = await getPageContent(cs.id);
+const relatedCases = cases.filter((item) => item.id !== cs.id).slice(0, 3);
+const caseHeadingMatches = Array.from(bodyHtml.matchAll(/<h2>(.*?)<\/h2>/g));
+const caseHeadingItems = caseHeadingMatches.map((match, i) => ({
+  id: `section-${i + 1}`,
+  title: match[1].replace(/<[^>]+>/g, ''),
+}));
+const caseHeadingQueue = [...caseHeadingItems];
+const processedBodyHtml = caseHeadingMatches.length
+  ? bodyHtml.replace(/<h2>/g, () => {
+      const heading = caseHeadingQueue.shift();
+      return heading ? `<h2 id="${heading.id}">` : '<h2>';
+    })
+  : bodyHtml;
+const caseApplicability = cs.industry
+  ? (lang === 'zh'
+      ? `适合参考 ${cs.industry} 相关业务场景`
+      : lang === 'ja'
+        ? `${cs.industry}周辺の事業に応用しやすい`
+        : `Especially relevant to ${cs.industry} operators`)
+  : (lang === 'zh' ? '适合想用 AI 提高效率或创造新产品的人' : lang === 'ja' ? 'AIで効率化や新規商品化を目指す人向け' : 'Useful for builders exploring AI leverage');
+const caseTakeaway = cs.snippet || (lang === 'zh' ? '建议补充一句“这一案例真正值得学的地方”。' : lang === 'ja' ? 'このケースから学ぶべき一言を補うと強くなります。' : 'Add one sentence on the deepest takeaway from this case.');
+const summaryCards = [
+  {
+    label: lang === 'zh' ? 'Problem' : lang === 'ja' ? 'Problem' : 'Problem',
+    value: cs.problem || cs.industry || (lang === 'zh' ? '业务增长与效率' : lang === 'ja' ? '事業成長と効率化' : 'Growth and operations'),
+  },
+  {
+    label: lang === 'zh' ? 'Outcome' : lang === 'ja' ? 'Outcome' : 'Outcome',
+    value: cs.revenue || (lang === 'zh' ? '结果待补充' : lang === 'ja' ? '結果を補足すると良い' : 'Outcome needs clarification'),
+  },
+  {
+    label: lang === 'zh' ? 'Applicable to' : lang === 'ja' ? 'Applicable to' : 'Applicable to',
+    value: cs.applicableTo || caseApplicability,
+  },
+  {
+    label: lang === 'zh' ? 'Key takeaway' : lang === 'ja' ? 'Key takeaway' : 'Key takeaway',
+    value: cs.takeaway || caseTakeaway,
+  },
+];
+const recommendationIntro = lang === 'zh'
+  ? '沿着问题类型、结果和可复制经验继续看下去。'
+  : lang === 'ja'
+    ? '課題タイプ、成果、再現可能な学びで読み進められます。'
+    : 'Continue by following adjacent problem types, outcomes, and reusable lessons.';
 ---
 
 <Layout title={`${cs.title} - ${t('site.name')}`}>
   <section class="page-section">
     <div class="container">
-      <article class="article fade-in">
-        <header class="article-header">
+      <article class="article-shell fade-in">
+        <header class="article-hero">
+          {cs.coverImage && (
+            <div class="article-cover">
+              <img src={cs.coverImage} alt={cs.title} loading="eager" />
+            </div>
+          )}
           <div class="article-tags">
             {cs.industry && <span class="card-badge">{cs.industry}</span>}
             {cs.revenue && <span class="card-badge impact-routine">{cs.revenue}</span>}
           </div>
           <h1>{cs.title}</h1>
+          {cs.snippet && <p class="article-dek">{cs.snippet}</p>}
           <div class="article-meta">
             <time datetime={cs.date}>{cs.date}</time>
             {cs.tags && <><span>·</span><span>{cs.tags}</span></>}
           </div>
+          <div class="article-lead-grid">
+            <div class="article-lead-note">
+              <p class="article-lead-label">{lang === 'zh' ? 'What changed' : lang === 'ja' ? 'What changed' : 'What changed'}</p>
+              <p>{cs.revenue || cs.takeaway || cs.snippet}</p>
+            </div>
+            <div class="article-lead-note alt">
+              <p class="article-lead-label">{lang === 'zh' ? 'Why this case matters' : lang === 'ja' ? 'Why this case matters' : 'Why this case matters'}</p>
+              <p>{cs.applicableTo || cs.takeaway || caseApplicability}</p>
+            </div>
+          </div>
         </header>
 
-        <div class="article-body">
-          {cs.snippet && <p class="lead">{cs.snippet}</p>}
-          {bodyHtml && <Fragment set:html={bodyHtml} />}
+        <div class="article-layout">
+          <aside class="article-rail">
+            <div class="rail-card">
+              <p class="rail-label">{lang === 'zh' ? 'Case snapshot' : lang === 'ja' ? 'Case snapshot' : 'Case snapshot'}</p>
+              <ul class="rail-list">
+                <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.cases')}</span></li>
+                <li><strong>{lang === 'zh' ? '领域' : lang === 'ja' ? '領域' : 'Industry'}</strong><span>{cs.industry || 'Business'}</span></li>
+                <li><strong>{lang === 'zh' ? '问题类型' : lang === 'ja' ? '課題タイプ' : 'Problem type'}</strong><span>{cs.problemType || 'N/A'}</span></li>
+                <li><strong>{lang === 'zh' ? '结果' : lang === 'ja' ? '結果' : 'Outcome'}</strong><span>{cs.revenue || 'N/A'}</span></li>
+              </ul>
+            </div>
+            {caseHeadingItems.length > 0 && (
+              <div class="rail-card">
+                <p class="rail-label">{lang === 'zh' ? 'On this page' : lang === 'ja' ? 'On this page' : 'On this page'}</p>
+                <ul class="related-list">
+                  {caseHeadingItems.map((item) => (
+                    <li><a href={`#${item.id}`}>{item.title}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {relatedCases.length > 0 && (
+              <div class="rail-card">
+                <p class="rail-label">{lang === 'zh' ? 'More cases' : lang === 'ja' ? 'More cases' : 'More cases'}</p>
+                <ul class="related-list">
+                  {relatedCases.map((item) => (
+                    <li><a href={`/${lang}/cases/${item.slug || item.id}/`}>{item.title}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </aside>
+
+          <div class="article-column">
+            <div class="summary-grid">
+              {summaryCards.map((card) => (
+                <section class="summary-card">
+                  <p class="summary-label">{card.label}</p>
+                  <div class="summary-value">{card.value}</div>
+                </section>
+              ))}
+            </div>
+            <div class="article-body">
+              {processedBodyHtml && <Fragment set:html={processedBodyHtml} />}
+            </div>
+          </div>
         </div>
 
         {(prevCase || nextCase) && (
@@ -69,6 +172,33 @@ const bodyHtml = await getPageContent(cs.id);
               </a>
             ) : <div />}
           </div>
+        )}
+
+        {relatedCases.length > 0 && (
+          <section class="article-recommendations">
+            <div class="article-recommendations-head">
+              <p class="article-recommendations-kicker">{lang === 'zh' ? 'Continue reading' : lang === 'ja' ? 'Continue reading' : 'Continue reading'}</p>
+              <h2>{lang === 'zh' ? '更多案例拆解' : lang === 'ja' ? 'More case breakdowns' : 'More case breakdowns'}</h2>
+              <p>{recommendationIntro}</p>
+            </div>
+            <div class="article-recommendations-grid">
+              {relatedCases.map((item) => (
+                <a href={`/${lang}/cases/${item.slug || item.id}/`} class="article-rec-card">
+                  {item.coverImage && (
+                    <div class="article-rec-cover">
+                      <img src={item.coverImage} alt={item.title} loading="lazy" />
+                    </div>
+                  )}
+                  <div class="article-rec-meta">
+                    <span>{item.problemType || item.industry || 'Case'}</span>
+                    <span>{item.revenue || item.tags || 'Outcome'}</span>
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.takeaway || item.snippet}</p>
+                </a>
+              ))}
+            </div>
+          </section>
         )}
 
         <div class="article-back">

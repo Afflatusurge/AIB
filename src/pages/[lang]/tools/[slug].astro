@@ -32,18 +32,68 @@ const prevTool = idx > 0 ? tools[idx - 1] : null;
 const nextTool = idx < tools.length - 1 ? tools[idx + 1] : null;
 const rating = Number(tool.rating) || 0;
 const bodyHtml = await getPageContent(tool.id);
+const relatedTools = tools.filter((item) => item.id !== tool.id).slice(0, 3);
+const toolHeadingMatches = Array.from(bodyHtml.matchAll(/<h2>(.*?)<\/h2>/g));
+const toolHeadingItems = toolHeadingMatches.map((match, i) => ({
+  id: `section-${i + 1}`,
+  title: match[1].replace(/<[^>]+>/g, ''),
+}));
+const toolHeadingQueue = [...toolHeadingItems];
+const processedBodyHtml = toolHeadingMatches.length
+  ? bodyHtml.replace(/<h2>/g, () => {
+      const heading = toolHeadingQueue.shift();
+      return heading ? `<h2 id="${heading.id}">` : '<h2>';
+    })
+  : bodyHtml;
+const toolBestFor = tool.category
+  ? (lang === 'zh'
+      ? `${tool.category} 相关的一人工作流`
+      : lang === 'ja'
+        ? `${tool.category}系の個人ワークフロー`
+        : `${tool.category} workflows for solo builders`)
+  : (lang === 'zh' ? '需要提高产出的独立创作者和开发者' : lang === 'ja' ? '生産性を上げたい個人制作者や開発者' : 'Independent builders who need leverage');
+const toolWorkflowFit = tool.snippet || (lang === 'zh' ? '建议补充这款工具在真实工作流中的位置。' : lang === 'ja' ? '実際のワークフロー内での位置づけを補足したい。' : 'Add a clearer note on where this fits inside a real workflow.');
+const summaryCards = [
+  {
+    label: lang === 'zh' ? 'Verdict' : lang === 'ja' ? 'Verdict' : 'Verdict',
+    value: tool.verdict || (rating >= 4.5 ? (lang === 'zh' ? '优先尝试' : lang === 'ja' ? '優先して試す価値あり' : 'High-priority pick') : rating >= 4 ? (lang === 'zh' ? '值得评估' : lang === 'ja' ? '十分に検討価値あり' : 'Worth evaluating') : (lang === 'zh' ? '按需考虑' : lang === 'ja' ? '必要に応じて検討' : 'Situational option')),
+  },
+  {
+    label: lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for',
+    value: tool.bestFor || toolBestFor,
+  },
+  {
+    label: lang === 'zh' ? 'Pricing' : lang === 'ja' ? 'Pricing' : 'Pricing',
+    value: tool.pricing || 'N/A',
+  },
+  {
+    label: lang === 'zh' ? 'Workflow fit' : lang === 'ja' ? 'Workflow fit' : 'Workflow fit',
+    value: tool.workflowFit || toolWorkflowFit,
+  },
+];
+const recommendationIntro = lang === 'zh'
+  ? '继续沿着工具栈、工作流和真实使用场景往下读。'
+  : lang === 'ja'
+    ? 'ツール、ワークフロー、実運用の流れで読み進められます。'
+    : 'Keep going through adjacent tools, workflow fits, and real operator use cases.';
 ---
 
 <Layout title={`${tool.title} - ${t('site.name')}`}>
   <section class="page-section">
     <div class="container">
-      <article class="article fade-in">
-        <header class="article-header">
+      <article class="article-shell fade-in">
+        <header class="article-hero">
+          {tool.coverImage && (
+            <div class="article-cover">
+              <img src={tool.coverImage} alt={tool.title} loading="eager" />
+            </div>
+          )}
           <div class="article-tags">
             {tool.category && <span class="card-badge">{tool.category}</span>}
             {tool.pricing && <span class="card-badge impact-notable">{tool.pricing}</span>}
           </div>
           <h1>{tool.title}</h1>
+          {tool.snippet && <p class="article-dek">{tool.snippet}</p>}
           <div class="article-meta">
             <span class="rating">
               {[0,1,2,3,4].map((s) => (
@@ -54,18 +104,70 @@ const bodyHtml = await getPageContent(tool.id);
             <span>·</span>
             <time datetime={tool.date}>{tool.date}</time>
           </div>
+          <div class="article-lead-grid">
+            <div class="article-lead-note">
+              <p class="article-lead-label">{lang === 'zh' ? 'Editor’s take' : lang === 'ja' ? 'Editor’s take' : 'Editor’s take'}</p>
+              <p>{tool.verdict || tool.takeaway || tool.workflowFit || tool.snippet}</p>
+            </div>
+            <div class="article-lead-note alt">
+              <p class="article-lead-label">{lang === 'zh' ? 'Best fit' : lang === 'ja' ? 'Best fit' : 'Best fit'}</p>
+              <p>{tool.bestFor || toolBestFor}</p>
+            </div>
+          </div>
         </header>
 
-        <div class="article-body">
-          {tool.snippet && <p class="lead">{tool.snippet}</p>}
-          {bodyHtml && <Fragment set:html={bodyHtml} />}
-          {tool.url && (
-            <p>
-              <a href={tool.url} target="_blank" rel="noopener" style="color: var(--accent-cyan);">
-                {lang === 'zh' ? '访问官网 →' : lang === 'ja' ? '公式サイトへ →' : 'Visit official site →'}
-              </a>
-            </p>
-          )}
+        <div class="article-layout">
+          <aside class="article-rail">
+            <div class="rail-card">
+              <p class="rail-label">{lang === 'zh' ? 'Review snapshot' : lang === 'ja' ? 'Review snapshot' : 'Review snapshot'}</p>
+              <ul class="rail-list">
+                <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.tools')}</span></li>
+                <li><strong>{lang === 'zh' ? '类别' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{tool.category || 'AI'}</span></li>
+                <li><strong>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '対象' : 'Best for'}</strong><span>{tool.bestFor || 'N/A'}</span></li>
+                <li><strong>{lang === 'zh' ? '价格' : lang === 'ja' ? '価格' : 'Pricing'}</strong><span>{tool.pricing || 'N/A'}</span></li>
+                <li><strong>{lang === 'zh' ? '评分' : lang === 'ja' ? '評価' : 'Rating'}</strong><span>{rating}/5</span></li>
+              </ul>
+              {tool.url && (
+                <a class="rail-link" href={tool.url} target="_blank" rel="noopener">
+                  {lang === 'zh' ? '访问官网 →' : lang === 'ja' ? '公式サイトへ →' : 'Visit official site →'}
+                </a>
+              )}
+            </div>
+            {toolHeadingItems.length > 0 && (
+              <div class="rail-card">
+                <p class="rail-label">{lang === 'zh' ? 'On this page' : lang === 'ja' ? 'On this page' : 'On this page'}</p>
+                <ul class="related-list">
+                  {toolHeadingItems.map((item) => (
+                    <li><a href={`#${item.id}`}>{item.title}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {relatedTools.length > 0 && (
+              <div class="rail-card">
+                <p class="rail-label">{lang === 'zh' ? 'More reviews' : lang === 'ja' ? 'More reviews' : 'More reviews'}</p>
+                <ul class="related-list">
+                  {relatedTools.map((item) => (
+                    <li><a href={`/${lang}/tools/${item.slug || item.id}/`}>{item.title}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </aside>
+
+          <div class="article-column">
+            <div class="summary-grid">
+              {summaryCards.map((card) => (
+                <section class="summary-card">
+                  <p class="summary-label">{card.label}</p>
+                  <div class="summary-value">{card.value}</div>
+                </section>
+              ))}
+            </div>
+            <div class="article-body">
+              {processedBodyHtml && <Fragment set:html={processedBodyHtml} />}
+            </div>
+          </div>
         </div>
 
         {(prevTool || nextTool) && (
@@ -83,6 +185,33 @@ const bodyHtml = await getPageContent(tool.id);
               </a>
             ) : <div />}
           </div>
+        )}
+
+        {relatedTools.length > 0 && (
+          <section class="article-recommendations">
+            <div class="article-recommendations-head">
+              <p class="article-recommendations-kicker">{lang === 'zh' ? 'Continue reading' : lang === 'ja' ? 'Continue reading' : 'Continue reading'}</p>
+              <h2>{lang === 'zh' ? '更多工具评测' : lang === 'ja' ? 'More reviews' : 'More reviews'}</h2>
+              <p>{recommendationIntro}</p>
+            </div>
+            <div class="article-recommendations-grid">
+              {relatedTools.map((item) => (
+                <a href={`/${lang}/tools/${item.slug || item.id}/`} class="article-rec-card">
+                  {item.coverImage && (
+                    <div class="article-rec-cover">
+                      <img src={item.coverImage} alt={item.title} loading="lazy" />
+                    </div>
+                  )}
+                  <div class="article-rec-meta">
+                    <span>{item.category || 'AI'}</span>
+                    <span>{item.bestFor || item.pricing || 'Review'}</span>
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.takeaway || item.snippet}</p>
+                </a>
+              ))}
+            </div>
+          </section>
         )}
 
         <div class="article-back">

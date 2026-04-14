@@ -1,43 +1,129 @@
-# Astro Starter Kit: Minimal
+# AIandBusiness 2.0
 
-```sh
-npm create astro@latest -- --template minimal
+Astro front end for the new `aiandbusiness.com`, with Notion as CMS, Vercel deployment, and a multilingual content model for:
+
+- `Daily Brief`
+- `Tool Reviews`
+- `Case Studies`
+
+## Local commands
+
+```bash
+npm install
+npm run dev
+npm run build
+npm run preview
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Environment variables
 
-## 🚀 Project Structure
+Create a `.env` file with:
 
-Inside of your Astro project, you'll see the following folders and files:
+```bash
+NOTION_API_KEY=
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+NOTION_DB_DAILY_EN=
+NOTION_DB_DAILY_JA=
+NOTION_DB_DAILY_ZH=
+
+NOTION_DB_TOOLS_EN=
+NOTION_DB_TOOLS_JA=
+NOTION_DB_TOOLS_ZH=
+
+NOTION_DB_CASES_EN=
+NOTION_DB_CASES_JA=
+NOTION_DB_CASES_ZH=
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+If Notion is unavailable during build, the site falls back to mock data so the front end can still render.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## Recommended Notion properties
 
-Any static assets, like images, can be placed in the `public/` directory.
+The front end now supports multiple aliases for editorial fields. You do not need every field, but adding them will make the site feel much more structured.
 
-## 🧞 Commands
+### Daily Brief
 
-All commands are run from the root of the project, from a terminal:
+Required:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+- `Title`
+- `Summary`
+- `Category`
+- `Impact`
+- `Date`
+- `Slug`
 
-## 👀 Want to learn more?
+Optional:
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- `Source URL`
+- `Commentary`
+- `Why It Matters`
+- `Featured` or `Lead` or `Homepage`
+
+### Tool Reviews
+
+Required:
+
+- `Tool Name` or `Title`
+- `Tagline` or `Summary`
+- `Pricing`
+- `Rating`
+- `Publish Date`
+- `Slug`
+
+Optional:
+
+- `Category`
+- `Official URL`
+- `Verdict`
+- `Best For`
+- `Workflow Fit`
+- `Key Takeaway`
+- `Featured` or `Lead` or `Homepage`
+
+### Case Studies
+
+Required:
+
+- `Title`
+- `Subtitle` or `Summary`
+- `Industry`
+- `Revenue Impact` or `Revenue`
+- `Publish Date`
+- `Slug`
+
+Optional:
+
+- `AI Tools Used` or `Tags`
+- `Problem`
+- `Applicable To`
+- `Key Takeaway`
+- `Featured` or `Lead` or `Homepage`
+
+## Editorial behavior wired into the front end
+
+- Homepage and list pages prioritize entries marked `Featured`, then fall back to the newest entry.
+- Article pages render summary cards before the main body.
+- Article pages auto-generate an `On this page` rail from `h2` headings.
+- Tool and case article summaries now prefer structured Notion fields over inferred fallback copy.
+
+## Current direction
+
+The site is intentionally moving away from a SaaS-style landing page and toward an editorial publication:
+
+- stronger hierarchy
+- front-page style sectioning
+- structured article summaries
+- more readable long-form layouts
+- clearer distinction between briefs, reviews, and cases
+
+## Next recommended step
+
+Push the Notion schema a bit further so article templates can rely on real editorial fields for:
+
+- `verdict`
+- `best for`
+- `workflow fit`
+- `key takeaway`
+- `featured`
+
+Once those fields are consistently populated, we can tighten the design again and reduce fallback copy throughout the site.

@@ -2,90 +2,80 @@
 interface Props {
   lang: string;
   t: (key: string) => string;
+  briefs: Array<{ title: string; slug: string; category?: string; commentary?: string }>;
+  tools: Array<{ title: string; slug: string; category?: string; pricing?: string; bestFor?: string }>;
+  cases: Array<{ title: string; slug: string; industry?: string; revenue?: string; problemType?: string }>;
 }
-const { lang, t } = Astro.props;
-
-const cards = [
-  {
-    icon: '📡',
-    iconClass: 'purple',
-    size: 'large',
-    title: { en: 'Daily Brief', zh: '每日简报', ja: 'デイリーブリーフ' },
-    desc: { en: 'AI-curated daily intelligence feed. Model launches, funding rounds, policy changes, and solopreneur opportunities — filtered by impact.', zh: 'AI策展的每日情报。模型发布、融资动态、政策变化和创业机会，按影响力过滤排序。', ja: 'AI厳選のデイリーインテリジェンス。モデルリリース、資金調達、政策変更、起業チャンスを影響度で分類。' },
-    tag: 'LIVE FEED',
-    meta: { en: 'Updated today at 07:00 UTC', zh: '今日 07:00 UTC 更新', ja: '本日 07:00 UTC 更新' },
-    href: `/${lang}/daily/`,
-    delay: '',
-  },
-  {
-    icon: '🔧',
-    iconClass: 'blue',
-    size: 'medium',
-    title: { en: 'AI Tool Reviews', zh: 'AI工具评测', ja: 'AIツールレビュー' },
-    desc: { en: 'Hands-on reviews with real benchmarks, pricing breakdowns, and workflow integration guides for solopreneurs.', zh: '实测评测：真实基准测试、定价分析和工作流集成指南。', ja: '実際のベンチマーク、価格分析、ワークフロー統合ガイド付きレビュー。' },
-    tag: '50+ TOOLS',
-    meta: { en: 'Updated weekly', zh: '每周更新', ja: '毎週更新' },
-    href: `/${lang}/tools/`,
-    delay: 'delay-1',
-  },
-  {
-    icon: '📊',
-    iconClass: 'green',
-    size: 'third',
-    title: { en: 'Case Studies', zh: '实战案例', ja: 'ケーススタディ' },
-    desc: { en: 'Real solopreneurs building real businesses with AI. Revenue numbers, tech stacks, and breakdowns.', zh: '真实的AI创业者案例。收入数据、技术栈和详细拆解。', ja: '実在のAI起業家の事例。収益、技術スタック、詳細分析。' },
-    tag: '30+ CASES',
-    meta: null,
-    href: `/${lang}/cases/`,
-    delay: 'delay-1',
-  },
-  {
-    icon: '⚡',
-    iconClass: 'cyan',
-    size: 'third',
-    title: { en: 'Workflows', zh: '自动化流程', ja: 'ワークフロー' },
-    desc: { en: 'Copy-paste automation blueprints. n8n, Zapier, and Make templates for solopreneur operations.', zh: '即用型自动化模板。n8n、Zapier、Make 工作流蓝图。', ja: 'コピペで使える自動化テンプレート。n8n、Zapier、Make対応。' },
-    tag: 'COMING SOON',
-    meta: null,
-    href: '#',
-    delay: 'delay-2',
-  },
-  {
-    icon: '🧭',
-    iconClass: 'amber',
-    size: 'third',
-    title: { en: 'Playbook', zh: '创业手册', ja: 'プレイブック' },
-    desc: { en: 'From zero to revenue: structured guides for launching your AI solopreneur journey.', zh: '从零到盈利：AI一人公司创业结构化指南。', ja: 'ゼロから収益へ：AIソロ起業の構造化ガイド。' },
-    tag: 'COMING SOON',
-    meta: null,
-    href: '#',
-    delay: 'delay-3',
-  },
-];
+const { lang, briefs, tools, cases } = Astro.props;
 ---
 
 <section class="section-block">
   <div class="container">
-    <div class="section-label">// NAVIGATE</div>
+    <div class="section-label">// START HERE</div>
     <h2 class="section-title">
-      {lang === 'zh' ? 'AI一人公司操作系统' : lang === 'ja' ? 'AIソロプレナーOS' : 'Your AI Solopreneur OS'}
+      {lang === 'zh' ? '先读哪里，一眼就知道' : lang === 'ja' ? 'どこから読むべきかが一目でわかる' : 'A front page that tells readers where to start'}
     </h2>
     <p class="section-desc">
-      {lang === 'zh' ? '启动和发展AI一人公司所需的一切，组织成可执行的系统。' : lang === 'ja' ? 'AIソロビジネスに必要なすべてを、実行可能なシステムに。' : 'Everything you need to launch and grow a one-person AI business, organized into actionable systems.'}
+      {lang === 'zh' ? '内容站首页最重要的任务不是解释功能，而是把不同栏目组织成清晰的阅读路线。' : lang === 'ja' ? 'コンテンツサイトのトップで大事なのは機能説明より、読む導線を見せることです。' : 'A content site should orient before it persuades. These three desks define what readers will find, how often it updates, and why it matters.'}
     </p>
 
-    <div class="bento-grid">
-      {cards.map((card) => (
-        <a href={card.href} class={`bento-card ${card.size} animate-in ${card.delay}`}>
-          <div class={`bento-icon ${card.iconClass}`}>{card.icon}</div>
-          <h3>{card.title[lang as keyof typeof card.title] || card.title.en}</h3>
-          <p>{card.desc[lang as keyof typeof card.desc] || card.desc.en}</p>
-          <div class="bento-meta">
-            <span class="bento-tag">{card.tag}</span>
-            {card.meta && <span class="bento-count">{card.meta[lang as keyof typeof card.meta] || card.meta.en}</span>}
-          </div>
-        </a>
-      ))}
+    <div class="desk-grid">
+      <article class="desk-card animate-in">
+        <div class="desk-topline">
+          <span class="desk-tag">01</span>
+          <a href={`/${lang}/daily/`} class="desk-link">{lang === 'zh' ? '进入每日简报' : lang === 'ja' ? 'デイリーブリーフへ' : 'Open daily brief'}</a>
+        </div>
+        <h3>{lang === 'zh' ? 'Daily Brief' : lang === 'ja' ? 'Daily Brief' : 'Daily Brief'}</h3>
+        <p>{lang === 'zh' ? '每天 3 到 5 条值得看、且对 AI 一人公司真有影响的更新。' : lang === 'ja' ? '毎日3〜5本、AIソロ事業に本当に影響のある更新だけ。' : 'Three to five updates a day, filtered for actual relevance to AI solopreneurs.'}</p>
+        <ul class="desk-list">
+          {briefs.length > 0 ? briefs.map((brief) => (
+            <li>
+              <a href={`/${lang}/daily/${brief.slug}/`}>{brief.title}</a>
+              <span>{brief.commentary || brief.category || (lang === 'zh' ? '信号' : lang === 'ja' ? 'シグナル' : 'Signal')}</span>
+            </li>
+          )) : (
+            <li class="empty-row">{lang === 'zh' ? 'Notion 内容接入后会显示最新条目。' : lang === 'ja' ? 'Notion接続後に最新記事を表示します。' : 'Latest entries will appear here once Notion is connected.'}</li>
+          )}
+        </ul>
+      </article>
+
+      <article class="desk-card animate-in delay-1">
+        <div class="desk-topline">
+          <span class="desk-tag">02</span>
+          <a href={`/${lang}/tools/`} class="desk-link">{lang === 'zh' ? '浏览工具评测' : lang === 'ja' ? 'ツールレビューへ' : 'Browse reviews'}</a>
+        </div>
+        <h3>{lang === 'zh' ? 'Tool Deep Dives' : lang === 'ja' ? 'Tool Deep Dives' : 'Tool Deep Dives'}</h3>
+        <p>{lang === 'zh' ? '用结构化评测替代纯工具目录，重点回答值不值得用、适合谁、怎样接入工作流。' : lang === 'ja' ? '単なるツール一覧ではなく、価値、対象読者、ワークフロー適合性を評価します。' : 'Structured reviews that answer whether a tool is worth the money, who it serves, and how it fits a real workflow.'}</p>
+        <ul class="desk-list">
+          {tools.length > 0 ? tools.map((tool) => (
+            <li>
+              <a href={`/${lang}/tools/${tool.slug}/`}>{tool.title}</a>
+              <span>{tool.bestFor || tool.pricing || tool.category || 'AI'}</span>
+            </li>
+          )) : (
+            <li class="empty-row">{lang === 'zh' ? '优先把高质量旧文迁成首批评测。' : lang === 'ja' ? '旧記事の良質コンテンツから最初のレビューを整備。' : 'Migrate the best legacy pages into your first review set.'}</li>
+          )}
+        </ul>
+      </article>
+
+      <article class="desk-card animate-in delay-2">
+        <div class="desk-topline">
+          <span class="desk-tag">03</span>
+          <a href={`/${lang}/cases/`} class="desk-link">{lang === 'zh' ? '查看案例' : lang === 'ja' ? 'ケースを見る' : 'View case studies'}</a>
+        </div>
+        <h3>{lang === 'zh' ? 'Case Studies' : lang === 'ja' ? 'Case Studies' : 'Case Studies'}</h3>
+        <p>{lang === 'zh' ? '把过去按行业散落的内容重组为“问题导向”的案例库，更贴近创业者决策。' : lang === 'ja' ? '業界別の断片的な情報を、課題別のケースに再構成します。' : 'Reframe scattered industry pages into problem-led cases about growth, operations, and productization.'}</p>
+        <ul class="desk-list">
+          {cases.length > 0 ? cases.map((item) => (
+            <li>
+              <a href={`/${lang}/cases/${item.slug}/`}>{item.title}</a>
+              <span>{item.problemType || item.revenue || item.industry || (lang === 'zh' ? '案例' : lang === 'ja' ? 'ケース' : 'Case')}</span>
+            </li>
+          )) : (
+            <li class="empty-row">{lang === 'zh' ? '下一阶段适合把旧站行业页改写成案例库。' : lang === 'ja' ? '次の段階で業界ページをケースへ再編集。' : 'Next phase: rewrite legacy industry pages into strong case studies.'}</li>
+          )}
+        </ul>
+      </article>
     </div>
   </div>
 </section>
@@ -96,100 +86,107 @@ const cards = [
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent-purple);
+    color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 12px;
   }
   .section-title {
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 5vw, 4.6rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
     margin-bottom: 16px;
+    line-height: 0.98;
   }
   .section-desc {
     color: var(--text-secondary);
-    font-size: 16px;
+    font-size: 1rem;
     margin-bottom: 40px;
-    max-width: 500px;
+    max-width: 700px;
+    line-height: 1.75;
   }
-  .bento-grid {
+  .desk-grid {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
   }
-  .bento-card {
+  .desk-card {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: 16px;
-    padding: 28px;
+    border-radius: 24px;
+    padding: 24px;
     transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    text-decoration: none;
-    color: inherit;
     display: flex;
     flex-direction: column;
-    position: relative;
-    overflow: hidden;
+    min-height: 420px;
   }
-  .bento-card:hover {
+  .desk-card:hover {
     transform: translateY(-4px);
     background: var(--bg-card-hover);
-    border-color: rgba(139,92,246,0.3);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    border-color: var(--border-hover);
   }
-  .bento-card.large { grid-column: span 7; }
-  .bento-card.medium { grid-column: span 5; }
-  .bento-card.third { grid-column: span 4; }
-  .bento-icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
+  .desk-topline {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    margin-bottom: 20px;
-  }
-  .bento-icon.purple { background: rgba(139,92,246,0.15); }
-  .bento-icon.blue { background: rgba(59,130,246,0.15); }
-  .bento-icon.cyan { background: rgba(6,182,212,0.15); }
-  .bento-icon.green { background: rgba(16,185,129,0.15); }
-  .bento-icon.amber { background: rgba(245,158,11,0.15); }
-  .bento-card h3 {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-  .bento-card p {
-    color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.6;
-    flex: 1;
-  }
-  .bento-meta {
-    display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 12px;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-subtle);
+    margin-bottom: 18px;
   }
-  .bento-tag {
+  .desk-tag {
     font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: rgba(139,92,246,0.1);
-    color: var(--accent-purple);
+    font-size: 0.74rem;
+    color: var(--accent);
   }
-  .bento-count {
-    font-family: var(--font-mono);
-    font-size: 12px;
+  .desk-link {
+    font-size: 0.84rem;
     color: var(--text-muted);
   }
+  .desk-card h3 {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 0.98;
+    margin-bottom: 12px;
+  }
+  .desk-card p {
+    color: var(--text-secondary);
+    font-size: 0.96rem;
+    line-height: 1.75;
+    margin-bottom: 22px;
+  }
+  .desk-list {
+    list-style: none;
+    padding: 0;
+    margin: auto 0 0;
+    display: grid;
+    gap: 12px;
+  }
+  .desk-list li {
+    display: grid;
+    gap: 6px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .desk-list a {
+    color: var(--text-primary);
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .desk-list span,
+  .empty-row {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .empty-row {
+    line-height: 1.7;
+  }
   @media (max-width: 768px) {
-    .bento-card.large,
-    .bento-card.medium,
-    .bento-card.third { grid-column: span 12; }
+    .section-block { padding: 64px 0; }
+    .desk-grid { grid-template-columns: 1fr; }
+    .desk-card {
+      min-height: unset;
+      border-radius: 20px;
+    }
   }
 </style>

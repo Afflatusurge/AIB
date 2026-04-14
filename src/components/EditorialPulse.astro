@@ -1,0 +1,212 @@
+---
+interface Brief {
+  title: string;
+  slug: string;
+  category?: string;
+  impact?: string;
+  date?: string;
+}
+
+interface Tool {
+  title: string;
+  slug: string;
+  category?: string;
+  bestFor?: string;
+  date?: string;
+}
+
+interface Case {
+  title: string;
+  slug: string;
+  problemType?: string;
+  industry?: string;
+  date?: string;
+}
+
+interface Props {
+  lang: string;
+  briefs: Brief[];
+  tools: Tool[];
+  cases: Case[];
+}
+
+const { lang, briefs, tools, cases } = Astro.props;
+
+function topTerms(values: Array<string | undefined>, limit = 3): string[] {
+  const counts = new Map<string, number>();
+
+  values
+    .flatMap((value) => (value || '').split(','))
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([value]) => value);
+}
+
+const briefingThemes = topTerms(briefs.map((item) => item.category));
+const reviewCoverage = topTerms(tools.map((item) => item.category));
+const casePatterns = topTerms(cases.map((item) => item.problemType || item.industry));
+---
+
+<section class="pulse-block">
+  <div class="container">
+    <div class="pulse-header">
+      <p class="pulse-kicker">{lang === 'zh' ? 'Editorial pulse' : lang === 'ja' ? 'Editorial pulse' : 'Editorial pulse'}</p>
+      <div class="pulse-counts">
+        <span>{briefs.length} {lang === 'zh' ? '条已上线 brief' : lang === 'ja' ? '本の公開ブリーフ' : 'live briefs'}</span>
+        <span>{tools.length} {lang === 'zh' ? '篇工具评测' : lang === 'ja' ? '本のレビュー' : 'tool reviews'}</span>
+        <span>{cases.length} {lang === 'zh' ? '个案例' : lang === 'ja' ? '本のケース' : 'case studies'}</span>
+      </div>
+    </div>
+
+    <div class="pulse-grid">
+      <article class="pulse-card">
+        <span class="pulse-index">Desk 01</span>
+        <h3>{lang === 'zh' ? 'Briefing themes' : lang === 'ja' ? 'Briefing themes' : 'Briefing themes'}</h3>
+        <p>{lang === 'zh' ? '首页先告诉读者这几天你在追哪些 AI 动向。' : lang === 'ja' ? 'いま何を追っているかを先に見せます。' : 'Show the beats your newsroom is tracking right now.'}</p>
+        <div class="pulse-tags">
+          {(briefingThemes.length ? briefingThemes : [lang === 'zh' ? '等待更多已发布 brief' : lang === 'ja' ? '公開ブリーフを追加中' : 'Waiting for more published briefs']).map((item) => (
+            <span>{item}</span>
+          ))}
+        </div>
+        {briefs[0] && (
+          <a href={`/${lang}/daily/${briefs[0].slug}/`} class="pulse-link">
+            {briefs[0].title}
+          </a>
+        )}
+      </article>
+
+      <article class="pulse-card">
+        <span class="pulse-index">Desk 02</span>
+        <h3>{lang === 'zh' ? 'Review coverage' : lang === 'ja' ? 'Review coverage' : 'Review coverage'}</h3>
+        <p>{lang === 'zh' ? '把工具站位说清楚，比单篇评测更能建立专业感。' : lang === 'ja' ? 'どのカテゴリを評価しているかを明確にします。' : 'Coverage breadth helps the review desk feel curated rather than random.'}</p>
+        <div class="pulse-tags">
+          {(reviewCoverage.length ? reviewCoverage : [lang === 'zh' ? '等待更多核心评测' : lang === 'ja' ? '基幹レビューを拡充中' : 'Building out cornerstone reviews']).map((item) => (
+            <span>{item}</span>
+          ))}
+        </div>
+        {tools[0] && (
+          <a href={`/${lang}/tools/${tools[0].slug}/`} class="pulse-link">
+            {tools[0].title}
+          </a>
+        )}
+      </article>
+
+      <article class="pulse-card">
+        <span class="pulse-index">Desk 03</span>
+        <h3>{lang === 'zh' ? 'Case patterns' : lang === 'ja' ? 'Case patterns' : 'Case patterns'}</h3>
+        <p>{lang === 'zh' ? '案例不只是讲故事，更要让人看见可复制的问题模型。' : lang === 'ja' ? '事例は再現できる課題パターンとして見せます。' : 'Cases feel more useful when recurring problem types are visible at a glance.'}</p>
+        <div class="pulse-tags">
+          {(casePatterns.length ? casePatterns : [lang === 'zh' ? '等待更多案例模式' : lang === 'ja' ? 'ケースの型を追加中' : 'Waiting for more case patterns']).map((item) => (
+            <span>{item}</span>
+          ))}
+        </div>
+        {cases[0] && (
+          <a href={`/${lang}/cases/${cases[0].slug}/`} class="pulse-link">
+            {cases[0].title}
+          </a>
+        )}
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pulse-block {
+    padding: 0 0 44px;
+  }
+  .pulse-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 0 24px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .pulse-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pulse-counts {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+  .pulse-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    padding-top: 22px;
+  }
+  .pulse-card {
+    background: linear-gradient(180deg, rgba(251, 248, 241, 0.94), rgba(239, 229, 214, 0.72));
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    padding: 22px;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .pulse-index {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+  }
+  .pulse-card h3 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+  }
+  .pulse-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+  .pulse-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: auto;
+  }
+  .pulse-tags span {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(177, 90, 53, 0.12);
+    background: rgba(177, 90, 53, 0.08);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+  .pulse-link {
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+    font-weight: 700;
+    line-height: 1.45;
+  }
+  .pulse-link:hover {
+    color: var(--accent);
+  }
+  @media (max-width: 900px) {
+    .pulse-grid {
+      grid-template-columns: 1fr;
+    }
+    .pulse-header {
+      padding-inline: 0;
+    }
+  }
+</style>

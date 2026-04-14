@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Hero from '../../components/Hero.astro';
+import EditorialPulse from '../../components/EditorialPulse.astro';
 import BentoGrid from '../../components/BentoGrid.astro';
 import SignalFeed from '../../components/SignalFeed.astro';
 import FeaturedCards from '../../components/FeaturedCards.astro';
@@ -24,16 +25,54 @@ const t = useTranslations(lang);
 const dailyBriefs = await getDailyBriefs(lang as 'en' | 'zh' | 'ja');
 const toolReviews = await getToolReviews(lang as 'en' | 'zh' | 'ja');
 const caseStudies = await getCaseStudies(lang as 'en' | 'zh' | 'ja');
+
+const leadBrief = dailyBriefs.find((item) => item.featured) || dailyBriefs[0];
+const leadTool = toolReviews.find((item) => item.featured) || toolReviews[0];
+const leadCase = caseStudies.find((item) => item.featured) || caseStudies[0];
+
+const prioritizedBriefs = leadBrief
+  ? [leadBrief, ...dailyBriefs.filter((item) => item.id !== leadBrief.id)]
+  : dailyBriefs;
+const prioritizedTools = leadTool
+  ? [leadTool, ...toolReviews.filter((item) => item.id !== leadTool.id)]
+  : toolReviews;
+const prioritizedCases = leadCase
+  ? [leadCase, ...caseStudies.filter((item) => item.id !== leadCase.id)]
+  : caseStudies;
 ---
 
 <Layout title={t('site.name')}>
-  <Hero lang={lang} t={t} />
+  <Hero
+    lang={lang}
+    t={t}
+    leadBrief={leadBrief}
+    leadTool={leadTool}
+    leadCase={leadCase}
+  />
+  <EditorialPulse
+    lang={lang}
+    briefs={prioritizedBriefs}
+    tools={prioritizedTools}
+    cases={prioritizedCases}
+  />
   <div class="section-divider"></div>
-  <BentoGrid lang={lang} t={t} />
+  <BentoGrid
+    lang={lang}
+    t={t}
+    briefs={prioritizedBriefs.slice(0, 3)}
+    tools={prioritizedTools.slice(0, 3)}
+    cases={prioritizedCases.slice(0, 3)}
+  />
   <div class="section-divider"></div>
   <SignalFeed lang={lang} t={t} briefs={dailyBriefs} />
   <div class="section-divider"></div>
-  <FeaturedCards lang={lang} t={t} tools={toolReviews} cases={caseStudies} />
+  <FeaturedCards
+    lang={lang}
+    t={t}
+    briefs={prioritizedBriefs}
+    tools={prioritizedTools}
+    cases={prioritizedCases}
+  />
   <div class="section-divider"></div>
   <NewsletterCTA lang={lang} />
   <Footer lang={lang} />

@@ -7,6 +7,8 @@ interface Tool {
   slug: string;
   date: string;
   category?: string;
+  bestFor?: string;
+  coverImage?: string;
 }
 interface Case {
   title: string;
@@ -15,74 +17,87 @@ interface Case {
   revenue: string;
   slug: string;
   date: string;
+  problemType?: string;
+  coverImage?: string;
 }
 interface Props {
   lang: string;
   t: (key: string) => string;
+  briefs: Array<{ title: string; slug: string; category?: string }>;
   tools: Tool[];
   cases: Case[];
 }
 
-const { lang, t, tools, cases } = Astro.props;
+const { lang, briefs, tools, cases } = Astro.props;
 
-// Interleave tools and cases for variety
-const items: Array<{ type: 'tool' | 'case'; data: any }> = [];
-const maxLen = Math.max(tools.length, cases.length);
-for (let i = 0; i < Math.min(maxLen, 3); i++) {
-  if (i < tools.length) items.push({ type: 'tool', data: tools[i] });
-  if (i < cases.length) items.push({ type: 'case', data: cases[i] });
-}
-const featured = items.slice(0, 3);
+const leadTool = tools[0];
+const leadCase = cases[0];
+const recentReads = [
+  ...briefs.slice(0, 2).map((item) => ({ type: 'brief', href: `/${lang}/daily/${item.slug}/`, title: item.title, meta: item.category || 'Daily Brief' })),
+  ...tools.slice(1, 3).map((item) => ({ type: 'tool', href: `/${lang}/tools/${item.slug}/`, title: item.title, meta: item.bestFor || item.pricing || item.category || 'Tool Review' })),
+  ...cases.slice(1, 3).map((item) => ({ type: 'case', href: `/${lang}/cases/${item.slug}/`, title: item.title, meta: item.problemType || item.industry || 'Case Study' })),
+].slice(0, 4);
 ---
 
 <section class="section-block">
   <div class="container">
-    <div class="section-label">// FEATURED</div>
+    <div class="section-label">// FEATURES</div>
     <h2 class="section-title">
-      {lang === 'zh' ? '本周精选' : lang === 'ja' ? '今週のピックアップ' : 'Top Picks This Week'}
+      {lang === 'zh' ? '让首页更像一本杂志，而不是一个组件清单' : lang === 'ja' ? 'ホームをコンポーネント一覧ではなく雑誌のように' : 'Give the homepage the rhythm of a magazine'}
     </h2>
     <p class="section-desc">
-      {lang === 'zh' ? '为AI创业者精选的工具评测和实战案例。' : lang === 'ja' ? 'AIソロプレナーのために厳選されたツールとケーススタディ。' : 'Curated tools and case studies hand-picked for AI solopreneurs.'}
+      {lang === 'zh' ? '一个内容站需要“主故事 + 辅助故事 + 最近更新”的节奏。这样读者会更自然地往下读。' : lang === 'ja' ? '主役の記事、補助記事、最近の更新というリズムがあると、読み進めやすくなります。' : 'A strong front page balances one lead story, one supporting feature, and a compact list of recent reads.'}
     </p>
 
-    <div class="cards-grid">
-      {featured.map((item, i) => (
-        <a href={item.type === 'tool' ? `/${lang}/tools/${item.data.slug}/` : `/${lang}/cases/${item.data.slug}/`} class={`product-card animate-in ${i === 1 ? 'delay-1' : i === 2 ? 'delay-2' : ''}`}>
-          <div class="card-header">
-            <span class={`card-tag ${item.type}`}>
-              {item.type === 'tool'
-                ? (lang === 'zh' ? '工具评测' : lang === 'ja' ? 'ツールレビュー' : 'TOOL REVIEW')
-                : (lang === 'zh' ? '案例分析' : lang === 'ja' ? 'ケーススタディ' : 'CASE STUDY')}
-            </span>
-            {item.type === 'tool' ? (
-              <span class="card-rating">
-                {[...Array(5)].map((_, s) => (
-                  <span class={s < Math.floor(item.data.rating) ? 'star-on' : 'star-off'}>★</span>
-                ))}
-              </span>
-            ) : (
-              <span class="card-metric">{item.data.revenue}</span>
-            )}
+    <div class="feature-grid">
+      <a href={leadTool ? `/${lang}/tools/${leadTool.slug}/` : `/${lang}/tools/`} class="lead-story animate-in">
+        {leadTool?.coverImage && (
+          <div class="story-image-wrap">
+            <img src={leadTool.coverImage} alt={leadTool.title} class="story-image" loading="lazy" />
           </div>
-          <h3>{item.data.title}</h3>
-          <p class="desc">{item.data.snippet}</p>
-          <div class="card-footer">
-            <div class="card-footer-tags">
-              {item.type === 'tool' ? (
-                <>
-                  <span class="card-footer-tag">{item.data.category || 'AI'}</span>
-                  <span class="card-footer-tag">{item.data.pricing}</span>
-                </>
-              ) : (
-                <>
-                  <span class="card-footer-tag">{item.data.industry}</span>
-                </>
-              )}
+        )}
+        <span class="story-tag">{lang === 'zh' ? '主故事 / 工具评测' : lang === 'ja' ? '主役 / ツールレビュー' : 'Lead story / Tool review'}</span>
+        <h3>{leadTool?.title || (lang === 'zh' ? '优先打造一篇足够代表站点气质的标杆评测' : lang === 'ja' ? 'サイトの空気感を代表する一本のレビューを先に' : 'Start with one flagship review that sets the tone for the whole site')}</h3>
+        <p>{leadTool?.snippet || (lang === 'zh' ? '首页需要一篇足够“厚”的主文章，承担品牌解释、方法论和差异化感知。' : lang === 'ja' ? '厚みのある主役記事は、ブランドの違いと方法論を最短で伝えます。' : 'A substantial lead review helps explain the site’s judgment, standards, and point of view at a glance.')}</p>
+        <div class="story-meta">
+          <span>{leadTool?.category || (lang === 'zh' ? '核心评测' : lang === 'ja' ? '基幹レビュー' : 'Cornerstone review')}</span>
+          <span>{leadTool?.bestFor || leadTool?.pricing || (lang === 'zh' ? '定价 / 工作流 / 适配度' : lang === 'ja' ? '価格 / ワークフロー / 適合性' : 'Pricing / workflow / fit')}</span>
+        </div>
+      </a>
+
+      <div class="side-column">
+        <a href={leadCase ? `/${lang}/cases/${leadCase.slug}/` : `/${lang}/cases/`} class="support-story animate-in delay-1">
+          {leadCase?.coverImage && (
+            <div class="story-image-wrap compact">
+              <img src={leadCase.coverImage} alt={leadCase.title} class="story-image" loading="lazy" />
             </div>
-            <span class="card-arrow">→</span>
+          )}
+          <span class="story-tag alt">{lang === 'zh' ? '辅助故事 / 案例' : lang === 'ja' ? '補助 / ケース' : 'Supporting / Case study'}</span>
+          <h4>{leadCase?.title || (lang === 'zh' ? '案例页应该回答“别人是怎么做成的”' : lang === 'ja' ? 'ケースは「他の人はどうやったか」に答える' : 'Case studies should answer how others actually made it work')}</h4>
+          <p>{leadCase?.snippet || (lang === 'zh' ? '收入、效率、流程变化，比单纯“行业分类”更能让读者记住。' : lang === 'ja' ? '業界分類より、収益や効率、変化の物語の方が記憶に残ります。' : 'Revenue, workflow shifts, and practical outcomes are more memorable than broad industry buckets.')}</p>
+          <div class="story-meta">
+            <span>{leadCase?.problemType || leadCase?.industry || (lang === 'zh' ? '问题导向' : lang === 'ja' ? '課題起点' : 'Problem-led')}</span>
+            <span>{leadCase?.revenue || (lang === 'zh' ? '结果导向案例' : lang === 'ja' ? '結果重視のケース' : 'Outcome-driven case')}</span>
           </div>
         </a>
-      ))}
+
+        <div class="reads-panel animate-in delay-2">
+          <div class="reads-head">
+            <h4>{lang === 'zh' ? 'Recent reads' : lang === 'ja' ? 'Recent reads' : 'Recent reads'}</h4>
+            <a href={`/${lang}/`}>{lang === 'zh' ? '回到首页' : lang === 'ja' ? 'ホームへ' : 'Home'}</a>
+          </div>
+          <ul>
+            {recentReads.length > 0 ? recentReads.map((item) => (
+              <li>
+                <a href={item.href}>{item.title}</a>
+                <span>{item.meta}</span>
+              </li>
+            )) : (
+              <li class="reads-empty">{lang === 'zh' ? '内容同步后这里会显示最近更新。' : lang === 'ja' ? '同期後に最新記事が表示されます。' : 'Recent stories will appear here after content sync.'}</li>
+            )}
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -93,113 +108,160 @@ const featured = items.slice(0, 3);
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent-purple);
+    color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 12px;
   }
   .section-title {
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 5vw, 4.4rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
     margin-bottom: 16px;
+    line-height: 0.98;
   }
   .section-desc {
     color: var(--text-secondary);
-    font-size: 16px;
+    font-size: 1rem;
     margin-bottom: 40px;
-    max-width: 500px;
+    max-width: 760px;
+    line-height: 1.75;
   }
-  .cards-grid {
+  .feature-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.72fr);
     gap: 20px;
   }
-  .product-card {
+  .lead-story,
+  .support-story,
+  .reads-panel {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: 16px;
+    border-radius: 24px;
     padding: 24px;
-    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     text-decoration: none;
     color: inherit;
-    display: flex;
-    flex-direction: column;
+    display: block;
   }
-  .product-card:hover {
+  .lead-story:hover,
+  .support-story:hover {
     transform: translateY(-4px);
-    border-color: rgba(139,92,246,0.3);
-    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    border-color: var(--border-hover);
   }
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+  .side-column {
+    display: grid;
+    gap: 20px;
+  }
+  .story-tag {
+    display: inline-flex;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .story-tag.alt {
+    color: var(--accent-blue);
+  }
+  .story-image-wrap {
+    margin: -8px -8px 18px;
+    border-radius: 18px;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, rgba(177, 90, 53, 0.12), rgba(61, 100, 120, 0.14));
+  }
+  .story-image-wrap.compact {
+    aspect-ratio: 16 / 8.5;
+  }
+  .story-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .lead-story h3 {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 4vw, 4rem);
+    line-height: 0.96;
+    letter-spacing: -0.05em;
     margin-bottom: 16px;
   }
-  .card-tag {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 6px;
-  }
-  .card-tag.tool { background: rgba(59,130,246,0.12); color: var(--accent-blue); }
-  .card-tag.case { background: rgba(16,185,129,0.12); color: var(--accent-green); }
-  .card-rating {
-    display: flex;
-    gap: 2px;
-    font-size: 12px;
-  }
-  .star-on { color: var(--accent-amber); }
-  .star-off { color: var(--text-muted); }
-  .card-metric {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent-green);
-  }
-  .product-card h3 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    line-height: 1.4;
-  }
-  .product-card .desc {
-    font-size: 13px;
+  .lead-story p,
+  .support-story p {
     color: var(--text-secondary);
-    line-height: 1.6;
-    flex: 1;
+    font-size: 0.98rem;
+    line-height: 1.75;
+    margin-bottom: 22px;
+  }
+  .support-story h4,
+  .reads-head h4 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: 12px;
+  }
+  .story-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .reads-panel {
+    min-height: 100%;
+  }
+  .reads-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
     margin-bottom: 16px;
   }
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 16px;
+  .reads-head a {
+    font-size: 0.82rem;
+    color: var(--accent);
+  }
+  .reads-panel ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+  }
+  .reads-panel li {
+    display: grid;
+    gap: 6px;
+    padding: 14px 0;
     border-top: 1px solid var(--border-subtle);
   }
-  .card-footer-tags {
-    display: flex;
-    gap: 6px;
+  .reads-panel li:first-child {
+    border-top: 0;
+    padding-top: 0;
   }
-  .card-footer-tag {
-    font-size: 11px;
+  .reads-panel li a {
+    font-weight: 700;
+    line-height: 1.45;
+  }
+  .reads-panel li span,
+  .reads-empty {
+    font-size: 0.8rem;
     color: var(--text-muted);
-    background: rgba(255,255,255,0.04);
-    padding: 3px 8px;
-    border-radius: 4px;
-  }
-  .card-arrow {
-    color: var(--text-muted);
-    font-size: 14px;
-    transition: all 0.2s;
-  }
-  .product-card:hover .card-arrow {
-    color: var(--accent-purple);
-    transform: translateX(4px);
   }
   @media (max-width: 768px) {
-    .cards-grid { grid-template-columns: 1fr; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .lead-story,
+    .support-story,
+    .reads-panel {
+      border-radius: 20px;
+    }
+    .lead-story h3,
+    .support-story h4,
+    .reads-head h4 {
+      font-size: 2rem;
+    }
   }
 </style>

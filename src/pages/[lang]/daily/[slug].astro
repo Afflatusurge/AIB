@@ -31,36 +31,120 @@ const t = useTranslations(lang);
 const prevBrief = idx > 0 ? briefs[idx - 1] : null;
 const nextBrief = idx < briefs.length - 1 ? briefs[idx + 1] : null;
 const bodyHtml = await getPageContent(brief.id);
+const relatedBriefs = briefs.filter((item) => item.id !== brief.id).slice(0, 3);
+const headingMatches = Array.from(bodyHtml.matchAll(/<h2>(.*?)<\/h2>/g));
+const headingItems = headingMatches.map((match, i) => ({
+  id: `section-${i + 1}`,
+  title: match[1].replace(/<[^>]+>/g, ''),
+}));
+const headingQueue = [...headingItems];
+const processedBodyHtml = headingMatches.length
+  ? bodyHtml.replace(/<h2>/g, () => {
+      const heading = headingQueue.shift();
+      return heading ? `<h2 id="${heading.id}">` : '<h2>';
+    })
+  : bodyHtml;
+
+const summaryCards = [
+  {
+    label: lang === 'zh' ? 'Signal' : lang === 'ja' ? 'Signal' : 'Signal',
+    value: brief.category || 'AI',
+  },
+  {
+    label: lang === 'zh' ? 'Impact' : lang === 'ja' ? 'Impact' : 'Impact',
+    value: brief.impact || 'Notable',
+  },
+  {
+    label: lang === 'zh' ? 'Why it matters' : lang === 'ja' ? 'Why it matters' : 'Why it matters',
+    value: brief.whyItMatters || brief.commentary || brief.snippet || (lang === 'zh' ? '需要补充一句判断。' : lang === 'ja' ? '一言の判断を補足すると良いです。' : 'Add one sharp editorial takeaway here.'),
+  },
+];
+const recommendationIntro = lang === 'zh'
+  ? '从当前信号继续延伸，看更多值得判断的更新。'
+  : lang === 'ja'
+    ? 'いまのシグナルから、次に読むべき更新へつなげます。'
+    : 'Move from this signal into adjacent updates worth your attention.';
 ---
 
 <Layout title={`${brief.title} - ${t('site.name')}`}>
   <section class="page-section">
     <div class="container">
-      <article class="article fade-in">
-        <header class="article-header">
+      <article class="article-shell fade-in">
+        <header class="article-hero">
           <div class="article-tags">
             <span class="card-badge">{brief.category || 'AI'}</span>
             {brief.impact && <span class="card-badge impact-major">{brief.impact}</span>}
           </div>
           <h1>{brief.title}</h1>
+          {brief.snippet && <p class="article-dek">{brief.snippet}</p>}
           <div class="article-meta">
             <time datetime={brief.date}>{brief.date}</time>
             <span>·</span>
             <span>{brief.category}</span>
           </div>
+          <div class="article-lead-grid">
+            <div class="article-lead-note">
+              <p class="article-lead-label">{lang === 'zh' ? 'Editor’s note' : lang === 'ja' ? 'Editor’s note' : 'Editor’s note'}</p>
+              <p>{brief.commentary || brief.whyItMatters || brief.snippet}</p>
+            </div>
+            <div class="article-lead-note alt">
+              <p class="article-lead-label">{lang === 'zh' ? 'Why now' : lang === 'ja' ? 'Why now' : 'Why now'}</p>
+              <p>{brief.whyItMatters || brief.snippet || brief.commentary}</p>
+            </div>
+          </div>
         </header>
 
-        <div class="article-body">
-          {brief.snippet && <p class="lead">{brief.snippet}</p>}
-          {bodyHtml ? <Fragment set:html={bodyHtml} /> : (!brief.snippet && <p>No content yet.</p>)}
-          {brief.commentary && <blockquote>{brief.commentary}</blockquote>}
-          {brief.sourceUrl && (
-            <p>
-              <a href={brief.sourceUrl} target="_blank" rel="noopener" style="color: var(--accent-cyan);">
-                {lang === 'zh' ? '查看原文 →' : lang === 'ja' ? 'ソースを見る →' : 'View source →'}
-              </a>
-            </p>
-          )}
+        <div class="article-layout">
+          <aside class="article-rail">
+            <div class="rail-card">
+              <p class="rail-label">{lang === 'zh' ? 'This brief' : lang === 'ja' ? 'This brief' : 'This brief'}</p>
+              <ul class="rail-list">
+                <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.daily')}</span></li>
+                <li><strong>{lang === 'zh' ? '类别' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{brief.category || 'AI'}</span></li>
+                <li><strong>{lang === 'zh' ? '影响' : lang === 'ja' ? '影響' : 'Impact'}</strong><span>{brief.impact || 'Notable'}</span></li>
+              </ul>
+              {brief.sourceUrl && (
+                <a class="rail-link" href={brief.sourceUrl} target="_blank" rel="noopener">
+                  {lang === 'zh' ? '查看原始来源 →' : lang === 'ja' ? '元ソースを見る →' : 'View source →'}
+                </a>
+              )}
+            </div>
+            {headingItems.length > 0 && (
+              <div class="rail-card">
+                <p class="rail-label">{lang === 'zh' ? 'On this page' : lang === 'ja' ? 'On this page' : 'On this page'}</p>
+                <ul class="related-list">
+                  {headingItems.map((item) => (
+                    <li><a href={`#${item.id}`}>{item.title}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {relatedBriefs.length > 0 && (
+              <div class="rail-card">
+                <p class="rail-label">{lang === 'zh' ? 'More from daily' : lang === 'ja' ? 'More from daily' : 'More from daily'}</p>
+                <ul class="related-list">
+                  {relatedBriefs.map((item) => (
+                    <li><a href={`/${lang}/daily/${item.slug || item.id}/`}>{item.title}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </aside>
+
+          <div class="article-column">
+            <div class="summary-grid">
+              {summaryCards.map((card) => (
+                <section class="summary-card">
+                  <p class="summary-label">{card.label}</p>
+                  <div class="summary-value">{card.value}</div>
+                </section>
+              ))}
+            </div>
+            <div class="article-body">
+              {processedBodyHtml ? <Fragment set:html={processedBodyHtml} /> : (!brief.snippet && <p>No content yet.</p>)}
+              {brief.commentary && <blockquote>{brief.commentary}</blockquote>}
+            </div>
+          </div>
         </div>
 
         {(prevBrief || nextBrief) && (
@@ -78,6 +162,28 @@ const bodyHtml = await getPageContent(brief.id);
               </a>
             ) : <div />}
           </div>
+        )}
+
+        {relatedBriefs.length > 0 && (
+          <section class="article-recommendations">
+            <div class="article-recommendations-head">
+              <p class="article-recommendations-kicker">{lang === 'zh' ? 'Continue reading' : lang === 'ja' ? 'Continue reading' : 'Continue reading'}</p>
+              <h2>{lang === 'zh' ? '更多今日信号' : lang === 'ja' ? 'More daily signals' : 'More daily signals'}</h2>
+              <p>{recommendationIntro}</p>
+            </div>
+            <div class="article-recommendations-grid">
+              {relatedBriefs.map((item) => (
+                <a href={`/${lang}/daily/${item.slug || item.id}/`} class="article-rec-card">
+                  <div class="article-rec-meta">
+                    <span>{item.category || 'AI'}</span>
+                    <span>{item.impact || 'Notable'}</span>
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.whyItMatters || item.commentary || item.snippet}</p>
+                </a>
+              ))}
+            </div>
+          </section>
         )}
 
         <div class="article-back">

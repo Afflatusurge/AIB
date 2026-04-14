@@ -37,32 +37,35 @@ const dayOfWeek = dayNames[lang]?.[new Date().getDay()] || dayNames.en[new Date(
 
 <section class="section-block">
   <div class="container">
-    <div class="section-label">// SIGNAL FEED</div>
+    <div class="section-label">// DAILY DESK</div>
     <h2 class="section-title">
-      {lang === 'zh' ? '今日情报' : lang === 'ja' ? '本日のインテリジェンス' : "Today's Intelligence"}
+      {lang === 'zh' ? '把“新闻流”改成真正可读的简报流' : lang === 'ja' ? 'ニュースの羅列ではなく、読めるブリーフに' : 'Turn the news feed into a readable briefing'}
     </h2>
     <p class="section-desc">
-      {lang === 'zh' ? '过去24小时AI领域动态 — 按对一人公司的影响排序。' : lang === 'ja' ? '過去24時間のAI動向 — ソロプレナーへの影響度でランキング。' : "What happened in AI in the last 24 hours — ranked by impact on solopreneurs."}
+      {lang === 'zh' ? '这里保留“快”和“新”，但语气应该更像编辑整理过的版面，而不是实时行情屏。' : lang === 'ja' ? '速さと新しさは保ちつつ、ティッカーではなく編集済みの紙面のように見せます。' : 'Keep the speed of a feed, but present it with the hierarchy and calm of an editorial desk.'}
     </p>
 
     <div class="signal-feed animate-in">
-      <div class="signal-header">
-        <div class="signal-header-left">
-          <span class="signal-live"><span class="dot"></span> LIVE</span>
-          <span class="signal-title">{t('nav.daily')}</span>
-        </div>
-        <span class="signal-date">{today} · {dayOfWeek}</span>
+      <div class="signal-summary">
+        <p class="summary-kicker">{t('nav.daily')}</p>
+        <h3>{lang === 'zh' ? '过去 24 小时，哪些 AI 动向值得独立创作者和小团队现在就关注？' : lang === 'ja' ? '過去24時間で、ひとり起業家が今すぐ見るべきAIの動きは何か。' : 'What mattered in AI over the last 24 hours for independent builders?'}</h3>
+        <p class="summary-copy">
+          {lang === 'zh' ? '按影响力和可执行性排序，而不是按热度堆砌。' : lang === 'ja' ? '話題性ではなく、影響と実行可能性で優先順位をつけます。' : 'Ranked by business impact and immediate usefulness, not by hype alone.'}
+        </p>
+        <div class="summary-date">{today} · {dayOfWeek}</div>
       </div>
       <div class="signal-items">
         {briefs.length > 0 ? briefs.slice(0, 6).map((brief, i) => (
           <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="signal-item">
-            <span class="signal-time">{brief.date?.split('T')[1]?.slice(0,5) || `0${7-i}:00`}</span>
-            <span class={`signal-category ${categoryClass[brief.category] || 'llm'}`}>{brief.category}</span>
-            <div class="signal-text">
+            <div class="signal-index">{String(i + 1).padStart(2, '0')}</div>
+            <div class="signal-main">
+              <div class="signal-row">
+                <span class={`signal-category ${categoryClass[brief.category] || 'llm'}`}>{brief.category || 'AI'}</span>
+                <span class={`signal-impact ${brief.impact.toLowerCase()}`}>{brief.impact || 'Notable'}</span>
+              </div>
               <h4>{brief.title}</h4>
               <p>{brief.snippet}</p>
             </div>
-            <span class={`signal-impact ${brief.impact.toLowerCase()}`}>{brief.impact.toUpperCase()}</span>
           </a>
         )) : (
           <div class="signal-empty">
@@ -86,123 +89,144 @@ const dayOfWeek = dayNames[lang]?.[new Date().getDay()] || dayNames.en[new Date(
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent-purple);
+    color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 12px;
   }
   .section-title {
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 5vw, 4.6rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
     margin-bottom: 16px;
+    line-height: 0.98;
   }
   .section-desc {
     color: var(--text-secondary);
-    font-size: 16px;
+    font-size: 1rem;
     margin-bottom: 40px;
-    max-width: 500px;
+    max-width: 720px;
+    line-height: 1.75;
   }
   .signal-feed {
-    background: var(--bg-surface);
+    background: linear-gradient(180deg, rgba(239, 229, 214, 0.48), rgba(251, 248, 241, 0.92));
     border: 1px solid var(--border-subtle);
-    border-radius: 16px;
+    border-radius: 28px;
     overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(280px, 0.42fr) minmax(0, 1fr);
   }
-  .signal-header {
+  .signal-summary {
+    padding: 28px 24px;
+    border-right: 1px solid var(--border-subtle);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border-subtle);
-    background: rgba(255,255,255,0.02);
+    flex-direction: column;
   }
-  .signal-header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .signal-live {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .summary-kicker {
     font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent-green);
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
   }
-  .signal-live .dot {
-    width: 6px; height: 6px;
-    background: var(--accent-green);
-    border-radius: 50%;
-    animation: pulse 2s ease-in-out infinite;
+  .signal-summary h3 {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: 14px;
   }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.3); }
+  .summary-copy {
+    color: var(--text-secondary);
+    font-size: 0.96rem;
+    line-height: 1.75;
+    margin-bottom: auto;
   }
-  .signal-title { font-size: 16px; font-weight: 700; }
-  .signal-date {
+  .summary-date {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 0.72rem;
     color: var(--text-muted);
   }
-  .signal-items { padding: 8px; }
+  .signal-items {
+    padding: 12px;
+  }
   .signal-item {
     display: grid;
-    grid-template-columns: 80px 72px 1fr auto;
-    align-items: center;
+    grid-template-columns: 52px minmax(0, 1fr);
     gap: 16px;
-    padding: 14px 16px;
-    border-radius: 8px;
-    transition: background 0.2s;
+    padding: 18px 16px;
+    border-radius: 18px;
+    transition: background 0.2s, transform 0.2s;
     text-decoration: none;
     color: inherit;
   }
-  .signal-item:hover { background: rgba(255,255,255,0.03); }
-  .signal-time {
+  .signal-item:hover {
+    background: rgba(255, 255, 255, 0.36);
+    transform: translateX(2px);
+  }
+  .signal-index {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 0.86rem;
     color: var(--text-muted);
+    padding-top: 4px;
+  }
+  .signal-main {
+    min-width: 0;
+  }
+  .signal-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
   }
   .signal-category {
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
     text-align: center;
     white-space: nowrap;
   }
-  .signal-category.llm { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
-  .signal-category.agent { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
-  .signal-category.business { background: rgba(16,185,129,0.15); color: var(--accent-green); }
-  .signal-category.coding { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
-  .signal-category.hardware { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
-  .signal-category.image { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
-  .signal-category.video { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+  .signal-category.llm { background: rgba(177, 90, 53, 0.12); color: var(--accent); }
+  .signal-category.agent { background: rgba(61, 100, 120, 0.12); color: var(--accent-cyan); }
+  .signal-category.business { background: rgba(79, 122, 90, 0.12); color: var(--accent-green); }
+  .signal-category.coding { background: rgba(61, 100, 120, 0.12); color: var(--accent-blue); }
+  .signal-category.hardware { background: rgba(159, 107, 47, 0.12); color: var(--accent-amber); }
+  .signal-category.image { background: rgba(154, 87, 111, 0.12); color: var(--accent-pink); }
+  .signal-category.video { background: rgba(154, 87, 111, 0.12); color: var(--accent-pink); }
   .signal-text h4 {
     font-size: 14px;
     font-weight: 600;
     margin-bottom: 2px;
     line-height: 1.4;
   }
-  .signal-text p {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.4;
+  .signal-main h4 {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .signal-main p {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
   }
   .signal-impact {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 4px;
+    padding: 4px 9px;
+    border-radius: 999px;
     white-space: nowrap;
   }
-  .signal-impact.major { background: rgba(239,68,68,0.15); color: #EF4444; }
-  .signal-impact.notable { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
-  .signal-impact.routine { background: rgba(100,116,139,0.1); color: var(--text-muted); }
+  .signal-impact.major { background: rgba(154, 87, 111, 0.12); color: var(--accent-pink); }
+  .signal-impact.notable { background: rgba(159, 107, 47, 0.12); color: var(--accent-amber); }
+  .signal-impact.routine { background: rgba(82, 72, 63, 0.08); color: var(--text-muted); }
   .signal-empty {
     padding: 48px 24px;
     text-align: center;
@@ -210,23 +234,35 @@ const dayOfWeek = dayNames[lang]?.[new Date().getDay()] || dayNames.en[new Date(
     font-size: 14px;
   }
   .signal-footer {
-    padding: 16px 24px;
+    padding: 20px 24px;
     border-top: 1px solid var(--border-subtle);
     text-align: center;
+    grid-column: 1 / -1;
   }
   .signal-footer a {
     font-size: 13px;
-    font-weight: 600;
-    color: var(--accent-purple);
+    font-weight: 700;
+    color: var(--accent);
     text-decoration: none;
     transition: color 0.2s;
   }
-  .signal-footer a:hover { color: var(--accent-cyan); }
+  .signal-footer a:hover { color: var(--text-primary); }
   @media (max-width: 768px) {
-    .signal-item {
+    .signal-feed {
       grid-template-columns: 1fr;
-      gap: 8px;
+      border-radius: 22px;
     }
-    .signal-time { display: none; }
+    .signal-summary {
+      border-right: 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .signal-item {
+      grid-template-columns: 40px minmax(0, 1fr);
+      gap: 10px;
+      padding: 14px 12px;
+    }
+    .signal-main h4 {
+      font-size: 1.35rem;
+    }
   }
 </style>
