@@ -56,21 +56,23 @@ const recentReads = [
 
     <div class="feature-grid">
       <a href={leadTool ? `/${lang}/tools/${leadTool.slug}/` : `/${lang}/tools/`} class="lead-story animate-in">
-        {leadTool?.coverImage && (
-          <div class="story-image-wrap">
-            <img src={leadTool.coverImage} alt={leadTool.title} class="story-image" loading="lazy" />
+        <div class="lead-story-main">
+          {leadTool?.coverImage && (
+            <div class="story-image-wrap">
+              <img src={leadTool.coverImage} alt={leadTool.title} class="story-image" loading="lazy" />
+            </div>
+          )}
+          <span class="story-tag">{lang === 'zh' ? '主故事 / 工具评测' : lang === 'ja' ? '主役 / ツールレビュー' : 'Lead story / Tool review'}</span>
+          <h3>{leadTool?.title || (lang === 'zh' ? '优先打造一篇足够代表站点气质的标杆评测' : lang === 'ja' ? 'サイトの空気感を代表する一本のレビューを先に' : 'Start with one flagship review that sets the tone for the whole site')}</h3>
+          <p>{leadTool?.snippet || (lang === 'zh' ? '首页需要一篇足够“厚”的主文章，承担品牌解释、方法论和差异化感知。' : lang === 'ja' ? '厚みのある主役記事は、ブランドの違いと方法論を最短で伝えます。' : 'A substantial lead review helps explain the site’s judgment, standards, and point of view at a glance.')}</p>
+          <div class="story-briefing">
+            <p class="story-briefing-label">{lang === 'zh' ? '这篇会回答什么' : lang === 'ja' ? 'このレビューで分かること' : 'What this review clarifies'}</p>
+            <ul class="story-points">
+              {leadToolDetails.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
           </div>
-        )}
-        <span class="story-tag">{lang === 'zh' ? '主故事 / 工具评测' : lang === 'ja' ? '主役 / ツールレビュー' : 'Lead story / Tool review'}</span>
-        <h3>{leadTool?.title || (lang === 'zh' ? '优先打造一篇足够代表站点气质的标杆评测' : lang === 'ja' ? 'サイトの空気感を代表する一本のレビューを先に' : 'Start with one flagship review that sets the tone for the whole site')}</h3>
-        <p>{leadTool?.snippet || (lang === 'zh' ? '首页需要一篇足够“厚”的主文章，承担品牌解释、方法论和差异化感知。' : lang === 'ja' ? '厚みのある主役記事は、ブランドの違いと方法論を最短で伝えます。' : 'A substantial lead review helps explain the site’s judgment, standards, and point of view at a glance.')}</p>
-        <div class="story-briefing">
-          <p class="story-briefing-label">{lang === 'zh' ? '这篇会回答什么' : lang === 'ja' ? 'このレビューで分かること' : 'What this review clarifies'}</p>
-          <ul class="story-points">
-            {leadToolDetails.map((item) => (
-              <li>{item}</li>
-            ))}
-          </ul>
         </div>
         <div class="story-meta">
           <span>{leadTool?.category || (lang === 'zh' ? '核心评测' : lang === 'ja' ? '基幹レビュー' : 'Cornerstone review')}</span>
@@ -161,6 +163,12 @@ const recentReads = [
   .lead-story {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+  .lead-story-main {
+    display: grid;
+    align-content: start;
   }
   .lead-story:hover,
   .support-story:hover {
@@ -169,7 +177,9 @@ const recentReads = [
   }
   .side-column {
     display: grid;
+    grid-template-rows: auto 1fr;
     gap: 20px;
+    height: 100%;
   }
   .story-tag {
     display: inline-flex;
@@ -269,6 +279,8 @@ const recentReads = [
   }
   .reads-panel {
     min-height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   .reads-head {
     display: flex;
@@ -286,6 +298,7 @@ const recentReads = [
     padding: 0;
     margin: 0;
     display: grid;
+    flex: 1;
   }
   .reads-panel li {
     display: grid;
