@@ -13,7 +13,7 @@ export async function GET() {
       id: brief.id,
       title: brief.title,
       description: brief.snippet,
-      link: `${SITE_URL}/en/daily/${brief.id}/`,
+      link: `${SITE_URL}/en/daily/${brief.slug || brief.id}/`,
       pubDate: new Date(brief.date),
       category: 'Daily Brief',
     })),

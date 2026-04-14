@@ -55,7 +55,7 @@ const dayOfWeek = dayNames[lang]?.[new Date().getDay()] || dayNames.en[new Date(
       </div>
       <div class="signal-items">
         {briefs.length > 0 ? briefs.slice(0, 6).map((brief, i) => (
-          <a href={`/${lang}/daily/${brief.id}/`} class="signal-item">
+          <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="signal-item">
             <span class="signal-time">{brief.date?.split('T')[1]?.slice(0,5) || `0${7-i}:00`}</span>
             <span class={`signal-category ${categoryClass[brief.category] || 'llm'}`}>{brief.category}</span>
             <div class="signal-text">
