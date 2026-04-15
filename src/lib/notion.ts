@@ -448,90 +448,275 @@ function renderRichText(rt: any[]): string {
     .join('');
 }
 
-function blocksToHtml(blocks: any[]): string {
-  let html = '';
-  let listBuffer: string[] = [];
-  let listType: 'ul' | 'ol' | null = null;
+function getBlockIcon(icon: any): string {
+  if (!icon) return '';
+  if (icon.type === 'emoji') return icon.emoji || '';
+  if (icon.type === 'external') return `<img src="${escapeHtml(icon.external?.url || '')}" alt="" loading="lazy" />`;
+  if (icon.type === 'file') return `<img src="${escapeHtml(icon.file?.url || '')}" alt="" loading="lazy" />`;
+  return '';
+}
 
-  const flushList = () => {
-    if (listBuffer.length && listType) {
-      html += `<${listType}>${listBuffer.join('')}</${listType}>`;
-      listBuffer = [];
-      listType = null;
-    }
-  };
+function getFileLikeUrl(block: any): string {
+  return (
+    block?.file?.url ||
+    block?.external?.url ||
+    block?.url ||
+    ''
+  );
+}
+
+function isTabToggle(block: any): boolean {
+  if (!block || block.type !== 'toggle') return false;
+  const raw = renderRichText(block.toggle?.rich_text || []);
+  const label = raw.replace(/<[^>]+>/g, '').trim().toLowerCase();
+  return label.startsWith('tab:') || label.startsWith('[tab]') || label.startsWith('tab ');
+}
+
+function getTabLabel(block: any): string {
+  const raw = renderRichText(block.toggle?.rich_text || []);
+  return raw.replace(/^\s*(?:\[tab\]|tab:|tab)\s*/i, '').trim() || 'Tab';
+}
+
+async function fetchBlockChildren(blockId: string): Promise<any[]> {
+  const results: any[] = [];
+  let cursor: string | undefined = undefined;
+
+  do {
+    const response: any = await notion.blocks.children.list({
+      block_id: blockId,
+      start_cursor: cursor,
+      page_size: 100,
+    });
+    results.push(...response.results);
+    cursor = response.has_more ? response.next_cursor : undefined;
+  } while (cursor);
+
+  return results;
+}
+
+async function hydrateBlocks(blocks: any[]): Promise<any[]> {
+  const hydrated: any[] = [];
 
   for (const block of blocks) {
+    if (!block?.has_children) {
+      hydrated.push(block);
+      continue;
+    }
+
+    try {
+      const children = await fetchBlockChildren(block.id);
+      hydrated.push({
+        ...block,
+        children: await hydrateBlocks(children),
+      });
+    } catch {
+      hydrated.push(block);
+    }
+  }
+
+  return hydrated;
+}
+
+function blocksToHtml(blocks: any[]): string {
+  let tabGroupCount = 0;
+
+  const renderTable = (block: any): string => {
+    const rows = block.children || [];
+    if (!rows.length) return '';
+
+    const hasColumnHeader = !!block.table?.has_column_header;
+    const hasRowHeader = !!block.table?.has_row_header;
+
+    const body = rows
+      .map((row: any, rowIndex: number) => {
+        const cells = row.table_row?.cells || [];
+        const renderedCells = cells
+          .map((cell: any[], cellIndex: number) => {
+            const content = renderRichText(cell);
+            const isColumnHeader = hasColumnHeader && rowIndex === 0;
+            const isRowHeader = hasRowHeader && cellIndex === 0 && !isColumnHeader;
+            const tag = isColumnHeader || isRowHeader ? 'th' : 'td';
+            const scope = isColumnHeader ? ' scope="col"' : isRowHeader ? ' scope="row"' : '';
+            return `<${tag}${scope}>${content || '&nbsp;'}</${tag}>`;
+          })
+          .join('');
+
+        return `<tr>${renderedCells}</tr>`;
+      })
+      .join('');
+
+    return `<div class="article-table-wrap"><table>${body}</table></div>`;
+  };
+
+  const renderTabGroup = (tabBlocks: any[]): string => {
+    const groupId = `notion-tabs-${++tabGroupCount}`;
+    const controls = tabBlocks
+      .map((block: any, index: number) => {
+        const tabId = `${groupId}-panel-${index + 1}`;
+        const isActive = index === 0 ? 'true' : 'false';
+        const activeClass = index === 0 ? ' is-active' : '';
+        return `<button class="article-tab-trigger${activeClass}" type="button" role="tab" aria-selected="${isActive}" aria-controls="${tabId}" data-tab-target="${tabId}">${getTabLabel(block)}</button>`;
+      })
+      .join('');
+
+    const panels = tabBlocks
+      .map((block: any, index: number) => {
+        const panelId = `${groupId}-panel-${index + 1}`;
+        const activeClass = index === 0 ? ' is-active' : '';
+        const children = renderBlocks(block.children || []);
+        return `<section id="${panelId}" class="article-tab-panel${activeClass}" role="tabpanel">${children}</section>`;
+      })
+      .join('');
+
+    return `<div class="article-tabs" data-tab-group><div class="article-tab-list" role="tablist">${controls}</div><div class="article-tab-panels">${panels}</div></div>`;
+  };
+
+  const renderList = (listType: 'ul' | 'ol', items: any[]): string => {
+    const inner = items
+      .map((item: any) => {
+        const text = renderRichText(item[item.type]?.rich_text || []);
+        const children = item.children?.length ? renderBlocks(item.children) : '';
+        return `<li>${text}${children}</li>`;
+      })
+      .join('');
+    return `<${listType}>${inner}</${listType}>`;
+  };
+
+  const renderBookmark = (url: string, label?: string): string => {
+    if (!url) return '';
+    const text = label || url.replace(/^https?:\/\//, '');
+    return `<a class="article-link-card" href="${escapeHtml(url)}" target="_blank" rel="noopener"><span class="article-link-card-label">${escapeHtml(text)}</span><span class="article-link-card-url">${escapeHtml(url)}</span></a>`;
+  };
+
+  const renderBlock = (block: any): string => {
     const type = block.type;
     const data = block[type];
-    if (!data) continue;
-
-    const isList = type === 'bulleted_list_item' || type === 'numbered_list_item';
-    const wantedListType = type === 'numbered_list_item' ? 'ol' : 'ul';
-    if (!isList || (listType && listType !== wantedListType)) flushList();
+    if (!data) return '';
 
     switch (type) {
       case 'paragraph': {
         const content = renderRichText(data.rich_text);
-        if (content.trim()) html += `<p>${content}</p>`;
-        break;
+        if (!content.trim()) return '';
+        return `<p>${content}</p>`;
       }
       case 'heading_1':
-        html += `<h2>${renderRichText(data.rich_text)}</h2>`;
-        break;
       case 'heading_2':
-        html += `<h2>${renderRichText(data.rich_text)}</h2>`;
-        break;
+        return `<h2>${renderRichText(data.rich_text)}</h2>`;
       case 'heading_3':
-        html += `<h3>${renderRichText(data.rich_text)}</h3>`;
-        break;
-      case 'bulleted_list_item':
-        listType = 'ul';
-        listBuffer.push(`<li>${renderRichText(data.rich_text)}</li>`);
-        break;
-      case 'numbered_list_item':
-        listType = 'ol';
-        listBuffer.push(`<li>${renderRichText(data.rich_text)}</li>`);
-        break;
-      case 'quote':
-        html += `<blockquote>${renderRichText(data.rich_text)}</blockquote>`;
-        break;
+        return `<h3>${renderRichText(data.rich_text)}</h3>`;
+      case 'quote': {
+        const content = renderRichText(data.rich_text);
+        const children = block.children?.length ? renderBlocks(block.children) : '';
+        return `<blockquote>${content}${children}</blockquote>`;
+      }
       case 'code': {
         const codeText = (data.rich_text || []).map((t: any) => t.plain_text).join('');
-        html += `<pre><code>${escapeHtml(codeText)}</code></pre>`;
-        break;
+        return `<pre><code>${escapeHtml(codeText)}</code></pre>`;
       }
-      case 'callout':
-        html += `<div class="callout">${renderRichText(data.rich_text)}</div>`;
-        break;
+      case 'callout': {
+        const icon = getBlockIcon(data.icon);
+        const title = renderRichText(data.rich_text);
+        const children = block.children?.length ? renderBlocks(block.children) : '';
+        return `<div class="callout">${icon ? `<div class="callout-icon">${icon}</div>` : ''}<div class="callout-body"><div class="callout-copy">${title}</div>${children}</div></div>`;
+      }
       case 'divider':
-        html += '<hr/>';
-        break;
+        return '<hr/>';
       case 'image': {
-        const url = data.file?.url || data.external?.url || '';
+        const url = getFileLikeUrl(data);
         const caption = renderRichText(data.caption || []);
-        if (url) html += `<figure><img src="${escapeHtml(url)}" alt="${caption}"/>${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`;
-        break;
+        if (!url) return '';
+        return `<figure><img src="${escapeHtml(url)}" alt="${caption.replace(/<[^>]+>/g, '')}" loading="lazy"/>${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`;
+      }
+      case 'video': {
+        const url = getFileLikeUrl(data);
+        const caption = renderRichText(data.caption || []);
+        if (!url) return '';
+        if (data.type === 'file') {
+          return `<figure><video controls preload="metadata" src="${escapeHtml(url)}"></video>${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`;
+        }
+        return renderBookmark(url, caption.replace(/<[^>]+>/g, '') || 'External video');
+      }
+      case 'pdf':
+      case 'file': {
+        const url = getFileLikeUrl(data);
+        const caption = renderRichText(data.caption || []);
+        return renderBookmark(url, caption.replace(/<[^>]+>/g, '') || 'Attached file');
       }
       case 'bookmark':
-      case 'embed':
-      case 'link_preview': {
+      case 'link_preview':
+        return renderBookmark(data.url || '');
+      case 'embed': {
         const url = data.url || '';
-        if (url) html += `<p><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a></p>`;
-        break;
+        if (!url) return '';
+        return `<div class="article-embed"><iframe src="${escapeHtml(url)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div><p class="article-embed-note"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">Open embedded source →</a></p>`;
       }
       case 'to_do': {
-        const checked = data.checked ? '☑' : '☐';
-        html += `<p>${checked} ${renderRichText(data.rich_text)}</p>`;
-        break;
+        const checked = data.checked ? ' checked' : '';
+        const content = renderRichText(data.rich_text);
+        return `<label class="article-todo"><input type="checkbox" disabled${checked} /><span>${content}</span></label>`;
       }
-      case 'toggle':
-        html += `<details><summary>${renderRichText(data.rich_text)}</summary></details>`;
-        break;
+      case 'toggle': {
+        const summary = renderRichText(data.rich_text);
+        const children = block.children?.length ? renderBlocks(block.children) : '';
+        return `<details class="article-toggle"><summary>${summary}</summary><div class="article-toggle-body">${children}</div></details>`;
+      }
+      case 'table':
+        return renderTable(block);
+      case 'column_list': {
+        const columns = (block.children || [])
+          .filter((child: any) => child.type === 'column')
+          .map((column: any) => `<div class="article-column-block">${renderBlocks(column.children || [])}</div>`)
+          .join('');
+        return columns ? `<div class="article-columns">${columns}</div>` : '';
+      }
+      case 'synced_block':
+      case 'column':
+        return block.children?.length ? renderBlocks(block.children) : '';
+      case 'child_page': {
+        const title = escapeHtml(data.title || 'Related page');
+        return `<div class="article-child-card"><span class="article-child-label">Notion page</span><strong>${title}</strong></div>`;
+      }
+      default:
+        return '';
     }
-  }
-  flushList();
-  return html;
+  };
+
+  const renderBlocks = (items: any[]): string => {
+    let html = '';
+
+    for (let i = 0; i < items.length; i += 1) {
+      const block = items[i];
+      if (!block) continue;
+
+      if (isTabToggle(block)) {
+        const tabBlocks: any[] = [];
+        while (i < items.length && isTabToggle(items[i])) {
+          tabBlocks.push(items[i]);
+          i += 1;
+        }
+        i -= 1;
+        html += renderTabGroup(tabBlocks);
+        continue;
+      }
+
+      if (block.type === 'bulleted_list_item' || block.type === 'numbered_list_item') {
+        const listType = block.type === 'numbered_list_item' ? 'ol' : 'ul';
+        const listBlocks = [block];
+        while (i + 1 < items.length && items[i + 1]?.type === block.type) {
+          listBlocks.push(items[i + 1]);
+          i += 1;
+        }
+        html += renderList(listType, listBlocks);
+        continue;
+      }
+
+      html += renderBlock(block);
+    }
+
+    return html;
+  };
+
+  return renderBlocks(blocks);
 }
 
 export async function getPageContent(pageId: string): Promise<string> {
@@ -539,18 +724,9 @@ export async function getPageContent(pageId: string): Promise<string> {
   const blockId = formatUuid(pageId);
   if (normalizeId(blockId).length !== 32) return '';
   try {
-    const allBlocks: any[] = [];
-    let cursor: string | undefined = undefined;
-    do {
-      const res: any = await notion.blocks.children.list({
-        block_id: blockId,
-        start_cursor: cursor,
-        page_size: 100,
-      });
-      allBlocks.push(...res.results);
-      cursor = res.has_more ? res.next_cursor : undefined;
-    } while (cursor);
-    return blocksToHtml(allBlocks);
+    const rootBlocks = await fetchBlockChildren(blockId);
+    const hydratedBlocks = await hydrateBlocks(rootBlocks);
+    return blocksToHtml(hydratedBlocks);
   } catch (err) {
     console.error(`[Notion] Failed to fetch page content (${blockId}):`, err);
     return '';

@@ -15,6 +15,8 @@ interface Props {
 }
 
 const { lang, t, briefs } = Astro.props;
+const editorialTimeZone = 'America/Los_Angeles';
+const editorialNow = new Date();
 
 const categoryClass: Record<string, string> = {
   'LLM': 'llm',
@@ -26,13 +28,20 @@ const categoryClass: Record<string, string> = {
   'Video': 'video',
 };
 
-const today = new Date().toISOString().split('T')[0];
-const dayNames: Record<string, string[]> = {
-  en: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
-  zh: ['周日','周一','周二','周三','周四','周五','周六'],
-  ja: ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'],
-};
-const dayOfWeek = dayNames[lang]?.[new Date().getDay()] || dayNames.en[new Date().getDay()];
+const dateParts = new Intl.DateTimeFormat('en-US', {
+  timeZone: editorialTimeZone,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).formatToParts(editorialNow);
+const year = dateParts.find((part) => part.type === 'year')?.value || '';
+const month = dateParts.find((part) => part.type === 'month')?.value || '';
+const day = dateParts.find((part) => part.type === 'day')?.value || '';
+const today = `${year}-${month}-${day}`;
+const dayOfWeek = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-US', {
+  timeZone: editorialTimeZone,
+  weekday: 'long',
+}).format(editorialNow);
 ---
 
 <section class="section-block">

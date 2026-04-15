@@ -7,6 +7,14 @@ interface Props {
   leadCase?: { title: string; slug?: string; industry?: string; problemType?: string };
 }
 const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
+const editorialTimeZone = 'America/Los_Angeles';
+const editorialLocale = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-US';
+const editionDate = new Intl.DateTimeFormat(editorialLocale, {
+  timeZone: editorialTimeZone,
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+}).format(new Date());
 ---
 
 <section class="hero">
@@ -47,11 +55,7 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
           {lang === 'zh' ? '今日版面' : lang === 'ja' ? '本日の版' : "Today's edition"}
         </span>
         <span class="edition-date">
-          {new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          }).format(new Date())}
+          {editionDate}
         </span>
       </div>
       <div class="edition-list">
