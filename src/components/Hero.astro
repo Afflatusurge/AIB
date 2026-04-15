@@ -15,7 +15,7 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
       <p class="hero-kicker">
         {lang === 'zh' ? 'AI-FIRST MEDIA FOR SOLO BUILDERS' : lang === 'ja' ? 'AI-FIRST MEDIA FOR SOLO BUILDERS' : 'AI-FIRST MEDIA FOR SOLO BUILDERS'}
       </p>
-      <h1 class={`hero-title animate-in delay-1 ${lang === 'en' ? '' : 'is-cjk'}`}>
+      <h1 class={`hero-title animate-in delay-1 ${lang === 'en' ? '' : 'is-cjk'} ${lang === 'ja' ? 'is-ja' : ''}`}>
         {lang === 'zh' ? (
           <>写给想把 AI 生意做成的人。<span>一份单人公司指南。</span></>
         ) : lang === 'ja' ? (
@@ -120,6 +120,10 @@ const { lang, t, leadBrief, leadTool, leadCase } = Astro.props;
   .hero-title.is-cjk {
     line-height: 1.04;
     letter-spacing: -0.03em;
+  }
+  .hero-title.is-ja {
+    font-size: clamp(3.2rem, 6.9vw, 6.4rem);
+    line-height: 1.08;
   }
   .hero-title span {
     color: var(--accent);
