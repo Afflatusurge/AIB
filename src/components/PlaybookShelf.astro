@@ -1,0 +1,223 @@
+---
+interface PlaybookCard {
+  slug: string;
+  title: string;
+  category?: string;
+  snippet: string;
+  outcome: string;
+  bestFor: string;
+  useWhen: string;
+}
+
+interface Props {
+  lang: string;
+  playbooks: PlaybookCard[];
+}
+
+const { lang, playbooks } = Astro.props;
+const primary = playbooks[0];
+const secondary = playbooks.slice(1);
+---
+
+<section class="section-block">
+  <div class="container">
+    <div class="playbooks-head">
+      <div>
+        <div class="section-label">{lang === 'zh' ? '// PLAYBOOKS' : lang === 'ja' ? '// PLAYBOOKS' : '// PLAYBOOKS'}</div>
+        <h2 class="section-title">
+          {lang === 'zh'
+            ? '不是更多工具，而是更完整的做事蓝图'
+            : lang === 'ja'
+              ? 'ツール一覧ではなく、仕事を進めるための設計図'
+              : 'Playbooks for getting the work done'}
+        </h2>
+      </div>
+      <p class="section-desc">
+        {lang === 'zh'
+          ? '把工具评测、案例和日常信号，重组为一套按任务推进的推荐组合。'
+          : lang === 'ja'
+            ? 'レビュー、事例、日々のシグナルを、タスク単位の実行ガイドへ組み替えます。'
+            : 'A playbook is where reviews, cases, and daily signals turn into one working stack for a real task.'}
+      </p>
+    </div>
+
+    <div class="playbooks-grid">
+      {primary && (
+        <article class="playbook-primary">
+          <div class="playbook-primary-copy">
+            <p class="playbook-tag">{primary.category || 'Playbook'}</p>
+            <h3><a href={`/${lang}/playbooks/${primary.slug}/`}>{primary.title}</a></h3>
+            <p class="playbook-dek">{primary.snippet}</p>
+            <div class="playbook-stat-list">
+              <div>
+                <span>{lang === 'zh' ? 'Outcome' : lang === 'ja' ? 'Outcome' : 'Outcome'}</span>
+                <p>{primary.outcome}</p>
+              </div>
+              <div>
+                <span>{lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for'}</span>
+                <p>{primary.bestFor}</p>
+              </div>
+            </div>
+          </div>
+          <div class="playbook-primary-side">
+            <p class="playbook-note-label">{lang === 'zh' ? 'Why it belongs now' : lang === 'ja' ? 'Why it belongs now' : 'Why it belongs now'}</p>
+            <p class="playbook-note">{primary.useWhen}</p>
+            <a class="playbook-link" href={`/${lang}/playbooks/${primary.slug}/`}>
+              {lang === 'zh' ? '打开这份 playbook →' : lang === 'ja' ? 'この playbook を読む →' : 'Open the playbook →'}
+            </a>
+          </div>
+        </article>
+      )}
+
+      <div class="playbook-list">
+        {secondary.map((playbook) => (
+          <article class="playbook-row">
+            <div class="playbook-row-top">
+              <p class="playbook-tag">{playbook.category || 'Playbook'}</p>
+              <a href={`/${lang}/playbooks/${playbook.slug}/`} class="playbook-row-link">
+                {lang === 'zh' ? '查看' : lang === 'ja' ? '開く' : 'Read'}
+              </a>
+            </div>
+            <h3><a href={`/${lang}/playbooks/${playbook.slug}/`}>{playbook.title}</a></h3>
+            <p class="playbook-row-dek">{playbook.snippet}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .playbooks-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+    gap: 24px;
+    align-items: end;
+    margin-bottom: 34px;
+  }
+  .playbooks-head .section-desc {
+    margin-bottom: 0;
+    justify-self: end;
+  }
+  .playbooks-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+    gap: 18px;
+  }
+  .playbook-primary,
+  .playbook-row {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
+  }
+  .playbook-primary {
+    padding: 28px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.7fr);
+    gap: 26px;
+  }
+  .playbook-primary-copy h3,
+  .playbook-row h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+  }
+  .playbook-primary-copy h3 {
+    font-size: clamp(2.2rem, 4vw, 3.25rem);
+    margin-bottom: 14px;
+    max-width: 14ch;
+  }
+  .playbook-tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .playbook-dek,
+  .playbook-row-dek,
+  .playbook-note {
+    color: var(--text-secondary);
+    line-height: 1.75;
+    font-size: 0.98rem;
+  }
+  .playbook-stat-list {
+    display: grid;
+    gap: 14px;
+    margin-top: 22px;
+  }
+  .playbook-stat-list div {
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .playbook-stat-list span,
+  .playbook-note-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .playbook-stat-list p {
+    color: var(--text-primary);
+    line-height: 1.7;
+  }
+  .playbook-primary-side {
+    display: grid;
+    align-content: space-between;
+    gap: 18px;
+    padding-left: 4px;
+  }
+  .playbook-link,
+  .playbook-row-link {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.88rem;
+  }
+  .playbook-list {
+    display: grid;
+    gap: 16px;
+  }
+  .playbook-row {
+    padding: 22px 24px;
+  }
+  .playbook-row-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .playbook-row h3 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 980px) {
+    .playbooks-head,
+    .playbooks-grid,
+    .playbook-primary {
+      grid-template-columns: 1fr;
+    }
+    .playbooks-head .section-desc {
+      justify-self: start;
+    }
+    .playbook-primary-copy h3 {
+      max-width: none;
+    }
+  }
+  @media (max-width: 768px) {
+    .playbook-primary,
+    .playbook-row {
+      border-radius: 20px;
+      padding: 22px;
+    }
+    .playbook-row h3 {
+      font-size: 1.75rem;
+    }
+  }
+</style>

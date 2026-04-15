@@ -1,4 +1,9 @@
 import { Client } from '@notionhq/client';
+import {
+  getAllPlaybookSlugs as getSeedPlaybookSlugs,
+  getPlaybookBySlug as getSeedPlaybookBySlug,
+  getPlaybooks as getSeedPlaybooks,
+} from './playbooks';
 
 // ── Notion Client ──────────────────────────────────────────
 const notion = new Client({
@@ -6,7 +11,7 @@ const notion = new Client({
 });
 
 type Lang = 'en' | 'zh' | 'ja';
-type ContentType = 'daily' | 'tools' | 'cases';
+type ContentType = 'daily' | 'tools' | 'cases' | 'playbooks';
 
 // Notion now exposes both a database object id and a nested data source / collection id.
 // The SDK's databases.query endpoint needs the database id, but it's easy to accidentally
@@ -54,6 +59,20 @@ const NOTION_DB_IDS: Record<ContentType, Record<Lang, { databaseId: string; data
       dataSourceId: 'c6e44af6-3174-4976-9811-27e9ee660ff6',
     },
   },
+  playbooks: {
+    en: {
+      databaseId: '3815f593-215e-4a20-a74f-54422b2a340c',
+      dataSourceId: '452d1a8d-c620-470a-aaba-dad5abb5544c',
+    },
+    ja: {
+      databaseId: 'aea1eb8a-c5dc-435e-9922-490e5f6968dc',
+      dataSourceId: '67c9ec0e-a7f7-48a2-b076-511e622ba006',
+    },
+    zh: {
+      databaseId: 'e4128fe0-cf2f-4322-9313-4b917a99d3e1',
+      dataSourceId: '1c805889-1e4d-4b95-9d52-ef0b06010e7a',
+    },
+  },
 };
 
 function normalizeId(id: string): string {
@@ -95,6 +114,11 @@ const DB = {
     en: resolveDatabaseId('cases', 'en', import.meta.env.NOTION_DB_CASES_EN || ''),
     zh: resolveDatabaseId('cases', 'zh', import.meta.env.NOTION_DB_CASES_ZH || ''),
     ja: resolveDatabaseId('cases', 'ja', import.meta.env.NOTION_DB_CASES_JA || ''),
+  },
+  playbooks: {
+    en: resolveDatabaseId('playbooks', 'en', import.meta.env.NOTION_DB_PLAYBOOKS_EN || ''),
+    zh: resolveDatabaseId('playbooks', 'zh', import.meta.env.NOTION_DB_PLAYBOOKS_ZH || ''),
+    ja: resolveDatabaseId('playbooks', 'ja', import.meta.env.NOTION_DB_PLAYBOOKS_JA || ''),
   },
 } as const;
 
@@ -377,6 +401,21 @@ export interface CaseStudy {
   status?: string;
 }
 
+export interface Playbook {
+  id: string;
+  title: string;
+  snippet: string;
+  category: string;
+  outcome: string;
+  bestFor: string;
+  useWhen: string;
+  slug: string;
+  date: string;
+  featured?: boolean;
+  coverImage?: string;
+  status?: string;
+}
+
 export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
   if (!isConfigured() || !DB.cases[lang]) return getMockCaseStudies();
 
@@ -415,6 +454,48 @@ export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
   } catch (err) {
     console.error(`[Notion] Failed to fetch case studies (${lang}):`, err);
     return getMockCaseStudies();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PLAYBOOKS
+// ══════════════════════════════════════════════════════════════
+
+export async function getPlaybooks(lang: Lang = 'en'): Promise<Playbook[]> {
+  if (!isConfigured() || !DB.playbooks[lang]) return getMockPlaybooks(lang);
+
+  try {
+    const response = await notion.databases.query({
+      database_id: DB.playbooks[lang],
+      sorts: [{ property: 'Publish Date', direction: 'descending' }],
+      page_size: 100,
+    });
+
+    const playbooks = response.results
+      .filter((page: any) => isVisibleEntry(page.properties))
+      .map((page: any) => {
+        const props = page.properties;
+        return {
+          id: page.id,
+          title: getAnyText(props, ['Title', 'Name']),
+          snippet: getAnyText(props, ['Summary', 'Dek', 'Subtitle']),
+          category: getAnyText(props, ['Category', 'Type']),
+          outcome: getAnyText(props, ['Outcome', 'Result']),
+          bestFor: getAnyText(props, ['Best For', 'Best for', 'Audience']),
+          useWhen: getAnyText(props, ['Use When', 'Use when', 'Cadence']),
+          slug: getAnyText(props, ['Slug']),
+          date: getAnyText(props, ['Publish Date', 'Date']),
+          featured: getAnyCheckbox(props, ['Featured', 'Lead', 'Homepage']),
+          coverImage: getAnyText(props, ['Cover Image', 'Image', 'Thumbnail']),
+          status: getStatus(props),
+        };
+      })
+      .filter((item) => !!(item.title && item.slug && item.snippet));
+
+    return sortByEditorialPriority(playbooks);
+  } catch (err) {
+    console.error(`[Notion] Failed to fetch playbooks (${lang}):`, err);
+    return getMockPlaybooks(lang);
   }
 }
 
@@ -761,4 +842,54 @@ function getMockCaseStudies(): CaseStudy[] {
     { id: '2', title: 'AI Writing Matrix: $3K to $18K Monthly Revenue', snippet: 'A freelance writer scaled from $3K to $18K/month using AI content systems.', industry: 'Content', revenue: '$18K/mo', slug: 'ai-writing-matrix', date: '2026-04-07', tags: 'Writing, Growth', problem: 'Breaking out of hourly writing work', problemType: 'Solopreneur', applicableTo: 'Writers, strategists, and creator-led service businesses', takeaway: 'AI mattered most when paired with packaging and process, not just drafting speed.', status: 'Done' },
     { id: '3', title: 'Replacing a $200K Data Team with AI', snippet: 'One analyst replaced an entire data team using AI-powered analysis tools.', industry: 'Data', revenue: '$200K saved', slug: 'ai-data-team', date: '2026-04-05', tags: 'Data, Cost Reduction', problem: 'Reporting bottlenecks and slow analysis cycles', problemType: 'Cost Reduction', applicableTo: 'Operators handling analytics for small teams', takeaway: 'The win came from reducing turnaround time, not from eliminating judgment.', status: 'Done' },
   ];
+}
+
+function getMockPlaybooks(lang: Lang): Playbook[] {
+  return getSeedPlaybooks(lang).map((playbook) => ({
+    id: playbook.slug,
+    title: playbook.title,
+    snippet: playbook.dek,
+    category: playbook.tag,
+    outcome: playbook.outcome,
+    bestFor: playbook.audience,
+    useWhen: playbook.cadence,
+    slug: playbook.slug,
+    date: '2026-04-15',
+    featured: playbook.slug === 'build-your-ai-first-website-or-mvp',
+    status: 'Done',
+  }));
+}
+
+export function getFallbackPlaybookContent(lang: Lang, slug: string): string {
+  const fallback = getSeedPlaybookBySlug(lang, slug);
+  if (!fallback) return '';
+
+  const stack = fallback.stack
+    .map((item) => `<section class="playbook-stack-card"><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.role)}</p></section>`)
+    .join('');
+  const steps = fallback.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('');
+  const sources = fallback.oldSiteSources
+    .map((source) => `<li><a href="${escapeHtml(source.url)}" target="_blank" rel="noopener">${escapeHtml(source.label)}</a></li>`)
+    .join('');
+  const notes = fallback.notes.map((note) => `<li>${escapeHtml(note)}</li>`).join('');
+  const related = fallback.related
+    .map((item) => `<a href="${escapeHtml(item.href)}" class="playbook-related-link">${escapeHtml(item.label)}</a>`)
+    .join('');
+
+  return [
+    `<h2>${escapeHtml(fallback.stackTitle)}</h2>`,
+    `<div class="playbook-stack-grid">${stack}</div>`,
+    `<h2>${escapeHtml(fallback.stepsTitle)}</h2>`,
+    `<ol class="playbook-steps">${steps}</ol>`,
+    `<h2>${escapeHtml(fallback.oldSiteTitle)}</h2>`,
+    `<ul class="playbook-source-list">${sources}</ul>`,
+    `<h2>${escapeHtml(fallback.notesTitle)}</h2>`,
+    `<ul>${notes}</ul>`,
+    `<h2>${escapeHtml(fallback.relatedTitle)}</h2>`,
+    `<div class="playbook-related-links">${related}</div>`,
+  ].join('');
+}
+
+export function getFallbackPlaybookSlugs(): string[] {
+  return getSeedPlaybookSlugs();
 }

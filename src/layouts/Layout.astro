@@ -75,6 +75,9 @@ const languages = ['en', 'ja', 'zh'];
                       <a href={`/${lang}/tools/`} class={Astro.url.pathname.startsWith(`/${lang}/tools`) ? 'active' : ''}>
                           {t('nav.tools')}
                       </a>
+                      <a href={`/${lang}/playbooks/`} class={Astro.url.pathname.startsWith(`/${lang}/playbooks`) ? 'active' : ''}>
+                          {t('nav.playbooks')}
+                      </a>
                       <a href={`/${lang}/cases/`} class={Astro.url.pathname.startsWith(`/${lang}/cases`) ? 'active' : ''}>
                           {t('nav.cases')}
                       </a>

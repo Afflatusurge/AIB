@@ -5,8 +5,9 @@ import BentoGrid from '../../components/BentoGrid.astro';
 import SignalFeed from '../../components/SignalFeed.astro';
 import FeaturedCards from '../../components/FeaturedCards.astro';
 import NewsletterCTA from '../../components/NewsletterCTA.astro';
+import PlaybookShelf from '../../components/PlaybookShelf.astro';
 import Footer from '../../components/Footer.astro';
-import { getDailyBriefs, getToolReviews, getCaseStudies } from '../../lib/notion';
+import { getDailyBriefs, getToolReviews, getCaseStudies, getPlaybooks } from '../../lib/notion';
 import { useTranslations, getLangFromUrl } from '../../i18n/utils';
 
 export function getStaticPaths() {
@@ -24,6 +25,7 @@ const t = useTranslations(lang);
 const dailyBriefs = await getDailyBriefs(lang as 'en' | 'zh' | 'ja');
 const toolReviews = await getToolReviews(lang as 'en' | 'zh' | 'ja');
 const caseStudies = await getCaseStudies(lang as 'en' | 'zh' | 'ja');
+const playbooks = await getPlaybooks(lang as 'en' | 'zh' | 'ja');
 
 const leadBrief = dailyBriefs.find((item) => item.featured) || dailyBriefs[0];
 const leadTool = toolReviews.find((item) => item.featured) || toolReviews[0];
@@ -66,6 +68,8 @@ const prioritizedCases = leadCase
     tools={prioritizedTools}
     cases={prioritizedCases}
   />
+  <div class="section-divider"></div>
+  <PlaybookShelf lang={lang} playbooks={playbooks.slice(0, 4)} />
   <div class="section-divider"></div>
   <NewsletterCTA lang={lang} />
   <Footer lang={lang} />

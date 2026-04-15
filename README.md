@@ -5,6 +5,7 @@ Astro front end for the new `aiandbusiness.com`, with Notion as CMS, Vercel depl
 - `Daily Brief`
 - `Tool Reviews`
 - `Case Studies`
+- `Playbooks`
 
 ## Local commands
 
@@ -33,6 +34,10 @@ NOTION_DB_TOOLS_ZH=
 NOTION_DB_CASES_EN=
 NOTION_DB_CASES_JA=
 NOTION_DB_CASES_ZH=
+
+NOTION_DB_PLAYBOOKS_EN=
+NOTION_DB_PLAYBOOKS_JA=
+NOTION_DB_PLAYBOOKS_ZH=
 ```
 
 If Notion is unavailable during build, the site falls back to mock data so the front end can still render.
@@ -99,12 +104,32 @@ Optional:
 - `Key Takeaway`
 - `Featured` or `Lead` or `Homepage`
 
+### Playbooks
+
+Required:
+
+- `Title`
+- `Summary`
+- `Category`
+- `Outcome`
+- `Best For`
+- `Use When`
+- `Slug`
+- `Publish Date`
+
+Optional:
+
+- `Featured`
+- `Status`
+- `Cover Image`
+
 ## Editorial behavior wired into the front end
 
 - Homepage and list pages prioritize entries marked `Featured`, then fall back to the newest entry.
 - Article pages render summary cards before the main body.
 - Article pages auto-generate an `On this page` rail from `h2` headings.
 - Tool and case article summaries now prefer structured Notion fields over inferred fallback copy.
+- Playbooks now follow the same multilingual Notion pattern as briefs, reviews, and cases.
 
 ## Current direction
 

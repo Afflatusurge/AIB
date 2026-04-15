@@ -1,0 +1,204 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Footer from '../../../components/Footer.astro';
+import { getPlaybooks } from '../../../lib/notion';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'ja' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const playbooks = await getPlaybooks(lang as 'en' | 'ja' | 'zh');
+const leadPlaybook = playbooks[0];
+const supportingPlaybooks = playbooks.slice(1);
+---
+
+<Layout
+  title={`${t('nav.playbooks')} - ${t('site.name')}`}
+  description={lang === 'zh'
+    ? '按任务组织的 AI 一人公司 playbooks，把工具、案例和工作流串成一套可执行的组合。'
+    : lang === 'ja'
+      ? 'AIソロビジネスを前に進めるための、タスク別 playbooks 集。'
+      : 'Task-led playbooks for building an AI-first business of one.'}
+>
+  <section class="page-section">
+    <div class="container">
+      <header class="playbook-page-header fade-in">
+        <div class="section-label">{lang === 'zh' ? '// PLAYBOOKS' : lang === 'ja' ? '// PLAYBOOKS' : '// PLAYBOOKS'}</div>
+        <h1>
+          {lang === 'zh'
+            ? '按任务组织，而不是按工具堆砌'
+            : lang === 'ja'
+              ? 'ツール一覧ではなく、仕事の進め方で整理する'
+              : 'Task-led playbooks for building the business'}
+        </h1>
+        <p>
+          {lang === 'zh'
+            ? '这里不是另一个工具目录。每篇 playbook 都把工具评测、案例和 daily brief 重组成一套更接近真实工作的组合。'
+            : lang === 'ja'
+              ? 'ここは別のツール一覧ではありません。レビュー、事例、daily brief を実際の仕事に近い流れへ組み替えます。'
+              : 'This desk is where reviews, cases, and briefs become one recommended stack for a real business task.'}
+        </p>
+      </header>
+
+      {leadPlaybook && (
+        <section class="playbook-lead">
+          <div class="playbook-lead-copy">
+            <p class="playbook-tag">{leadPlaybook.category || 'Playbook'}</p>
+            <h2><a href={`/${lang}/playbooks/${leadPlaybook.slug}/`}>{leadPlaybook.title}</a></h2>
+            <p class="playbook-lead-dek">{leadPlaybook.snippet}</p>
+          </div>
+          <div class="playbook-lead-rail">
+            <div>
+              <span>{lang === 'zh' ? 'Outcome' : lang === 'ja' ? 'Outcome' : 'Outcome'}</span>
+              <p>{leadPlaybook.outcome}</p>
+            </div>
+            <div>
+              <span>{lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for'}</span>
+              <p>{leadPlaybook.bestFor}</p>
+            </div>
+            <div>
+              <span>{lang === 'zh' ? 'Why now' : lang === 'ja' ? 'Why now' : 'Why now'}</span>
+              <p>{leadPlaybook.useWhen}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <div class="playbook-index-list">
+        {supportingPlaybooks.map((playbook) => (
+          <article class="playbook-index-row">
+            <div class="playbook-index-main">
+              <p class="playbook-tag">{playbook.category || 'Playbook'}</p>
+              <h3><a href={`/${lang}/playbooks/${playbook.slug}/`}>{playbook.title}</a></h3>
+              <p>{playbook.snippet}</p>
+            </div>
+            <div class="playbook-index-side">
+              <p>{playbook.outcome}</p>
+              <a href={`/${lang}/playbooks/${playbook.slug}/`}>
+                {lang === 'zh' ? '打开这份 playbook →' : lang === 'ja' ? 'この playbook を読む →' : 'Open the playbook →'}
+              </a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+  <Footer lang={lang} />
+</Layout>
+
+<style>
+  .playbook-page-header {
+    max-width: 920px;
+    margin-bottom: 42px;
+  }
+  .playbook-page-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.8rem, 5vw, 4.7rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 0.96;
+    margin-bottom: 14px;
+  }
+  .playbook-page-header p {
+    max-width: 760px;
+    font-size: 1.04rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+  .playbook-lead {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
+    gap: 24px;
+    padding: 28px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 28px;
+    margin-bottom: 18px;
+  }
+  .playbook-lead h2,
+  .playbook-index-row h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+  }
+  .playbook-lead h2 {
+    font-size: clamp(2.4rem, 4vw, 3.7rem);
+    margin-bottom: 14px;
+    max-width: 14ch;
+  }
+  .playbook-lead-dek,
+  .playbook-index-row p {
+    color: var(--text-secondary);
+    line-height: 1.75;
+    font-size: 0.98rem;
+  }
+  .playbook-lead-rail {
+    display: grid;
+    gap: 16px;
+  }
+  .playbook-lead-rail div {
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .playbook-lead-rail span {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .playbook-index-list {
+    display: grid;
+    gap: 18px;
+  }
+  .playbook-index-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+    gap: 20px;
+    padding: 24px 28px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+  }
+  .playbook-index-row h3 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+  .playbook-index-side {
+    display: grid;
+    align-content: space-between;
+    gap: 18px;
+  }
+  .playbook-index-side a {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  @media (max-width: 960px) {
+    .playbook-lead,
+    .playbook-index-row {
+      grid-template-columns: 1fr;
+    }
+    .playbook-lead h2 {
+      max-width: none;
+    }
+  }
+  @media (max-width: 768px) {
+    .playbook-lead,
+    .playbook-index-row {
+      padding: 22px;
+      border-radius: 20px;
+    }
+    .playbook-index-row h3 {
+      font-size: 1.75rem;
+    }
+  }
+</style>

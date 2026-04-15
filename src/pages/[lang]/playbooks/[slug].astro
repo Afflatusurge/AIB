@@ -1,0 +1,169 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Footer from '../../../components/Footer.astro';
+import { getFallbackPlaybookContent, getPageContent, getPlaybooks } from '../../../lib/notion';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+
+export async function getStaticPaths() {
+  const langs: Array<'en' | 'ja' | 'zh'> = ['en', 'ja', 'zh'];
+  const all: Array<{ params: { lang: string; slug: string }; props: { playbook: any; playbooks: any[] } }> = [];
+
+  for (const lang of langs) {
+    const playbooks = await getPlaybooks(lang);
+    playbooks.forEach((playbook) => {
+      all.push({
+        params: { lang, slug: playbook.slug || playbook.id },
+        props: { playbook, playbooks },
+      });
+    });
+  }
+
+  return all;
+}
+
+const lang = getLangFromUrl(Astro.url) as 'en' | 'ja' | 'zh';
+const t = useTranslations(lang);
+const { playbook, playbooks: allPlaybooks } = Astro.props;
+const slug = playbook.slug || Astro.params.slug || '';
+const relatedPlaybooks = allPlaybooks.filter((item) => item.slug !== slug).slice(0, 3);
+const bodyHtml = await getPageContent(playbook.id);
+const renderedBody = bodyHtml || getFallbackPlaybookContent(lang, slug);
+---
+
+<Layout title={`${playbook.title} - ${t('nav.playbooks')} - ${t('site.name')}`} description={playbook.snippet}>
+  <section class="page-section">
+    <div class="container">
+      <article class="article-shell fade-in">
+        <header class="article-hero playbook-hero">
+          <p class="playbook-tag">{playbook.category || 'Playbook'}</p>
+          <h1>{playbook.title}</h1>
+          <p class="article-dek">{playbook.snippet}</p>
+
+          <div class="article-lead-grid">
+            <div class="article-lead-note">
+              <p class="article-lead-label">{lang === 'zh' ? 'Outcome' : lang === 'ja' ? 'Outcome' : 'Outcome'}</p>
+              <p>{playbook.outcome}</p>
+            </div>
+            <div class="article-lead-note alt">
+              <p class="article-lead-label">{lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for'}</p>
+              <p>{playbook.bestFor}</p>
+            </div>
+          </div>
+        </header>
+
+        <div class="article-layout">
+          <aside class="article-rail">
+            <div class="rail-card">
+              <p class="rail-label">{lang === 'zh' ? 'Playbook snapshot' : lang === 'ja' ? 'Playbook snapshot' : 'Playbook snapshot'}</p>
+              <ul class="rail-list">
+                <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.playbooks')}</span></li>
+                <li><strong>{lang === 'zh' ? '分类' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{playbook.category || 'Playbook'}</span></li>
+                <li><strong>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '対象' : 'Best for'}</strong><span>{playbook.bestFor}</span></li>
+                <li><strong>{lang === 'zh' ? '节奏' : lang === 'ja' ? 'タイミング' : 'Use when'}</strong><span>{playbook.useWhen}</span></li>
+              </ul>
+            </div>
+            {relatedPlaybooks.length > 0 && (
+              <div class="rail-card">
+                <p class="rail-label">{lang === 'zh' ? 'More playbooks' : lang === 'ja' ? 'More playbooks' : 'More playbooks'}</p>
+                <ul class="related-list">
+                  {relatedPlaybooks.map((item) => (
+                    <li><a href={`/${lang}/playbooks/${item.slug}/`}>{item.title}</a></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </aside>
+
+          <div class="article-column">
+            <div class="summary-grid">
+              <section class="summary-card">
+                <p class="summary-label">{lang === 'zh' ? 'Outcome' : lang === 'ja' ? 'Outcome' : 'Outcome'}</p>
+                <div class="summary-value">{playbook.outcome}</div>
+              </section>
+              <section class="summary-card">
+                <p class="summary-label">{lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for'}</p>
+                <div class="summary-value">{playbook.bestFor}</div>
+              </section>
+              <section class="summary-card">
+                <p class="summary-label">{lang === 'zh' ? 'Use when' : lang === 'ja' ? 'Use when' : 'Use when'}</p>
+                <div class="summary-value">{playbook.useWhen}</div>
+              </section>
+            </div>
+
+            <div class="article-body">
+              {renderedBody && <Fragment set:html={renderedBody} />}
+            </div>
+          </div>
+        </div>
+
+        <div class="article-back">
+          <a href={`/${lang}/playbooks/`}>← {t('nav.playbooks')}</a>
+        </div>
+      </article>
+    </div>
+  </section>
+  <Footer lang={lang} />
+</Layout>
+
+<style>
+  .playbook-hero h1 {
+    max-width: 12ch;
+  }
+  .playbook-stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 18px 0 8px;
+  }
+  .playbook-stack-card {
+    padding: 18px;
+    background: rgba(251, 248, 241, 0.74);
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+  }
+  .playbook-stack-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .playbook-stack-card p {
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 0;
+  }
+  .playbook-steps {
+    display: grid;
+    gap: 12px;
+    padding-left: 1.4rem;
+    margin: 18px 0 6px;
+  }
+  .playbook-steps li {
+    padding-left: 0.2rem;
+  }
+  .playbook-source-list {
+    margin: 18px 0 6px;
+  }
+  .playbook-source-list li + li {
+    margin-top: 8px;
+  }
+  .playbook-related-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .playbook-related-link {
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  @media (max-width: 768px) {
+    .playbook-stack-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
