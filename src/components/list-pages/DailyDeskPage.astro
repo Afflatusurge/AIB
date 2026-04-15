@@ -1,0 +1,204 @@
+---
+import type { DailyBrief } from '../../lib/notion';
+import PaginationNav from '../PaginationNav.astro';
+
+interface Props {
+  lang: 'en' | 'zh' | 'ja';
+  t: (key: any) => string;
+  leadBrief?: DailyBrief;
+  briefs: DailyBrief[];
+  currentPage: number;
+  totalPages: number;
+}
+
+const { lang, t, leadBrief, briefs, currentPage, totalPages } = Astro.props;
+const paginationLabels = {
+  previous: lang === 'zh' ? '上一页' : lang === 'ja' ? '前へ' : 'Previous',
+  next: lang === 'zh' ? '下一页' : lang === 'ja' ? '次へ' : 'Next',
+  page: lang === 'zh' ? '页码' : lang === 'ja' ? 'ページ' : 'Page',
+  loadMore: lang === 'zh' ? '加载更多' : lang === 'ja' ? 'もっと見る' : 'Load more',
+};
+
+function impactClass(impact: string): string {
+  const i = (impact || '').toLowerCase();
+  if (i.includes('major') || i === 'high') return 'impact-major';
+  if (i.includes('notable') || i === 'medium') return 'impact-notable';
+  return 'impact-routine';
+}
+---
+
+<section class="page-section">
+  <div class="container">
+    <div class="page-header fade-in">
+      <p class="section-kicker">Daily Desk</p>
+      <h1>{t('nav.daily')}</h1>
+      <p>{lang === 'zh' ? '每天挑出真正会影响 AI 一人公司判断的几条更新，配上足够简洁但有方向感的编辑说明。' : lang === 'ja' ? 'AIソロプレナーに本当に影響する更新だけを選び、短くても判断に役立つ文脈を添えます。' : 'A daily desk for AI solopreneurs: fewer items, sharper judgment, and enough context to decide what matters next.'}</p>
+    </div>
+
+    {leadBrief ? (
+      <div class="list-shell fade-in">
+        <article class="lead-entry">
+          <div class="lead-entry-meta">
+            <span class="card-badge">{leadBrief.category || 'AI'}</span>
+            {leadBrief.impact && <span class={`card-badge ${impactClass(leadBrief.impact)}`}>{leadBrief.impact}</span>}
+          </div>
+          <div class="lead-entry-date">{leadBrief.date}</div>
+          <h2>
+            <a href={`/${lang}/daily/${leadBrief.slug || leadBrief.id}/`}>{leadBrief.title}</a>
+          </h2>
+          <p>{leadBrief.whyItMatters || leadBrief.commentary || leadBrief.snippet || ''}</p>
+          <div class="lead-entry-actions">
+            <a href={`/${lang}/daily/${leadBrief.slug || leadBrief.id}/`} class="read-more">
+              {t('read.more')} →
+            </a>
+            <span class="lead-entry-note">
+              {lang === 'zh' ? '主编推荐' : lang === 'ja' ? '編集部ピック' : 'Editor pick'}
+            </span>
+          </div>
+        </article>
+
+        <aside class="list-aside">
+          <div class="aside-card">
+            <h3>{lang === 'zh' ? '今天这一栏怎么读' : lang === 'ja' ? '今日の読み方' : 'How to read today’s desk'}</h3>
+            <p>{lang === 'zh' ? '先看主条目，再按影响等级快速扫其余更新。首页与列表页都应该帮助读者在几分钟内形成判断。' : lang === 'ja' ? 'まず主役記事を読み、その後に影響度の高い順で他の更新を追う構成です。' : 'Start with the lead item, then scan the rest by impact. The goal is quick judgment, not infinite scrolling.'}</p>
+          </div>
+          <div class="aside-card">
+            <h3>{lang === 'zh' ? '更新节奏' : lang === 'ja' ? '更新頻度' : 'Cadence'}</h3>
+            <ul class="aside-list">
+              <li>{lang === 'zh' ? '每日 3-5 条精选' : lang === 'ja' ? '毎日3〜5本を厳選' : '3-5 curated items daily'}</li>
+              <li>{lang === 'zh' ? '按影响力而不是热度排序' : lang === 'ja' ? '話題性ではなく影響度順' : 'Ordered by impact, not hype'}</li>
+              <li>{lang === 'zh' ? '每条都应有一句 why it matters' : lang === 'ja' ? '各項目に一言の文脈' : 'Every item should carry a why-it-matters angle'}</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    ) : null}
+
+    <div class="card-grid editorial-list" data-paginated-list>
+      {briefs.map((brief, i) => (
+        <article class="content-card fade-in" style={`animation-delay: ${i * 60}ms`}>
+          <div class="card-meta">
+            <span class="card-badge">{brief.category || 'AI'}</span>
+            {brief.impact && <span class={`card-badge ${impactClass(brief.impact)}`}>{brief.impact}</span>}
+          </div>
+          <div class="card-date">{brief.date}</div>
+          <h2>
+            <a href={`/${lang}/daily/${brief.slug || brief.id}/`}>{brief.title}</a>
+          </h2>
+          <p class="card-snippet">{brief.whyItMatters || brief.commentary || brief.snippet}</p>
+          <div class="card-footer">
+            <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="read-more">
+              {t('read.more')} →
+            </a>
+          </div>
+        </article>
+      ))}
+      {!leadBrief && briefs.length === 0 && (
+        <div class="empty-state">No daily briefs yet.</div>
+      )}
+    </div>
+
+    <PaginationNav
+      basePath={`/${lang}/daily/`}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      labels={paginationLabels}
+    />
+  </div>
+</section>
+
+<style>
+  .list-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.46fr);
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+  .lead-entry,
+  .aside-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    padding: 24px;
+  }
+  .lead-entry {
+    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
+  }
+  .lead-entry-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .lead-entry-date {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .lead-entry h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4.2rem);
+    line-height: 0.96;
+    letter-spacing: -0.05em;
+    margin-bottom: 14px;
+  }
+  .lead-entry p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.8;
+    max-width: 46rem;
+  }
+  .lead-entry-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .lead-entry-note {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .list-aside {
+    display: grid;
+    gap: 18px;
+  }
+  .aside-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: 12px;
+  }
+  .aside-card p,
+  .aside-list li {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+  .aside-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .aside-list li {
+    padding-top: 10px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .editorial-list {
+    margin-top: 0;
+  }
+  @media (max-width: 900px) {
+    .list-shell {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

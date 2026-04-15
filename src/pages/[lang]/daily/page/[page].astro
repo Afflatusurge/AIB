@@ -1,0 +1,48 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import Footer from '../../../../components/Footer.astro';
+import DailyDeskPage from '../../../../components/list-pages/DailyDeskPage.astro';
+import { getDailyBriefs } from '../../../../lib/notion';
+import { getAdditionalPageParams, getPaginatedListing } from '../../../../lib/pagination';
+import { useTranslations, getLangFromUrl } from '../../../../i18n/utils';
+
+export async function getStaticPaths() {
+  const langs = ['en', 'ja', 'zh'] as const;
+  const paths = [];
+
+  for (const lang of langs) {
+    const dailyBriefs = await getDailyBriefs(lang);
+    const { totalPages } = getPaginatedListing(dailyBriefs, 1);
+
+    for (const params of getAdditionalPageParams(totalPages)) {
+      paths.push({
+        params: {
+          lang,
+          ...params,
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const currentPage = Number.parseInt(Astro.params.page || '1', 10);
+
+const dailyBriefs = await getDailyBriefs(lang as 'en' | 'zh' | 'ja');
+const listing = getPaginatedListing(dailyBriefs, currentPage);
+---
+
+<Layout title={`${t('nav.daily')} - ${t('site.name')}`}>
+  <DailyDeskPage
+    lang={lang}
+    t={t}
+    leadBrief={listing.leadItem}
+    briefs={listing.entries}
+    currentPage={listing.currentPage}
+    totalPages={listing.totalPages}
+  />
+  <Footer lang={lang} />
+</Layout>

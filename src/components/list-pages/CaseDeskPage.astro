@@ -1,0 +1,222 @@
+---
+import type { CaseStudy } from '../../lib/notion';
+import PaginationNav from '../PaginationNav.astro';
+
+interface Props {
+  lang: 'en' | 'zh' | 'ja';
+  t: (key: any) => string;
+  leadCase?: CaseStudy;
+  cases: CaseStudy[];
+  currentPage: number;
+  totalPages: number;
+}
+
+const { lang, t, leadCase, cases, currentPage, totalPages } = Astro.props;
+const paginationLabels = {
+  previous: lang === 'zh' ? '上一页' : lang === 'ja' ? '前へ' : 'Previous',
+  next: lang === 'zh' ? '下一页' : lang === 'ja' ? '次へ' : 'Next',
+  page: lang === 'zh' ? '页码' : lang === 'ja' ? 'ページ' : 'Page',
+  loadMore: lang === 'zh' ? '加载更多' : lang === 'ja' ? 'もっと見る' : 'Load more',
+};
+---
+
+<section class="page-section">
+  <div class="container">
+    <div class="page-header fade-in">
+      <p class="section-kicker">Case Desk</p>
+      <h1>{t('nav.cases')}</h1>
+      <p>{lang === 'zh' ? '不再按行业松散堆内容，而是用增长、自动化、产品化和一人公司路径去重组案例。' : lang === 'ja' ? '業界別の断片ではなく、成長・自動化・商品化・ひとり起業の視点でケースを再編集します。' : 'A case library organized around problems and outcomes, not loose industry buckets.'}</p>
+    </div>
+
+    {leadCase ? (
+      <div class="list-shell fade-in">
+        <article class="lead-entry">
+          {leadCase.coverImage && (
+            <div class="lead-entry-image">
+              <img src={leadCase.coverImage} alt={leadCase.title} loading="lazy" />
+            </div>
+          )}
+          <div class="lead-entry-meta">
+            {(leadCase.problemType || leadCase.industry) && <span class="card-badge">{leadCase.problemType || leadCase.industry}</span>}
+            {leadCase.revenue && <span class="card-badge impact-routine">{leadCase.revenue}</span>}
+          </div>
+          <div class="lead-entry-date">{leadCase.date}</div>
+          <h2>
+            <a href={`/${lang}/cases/${leadCase.slug || leadCase.id}/`}>{leadCase.title}</a>
+          </h2>
+          <p>{leadCase.snippet}</p>
+          <div class="lead-entry-actions">
+            <a href={`/${lang}/cases/${leadCase.slug || leadCase.id}/`} class="read-more">
+              {t('read.more')} →
+            </a>
+            <span class="lead-entry-note">{lang === 'zh' ? '案例拆解' : lang === 'ja' ? 'ケース分解' : 'Case breakdown'}</span>
+          </div>
+        </article>
+
+        <aside class="list-aside">
+          <div class="aside-card">
+            <h3>{lang === 'zh' ? '案例角度' : lang === 'ja' ? 'ケースの軸' : 'Case lens'}</h3>
+            <ul class="aside-list">
+              <li>{lang === 'zh' ? 'AI 解决了什么具体问题' : lang === 'ja' ? 'AIが何を解決したか' : 'What specific problem did AI solve?'}</li>
+              <li>{lang === 'zh' ? '收入、效率或流程有什么变化' : lang === 'ja' ? '収益・効率・運用はどう変わったか' : 'What changed in revenue, efficiency, or operations?'}</li>
+              <li>{lang === 'zh' ? '对独立创业者可复制的部分是什么' : lang === 'ja' ? '個人でも再現できる要素は何か' : 'What parts are replicable for solo builders?'}</li>
+            </ul>
+          </div>
+          <div class="aside-card">
+            <h3>{lang === 'zh' ? '内容建议' : lang === 'ja' ? '改善メモ' : 'Editorial note'}</h3>
+            <p>{lang === 'zh' ? '你现在的真实库已经有 `Problem Type`，这很好。下一步建议补 `Applicable To` 和 `Key Takeaway`，让案例页从“故事”更进一步变成“可复用的经验”。' : lang === 'ja' ? '現行DBには `Problem Type` があるので、次は `Applicable To` と `Key Takeaway` を足すと再利用しやすいケースになります。' : 'Your real database already has `Problem Type`, which is a strong start. Add `Applicable To` and `Key Takeaway` next to turn these from stories into reusable operating lessons.'}</p>
+          </div>
+        </aside>
+      </div>
+    ) : null}
+
+    <div class="card-grid editorial-list" data-paginated-list>
+      {cases.map((cs, i) => (
+        <article class="content-card fade-in" style={`animation-delay: ${i * 60}ms`}>
+          {cs.coverImage && (
+            <div class="card-cover">
+              <img src={cs.coverImage} alt={cs.title} loading="lazy" />
+            </div>
+          )}
+          <div class="card-meta">
+            <span class="card-badge">{cs.problemType || cs.industry || 'Business'}</span>
+            {cs.revenue && <span class="card-badge impact-routine">{cs.revenue}</span>}
+          </div>
+          <div class="card-date">{cs.date}</div>
+          <h2>
+            <a href={`/${lang}/cases/${cs.slug || cs.id}/`}>{cs.title}</a>
+          </h2>
+          <p class="card-snippet">{cs.snippet}</p>
+          <div class="card-footer">
+            <a href={`/${lang}/cases/${cs.slug || cs.id}/`} class="read-more">
+              {t('read.more')} →
+            </a>
+          </div>
+        </article>
+      ))}
+      {!leadCase && cases.length === 0 && (
+        <div class="empty-state">No case studies yet.</div>
+      )}
+    </div>
+
+    <PaginationNav
+      basePath={`/${lang}/cases/`}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      labels={paginationLabels}
+    />
+  </div>
+</section>
+
+<style>
+  .list-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.46fr);
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+  .lead-entry,
+  .aside-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    padding: 24px;
+  }
+  .lead-entry {
+    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
+  }
+  .lead-entry-image {
+    margin: -8px -8px 18px;
+    border-radius: 18px;
+    overflow: hidden;
+    aspect-ratio: 16 / 8.6;
+    background: linear-gradient(135deg, rgba(177, 90, 53, 0.12), rgba(61, 100, 120, 0.14));
+  }
+  .lead-entry-image img,
+  .card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .lead-entry-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .lead-entry-date {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .lead-entry h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4.2rem);
+    line-height: 0.96;
+    letter-spacing: -0.05em;
+    margin-bottom: 14px;
+  }
+  .lead-entry p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.8;
+    max-width: 46rem;
+  }
+  .lead-entry-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .lead-entry-note {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .list-aside {
+    display: grid;
+    gap: 18px;
+  }
+  .aside-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: 12px;
+  }
+  .aside-card p,
+  .aside-list li {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+  .aside-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .aside-list li {
+    padding-top: 10px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .card-cover {
+    margin: -6px -6px 18px;
+    border-radius: 16px;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, rgba(177, 90, 53, 0.12), rgba(61, 100, 120, 0.14));
+  }
+  @media (max-width: 900px) {
+    .list-shell {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

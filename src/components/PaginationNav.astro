@@ -1,0 +1,255 @@
+---
+import { buildPaginationTokens, buildPageHref } from '../lib/pagination';
+
+interface Props {
+  basePath: string;
+  currentPage: number;
+  totalPages: number;
+  labels?: {
+    previous: string;
+    next: string;
+    page: string;
+    loadMore: string;
+  };
+}
+
+const {
+  basePath,
+  currentPage,
+  totalPages,
+  labels = {
+    previous: 'Previous',
+    next: 'Next',
+    page: 'Page',
+    loadMore: 'Load more',
+  },
+} = Astro.props;
+
+const tokens = buildPaginationTokens(currentPage, totalPages);
+const nextHref = currentPage < totalPages ? buildPageHref(basePath, currentPage + 1) : undefined;
+---
+
+<nav
+  class="pager fade-in"
+  aria-label="Pagination"
+  data-pager-root
+  data-current-page={String(currentPage)}
+  data-total-pages={String(totalPages)}
+>
+  {nextHref && (
+    <a class="pager-load-more" href={nextHref} data-load-more>
+      {labels.loadMore} <span aria-hidden="true">+</span>
+    </a>
+  )}
+
+  <div class="pager-nav">
+    <a
+      class:list={['pager-arrow', currentPage === 1 && 'is-disabled']}
+      href={currentPage === 1 ? undefined : buildPageHref(basePath, currentPage - 1)}
+      aria-disabled={currentPage === 1 ? 'true' : 'false'}
+    >
+      {labels.previous}
+    </a>
+
+    <div class="pager-pages">
+      {tokens.map((token) =>
+        token.type === 'ellipsis' ? (
+          <span class="pager-ellipsis" aria-hidden="true">…</span>
+        ) : (
+          <a
+            class:list={['pager-page', token.value === currentPage && 'is-current']}
+            href={buildPageHref(basePath, token.value)}
+            aria-current={token.value === currentPage ? 'page' : undefined}
+          >
+            {token.value}
+          </a>
+        )
+      )}
+    </div>
+
+    <a
+      class:list={['pager-arrow', currentPage === totalPages && 'is-disabled']}
+      href={currentPage === totalPages ? undefined : buildPageHref(basePath, currentPage + 1)}
+      aria-disabled={currentPage === totalPages ? 'true' : 'false'}
+    >
+      {labels.next}
+    </a>
+
+    <p class="pager-summary">{labels.page} {currentPage} / {totalPages}</p>
+  </div>
+</nav>
+
+<script is:inline>
+  if (!window.__aibLoadMoreBound) {
+    window.__aibLoadMoreBound = true;
+
+    document.addEventListener('click', async (event) => {
+      const trigger = event.target instanceof Element ? event.target.closest('[data-load-more]') : null;
+      if (!trigger) return;
+
+      event.preventDefault();
+
+      const href = trigger.getAttribute('href');
+      const pager = trigger.closest('[data-pager-root]');
+      const section = trigger.closest('.container');
+      const currentList = section?.querySelector('[data-paginated-list]');
+
+      if (!href || !pager || !currentList || trigger.getAttribute('aria-busy') === 'true') {
+        return;
+      }
+
+      trigger.setAttribute('aria-busy', 'true');
+      trigger.classList.add('is-loading');
+
+      try {
+        const response = await fetch(href);
+        if (!response.ok) throw new Error(`Failed to fetch ${href}`);
+
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const nextList = doc.querySelector('[data-paginated-list]');
+        const nextPager = doc.querySelector('[data-pager-root]');
+
+        if (!nextList || !nextPager) {
+          window.location.href = href;
+          return;
+        }
+
+        const cards = nextList.querySelectorAll('.content-card');
+        cards.forEach((card) => {
+          currentList.appendChild(card);
+        });
+
+        pager.innerHTML = nextPager.innerHTML;
+        for (const { name, value } of Array.from(nextPager.attributes)) {
+          if (name.startsWith('data-')) {
+            pager.setAttribute(name, value);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        window.location.href = href;
+      } finally {
+        trigger.removeAttribute('aria-busy');
+        trigger.classList.remove('is-loading');
+      }
+    });
+  }
+</script>
+
+<style>
+  .pager {
+    display: grid;
+    gap: 14px;
+    margin: 28px auto 0;
+    padding: 18px 22px 20px;
+    max-width: 560px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    background: rgba(251, 248, 241, 0.78);
+    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
+  }
+  .pager-nav {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+  }
+  .pager-load-more {
+    width: 100%;
+    min-height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 999px;
+    background: var(--bg-strong);
+    color: #f7f0e8;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid var(--bg-strong);
+    transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease;
+  }
+  .pager-load-more:hover {
+    transform: translateY(-1px);
+  }
+  .pager-load-more.is-loading {
+    opacity: 0.72;
+    pointer-events: none;
+  }
+  .pager-pages {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pager-page,
+  .pager-arrow {
+    min-width: 42px;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+  }
+  .pager-arrow {
+    padding: 0 14px;
+    min-width: 102px;
+  }
+  .pager-page:hover,
+  .pager-arrow:hover {
+    border-color: var(--border-hover);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .pager-page.is-current {
+    background: var(--bg-strong);
+    border-color: var(--bg-strong);
+    color: #f7f0e8;
+  }
+  .pager-arrow.is-disabled {
+    pointer-events: none;
+    opacity: 0.42;
+  }
+  .pager-ellipsis {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    padding: 0 2px;
+  }
+  .pager-summary {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  @media (max-width: 720px) {
+    .pager {
+      gap: 12px;
+      padding: 16px;
+    }
+    .pager-nav {
+      grid-template-columns: 1fr;
+    }
+    .pager-arrow {
+      min-width: 100%;
+    }
+    .pager-pages {
+      order: -1;
+    }
+  }
+</style>
