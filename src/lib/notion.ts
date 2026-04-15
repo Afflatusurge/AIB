@@ -5,26 +5,98 @@ const notion = new Client({
   auth: import.meta.env.NOTION_API_KEY || '',
 });
 
+type Lang = 'en' | 'zh' | 'ja';
+type ContentType = 'daily' | 'tools' | 'cases';
+
+// Notion now exposes both a database object id and a nested data source / collection id.
+// The SDK's databases.query endpoint needs the database id, but it's easy to accidentally
+// paste the collection id from a collection:// URL into env vars. This map lets us accept both.
+const NOTION_DB_IDS: Record<ContentType, Record<Lang, { databaseId: string; dataSourceId: string }>> = {
+  daily: {
+    en: {
+      databaseId: '68223dc1-0caa-4a8d-ab07-3fa8c336cefc',
+      dataSourceId: '0ea22d16-f362-437a-96f0-aa7cae3a9f4d',
+    },
+    ja: {
+      databaseId: 'c7358cf3-6798-40b6-a067-36450d15fe4b',
+      dataSourceId: '9e1a115b-fccf-445c-80e1-5a3f9722fee2',
+    },
+    zh: {
+      databaseId: '5336d835-1042-4808-a5b8-ff162542a065',
+      dataSourceId: 'e50e7cb0-5eff-46c2-b04e-55ce5a46a43e',
+    },
+  },
+  tools: {
+    en: {
+      databaseId: '7a982031-2ce7-46c1-8b2d-963f7d792213',
+      dataSourceId: '6b5d18a1-84b2-4a6f-9c33-a080064d047f',
+    },
+    ja: {
+      databaseId: 'ff529c1a-64f5-468c-9a10-317a2d7304d8',
+      dataSourceId: '3d905653-ba0c-4522-a240-23cc085369fe',
+    },
+    zh: {
+      databaseId: '1026f444-f10a-4f61-9006-5d83902befc3',
+      dataSourceId: '88b3c0d1-401e-4470-a400-b47728d20566',
+    },
+  },
+  cases: {
+    en: {
+      databaseId: '66410679-796e-4f28-bcda-193d15c14ca2',
+      dataSourceId: '36156f4e-a322-44f4-9e40-b330dae1a93d',
+    },
+    ja: {
+      databaseId: '321bc96a-80ce-4d56-bdb0-31efe140f116',
+      dataSourceId: '7b129e8b-f1e6-4ccf-802c-22d284d7ff13',
+    },
+    zh: {
+      databaseId: '0e795dbe-f0ea-4e9c-9be1-4df7098e2de8',
+      dataSourceId: 'c6e44af6-3174-4976-9811-27e9ee660ff6',
+    },
+  },
+};
+
+function normalizeId(id: string): string {
+  return (id || '').trim().replace(/-/g, '').toLowerCase();
+}
+
+function formatUuid(id: string): string {
+  const clean = normalizeId(id);
+  if (clean.length !== 32) return id;
+  return `${clean.slice(0, 8)}-${clean.slice(8, 12)}-${clean.slice(12, 16)}-${clean.slice(16, 20)}-${clean.slice(20)}`;
+}
+
+function resolveDatabaseId(type: ContentType, lang: Lang, value: string): string {
+  const ids = NOTION_DB_IDS[type][lang];
+  const candidate = (value || '').trim();
+
+  if (!candidate) return ids.databaseId;
+
+  if (normalizeId(candidate) === normalizeId(ids.dataSourceId)) {
+    return ids.databaseId;
+  }
+
+  return formatUuid(candidate);
+}
+
 // ── Database ID Map ────────────────────────────────────────
 const DB = {
   daily: {
-    en: import.meta.env.NOTION_DB_DAILY_EN || '',
-    zh: import.meta.env.NOTION_DB_DAILY_ZH || '',
-    ja: import.meta.env.NOTION_DB_DAILY_JA || '',
+    en: resolveDatabaseId('daily', 'en', import.meta.env.NOTION_DB_DAILY_EN || ''),
+    zh: resolveDatabaseId('daily', 'zh', import.meta.env.NOTION_DB_DAILY_ZH || ''),
+    ja: resolveDatabaseId('daily', 'ja', import.meta.env.NOTION_DB_DAILY_JA || ''),
   },
   tools: {
-    en: import.meta.env.NOTION_DB_TOOLS_EN || '',
-    zh: import.meta.env.NOTION_DB_TOOLS_ZH || '',
-    ja: import.meta.env.NOTION_DB_TOOLS_JA || '',
+    en: resolveDatabaseId('tools', 'en', import.meta.env.NOTION_DB_TOOLS_EN || ''),
+    zh: resolveDatabaseId('tools', 'zh', import.meta.env.NOTION_DB_TOOLS_ZH || ''),
+    ja: resolveDatabaseId('tools', 'ja', import.meta.env.NOTION_DB_TOOLS_JA || ''),
   },
   cases: {
-    en: import.meta.env.NOTION_DB_CASES_EN || '',
-    zh: import.meta.env.NOTION_DB_CASES_ZH || '',
-    ja: import.meta.env.NOTION_DB_CASES_JA || '',
+    en: resolveDatabaseId('cases', 'en', import.meta.env.NOTION_DB_CASES_EN || ''),
+    zh: resolveDatabaseId('cases', 'zh', import.meta.env.NOTION_DB_CASES_ZH || ''),
+    ja: resolveDatabaseId('cases', 'ja', import.meta.env.NOTION_DB_CASES_JA || ''),
   },
 } as const;
-
-type Lang = 'en' | 'zh' | 'ja';
 
 const VISIBLE_STATUSES = new Set([
   'done',
@@ -464,12 +536,14 @@ function blocksToHtml(blocks: any[]): string {
 
 export async function getPageContent(pageId: string): Promise<string> {
   if (!isConfigured()) return '';
+  const blockId = formatUuid(pageId);
+  if (normalizeId(blockId).length !== 32) return '';
   try {
     const allBlocks: any[] = [];
     let cursor: string | undefined = undefined;
     do {
       const res: any = await notion.blocks.children.list({
-        block_id: pageId,
+        block_id: blockId,
         start_cursor: cursor,
         page_size: 100,
       });
@@ -478,7 +552,7 @@ export async function getPageContent(pageId: string): Promise<string> {
     } while (cursor);
     return blocksToHtml(allBlocks);
   } catch (err) {
-    console.error(`[Notion] Failed to fetch page content (${pageId}):`, err);
+    console.error(`[Notion] Failed to fetch page content (${blockId}):`, err);
     return '';
   }
 }
