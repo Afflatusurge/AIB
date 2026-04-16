@@ -95,12 +95,41 @@ Why first:
 - It helps the site cover internal operations, not just publishing or building.
 - It can later branch into `AI analyst`, `AI CFO`, and `solo research stack`.
 
-## Second wave candidates
+## Shipped waves
+
+### Wave 1
+
+- `Build your AI-first website or MVP`
+- `The one-person media studio`
+- `AI growth and distribution system`
+- `The one-person office stack`
+
+### Wave 2
 
 - `The solo coding stack`
 - `AI as your analyst / mini CFO`
+
+### Wave 3
+
+- `The AI growth stack for a newsletter business`
+- `The solo research stack`
+
+### Wave 4
+
 - `How to productize a course business with AI`
 - `How to run a multilingual content site with AI`
+
+### Wave 5
+
+- `The AI workflow for a client-services business`
+- `How to run a solo advisory business with AI`
+
+## Next candidates
+
+- `The AI stack for repurposing one idea into five formats`
+- `How to build a small paid membership with AI`
+- `How to turn advisory into a productized retainer`
+- `The AI workflow for a niche research letter`
 
 ## Legacy docs strategy
 
