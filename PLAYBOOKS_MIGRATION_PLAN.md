@@ -124,12 +124,37 @@ Why first:
 - `The AI workflow for a client-services business`
 - `How to run a solo advisory business with AI`
 
-## Next candidates
+### Wave 6
 
 - `The AI stack for repurposing one idea into five formats`
 - `How to build a small paid membership with AI`
+
+### Wave 7
+
 - `How to turn advisory into a productized retainer`
 - `The AI workflow for a niche research letter`
+
+### Wave 8
+
+- `How to run a small premium briefing business`
+- `How to build a solo media franchise with AI`
+
+### Wave 9
+
+- `How to package a niche knowledge base with AI`
+- `The AI workflow for a solo expert network`
+
+### Wave 10
+
+- `How to build a premium signal archive with AI`
+- `The AI stack for solo editorial operations`
+
+## Next candidates
+
+- `How to run a solo editorial lab with AI`
+- `The AI workflow for a specialist interview series`
+- `How to build a solo editorial calendar with AI`
+- `The AI stack for a compact publishing studio`
 
 ## Legacy docs strategy
 

@@ -17,27 +17,40 @@ interface Props {
 const { lang, playbooks } = Astro.props;
 const primary = playbooks[0];
 const secondary = playbooks.slice(1);
+
+const localizeCategory = (category?: string) => {
+  if (!category) {
+    return lang === 'zh' ? '实战手册' : lang === 'ja' ? 'プレイブック' : 'Playbook';
+  }
+
+  const labels: Record<string, { en: string; ja: string; zh: string }> = {
+    Build: { en: 'Build', ja: '構築', zh: '搭建' },
+    Media: { en: 'Media', ja: 'メディア', zh: '媒体' },
+    Growth: { en: 'Growth', ja: '成長', zh: '增长' },
+    Operations: { en: 'Operations', ja: '運営', zh: '运营' },
+  };
+
+  return labels[category]?.[lang as 'en' | 'ja' | 'zh'] ?? category;
+};
 ---
 
 <section class="section-block">
   <div class="container">
     <div class="playbooks-head">
-      <div>
-        <div class="section-label">{lang === 'zh' ? '// PLAYBOOKS' : lang === 'ja' ? '// PLAYBOOKS' : '// PLAYBOOKS'}</div>
-        <h2 class="section-title">
-          {lang === 'zh'
-            ? '不是更多工具，而是更完整的做事蓝图'
-            : lang === 'ja'
-              ? 'ツール一覧ではなく、仕事を進めるための設計図'
-              : 'Playbooks for getting the work done'}
-        </h2>
-      </div>
+      <div class="section-label">// PLAYBOOKS</div>
+      <h2 class="section-title">
+        {lang === 'zh'
+          ? '按任务组织的 AI 实战手册'
+          : lang === 'ja'
+            ? 'AIで進めるためのタスク別ガイド'
+            : 'Task-based guides for building with AI'}
+      </h2>
       <p class="section-desc">
         {lang === 'zh'
-          ? '把工具评测、案例和日常信号，重组为一套按任务推进的推荐组合。'
+          ? '把评测、案例和日常信号，重组为一套可以直接照着推进的做事顺序。'
           : lang === 'ja'
-            ? 'レビュー、事例、日々のシグナルを、タスク単位の実行ガイドへ組み替えます。'
-            : 'A playbook is where reviews, cases, and daily signals turn into one working stack for a real task.'}
+            ? 'レビュー、事例、日々のシグナルを、実際に辿れるひとつの進め方へ組み直します。'
+            : 'This is where reviews, cases, and daily signals turn into one practical sequence you can actually follow.'}
       </p>
     </div>
 
@@ -45,22 +58,22 @@ const secondary = playbooks.slice(1);
       {primary && (
         <article class="playbook-primary">
           <div class="playbook-primary-copy">
-            <p class="playbook-tag">{primary.category || 'Playbook'}</p>
+            <p class="playbook-tag">{localizeCategory(primary.category)}</p>
             <h3><a href={`/${lang}/playbooks/${primary.slug}/`}>{primary.title}</a></h3>
             <p class="playbook-dek">{primary.snippet}</p>
             <div class="playbook-stat-list">
               <div>
-                <span>{lang === 'zh' ? 'Outcome' : lang === 'ja' ? 'Outcome' : 'Outcome'}</span>
+                <span>{lang === 'zh' ? '能得到什么' : lang === 'ja' ? '得られる結果' : 'Outcome'}</span>
                 <p>{primary.outcome}</p>
               </div>
               <div>
-                <span>{lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for'}</span>
+                <span>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for'}</span>
                 <p>{primary.bestFor}</p>
               </div>
             </div>
           </div>
           <div class="playbook-primary-side">
-            <p class="playbook-note-label">{lang === 'zh' ? 'Why it belongs now' : lang === 'ja' ? 'Why it belongs now' : 'Why it belongs now'}</p>
+            <p class="playbook-note-label">{lang === 'zh' ? '为什么现在读' : lang === 'ja' ? '今読む理由' : 'Why now'}</p>
             <p class="playbook-note">{primary.useWhen}</p>
             <a class="playbook-link" href={`/${lang}/playbooks/${primary.slug}/`}>
               {lang === 'zh' ? '打开这份 playbook →' : lang === 'ja' ? 'この playbook を読む →' : 'Open the playbook →'}
@@ -73,9 +86,9 @@ const secondary = playbooks.slice(1);
         {secondary.map((playbook) => (
           <article class="playbook-row">
             <div class="playbook-row-top">
-              <p class="playbook-tag">{playbook.category || 'Playbook'}</p>
+              <p class="playbook-tag">{localizeCategory(playbook.category)}</p>
               <a href={`/${lang}/playbooks/${playbook.slug}/`} class="playbook-row-link">
-                {lang === 'zh' ? '查看' : lang === 'ja' ? '開く' : 'Read'}
+                {lang === 'zh' ? '查看' : lang === 'ja' ? '読む' : 'Read'}
               </a>
             </div>
             <h3><a href={`/${lang}/playbooks/${playbook.slug}/`}>{playbook.title}</a></h3>
@@ -89,15 +102,11 @@ const secondary = playbooks.slice(1);
 
 <style>
   .playbooks-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
-    gap: 24px;
-    align-items: end;
-    margin-bottom: 34px;
+    margin-bottom: 40px;
+    max-width: 760px;
   }
   .playbooks-head .section-desc {
     margin-bottom: 0;
-    justify-self: end;
   }
   .playbooks-grid {
     display: grid;
@@ -198,13 +207,9 @@ const secondary = playbooks.slice(1);
     margin-bottom: 10px;
   }
   @media (max-width: 980px) {
-    .playbooks-head,
     .playbooks-grid,
     .playbook-primary {
       grid-template-columns: 1fr;
-    }
-    .playbooks-head .section-desc {
-      justify-self: start;
     }
     .playbook-primary-copy h3 {
       max-width: none;
