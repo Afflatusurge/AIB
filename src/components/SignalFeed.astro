@@ -46,12 +46,12 @@ const dayOfWeek = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja
 
 <section class="section-block">
   <div class="container">
-    <div class="section-label">{lang === 'zh' ? '// DAILY BRIEFING' : lang === 'ja' ? '// DAILY BRIEFING' : '// DAILY BRIEFING'}</div>
+    <div class="section-label">{lang === 'zh' ? '// 每日简报' : lang === 'ja' ? '// デイリーブリーフ' : '// DAILY BRIEF'}</div>
     <h2 class="section-title">
-      {lang === 'zh' ? '把每天的重要变化整理成简报' : lang === 'ja' ? '毎日の変化を、読めるブリーフに整理する' : 'A daily brief, not a noisy feed'}
+      {lang === 'zh' ? '只看关键信号' : lang === 'ja' ? 'ノイズではなくシグナル' : 'Signal, not noise'}
     </h2>
     <p class="section-desc">
-      {lang === 'zh' ? '这里保留“快”和“新”，但读起来应该像编辑整理过的版面，而不是信息流。' : lang === 'ja' ? '速さと新しさは保ちつつ、読む体験は情報流ではなく編集済みの紙面に近づけます。' : 'Keep the speed of the news cycle, but present it with the hierarchy and calm of an editorial desk.'}
+      {lang === 'zh' ? '筛选真正重要的信息，用结构化方式呈现。' : lang === 'ja' ? '重要な情報だけを整理して提供。' : 'What matters today, filtered and structured for quick reading.'}
     </p>
 
     <div class="signal-feed animate-in">
@@ -84,7 +84,7 @@ const dayOfWeek = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja
       </div>
       <div class="signal-footer">
         <a href={`/${lang}/daily/`}>
-          {lang === 'zh' ? '查看完整简报 →' : lang === 'ja' ? 'フルブリーフを見る →' : 'View Full Brief →'}
+          {lang === 'zh' ? '查看最新 →' : lang === 'ja' ? '最新ブリーフを見る →' : 'View latest brief →'}
           {briefs.length > 6 && ` ${briefs.length - 6} more signals`}
         </a>
       </div>

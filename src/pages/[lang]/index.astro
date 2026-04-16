@@ -40,9 +40,36 @@ const prioritizedTools = leadTool
 const prioritizedCases = leadCase
   ? [leadCase, ...caseStudies.filter((item) => item.id !== leadCase.id)]
   : caseStudies;
+
+const homepageTitle = lang === 'zh'
+  ? 'AI一人公司指南 | 每日简报、工具评测与实战指南'
+  : lang === 'ja'
+    ? 'AIソロプレナーガイド | デイリーブリーフ・ツールレビュー・プレイブック'
+    : 'AI Solopreneur Guide | Daily Brief, Tool Reviews, and Playbooks';
+
+const homepageDescription = lang === 'zh'
+  ? '从 AI 噪音，到商业信号。每日简报、工具评测、案例分析与实战指南，帮助你筛选重要信息、理解趋势，并一步步落地执行。'
+  : lang === 'ja'
+    ? 'AIのノイズを、ビジネスのシグナルへ。デイリーブリーフ、ツールレビュー、ケース、プレイブックで、重要な情報を理解し、実行へつなげます。'
+    : 'AI, filtered for decisions and execution. Daily AI briefings, tool reviews, case studies, and playbooks to help builders understand what matters and apply it step by step.';
+
+const homepageKeywords = lang === 'en'
+  ? [
+      'AI news summary',
+      'daily AI briefing',
+      'AI trends today',
+      'AI tool reviews',
+      'best AI tools 2026',
+      'AI tools comparison',
+      'AI case studies',
+      'AI in business examples',
+      'AI workflows',
+      'AI automation guide',
+    ]
+  : undefined;
 ---
 
-<Layout title={t('site.name')}>
+<Layout title={homepageTitle} description={homepageDescription} keywords={homepageKeywords}>
   <Hero
     lang={lang}
     t={t}
@@ -54,8 +81,8 @@ const prioritizedCases = leadCase
   <BentoGrid
     lang={lang}
     t={t}
+    briefs={prioritizedBriefs.slice(0, 3)}
     tools={prioritizedTools.slice(0, 3)}
-    cases={prioritizedCases.slice(0, 3)}
     playbooks={playbooks.slice(0, 3)}
   />
   <div class="section-divider"></div>

@@ -28,12 +28,12 @@ interface PlaybookCard {
 interface Props {
   lang: string;
   t: (key: string) => string;
+  briefs: Array<{ title: string; slug: string; category?: string; commentary?: string }>;
   tools: ToolCard[];
-  cases: CaseCard[];
   playbooks: PlaybookCard[];
 }
 
-const { lang, tools, cases, playbooks } = Astro.props;
+const { lang, briefs, tools, playbooks } = Astro.props;
 
 const localizePlaybookCategory = (category?: string) => {
   if (!category) {
@@ -53,26 +53,61 @@ const localizePlaybookCategory = (category?: string) => {
 
 <section class="section-block">
   <div class="container">
-    <div class="section-label">// READING PATHS</div>
+    <div class="section-label">{lang === 'zh' ? '// 阅读路径' : lang === 'ja' ? '// 読み方' : '// READING PATHS'}</div>
     <h2 class="section-title">
       {lang === 'zh'
-        ? '继续往下读的三条路径'
+        ? '从你的需求开始'
         : lang === 'ja'
-          ? 'サイトを深く読むための3つの入口'
-          : 'Three deeper ways into the site'}
+          ? '目的から選ぶ'
+          : 'Start from what you need'}
     </h2>
     <p class="section-desc">
       {lang === 'zh'
-        ? 'Daily Brief 负责“发生了什么”，这三条路径则分别回答“什么值得评估”“什么已经跑通”“下一步该怎么做”。'
+        ? '看趋势、做决策、到实际执行。'
         : lang === 'ja'
-          ? 'Daily Brief が「何が起きたか」を受け持つなら、この3つは「何を見極めるか」「何が実際に機能したか」「どう進めるか」を担当します。'
-          : 'The daily brief handles what is new. These three desks help readers evaluate tools, learn from working cases, and move through a task step by step.'}
+          ? 'トレンド把握、意思決定、実行まで。'
+          : 'News for awareness. Reviews for decisions. Playbooks for execution.'}
     </p>
 
     <div class="desk-grid">
       <article class="desk-card animate-in">
         <div class="desk-topline">
           <span class="desk-tag">01</span>
+          <a href={`/${lang}/daily/`} class="desk-link">
+            {lang === 'zh' ? '查看每日简报' : lang === 'ja' ? 'デイリーブリーフを見る' : 'Open daily brief'}
+          </a>
+        </div>
+        <div class="desk-intro">
+          <h3>{lang === 'zh' ? '每日简报' : lang === 'ja' ? 'デイリーブリーフ' : 'Daily Brief'}</h3>
+          <p>
+            {lang === 'zh'
+              ? '掌握当天关键 AI 动态。'
+              : lang === 'ja'
+                ? '今日の重要な動きを把握。'
+                : 'Track what matters today.'}
+          </p>
+        </div>
+        <ul class="desk-list">
+          {briefs.length > 0 ? briefs.map((brief) => (
+            <li>
+              <a href={`/${lang}/daily/${brief.slug}/`}>{brief.title}</a>
+              <span>{brief.commentary || brief.category || (lang === 'zh' ? '关键信号' : lang === 'ja' ? '重要シグナル' : 'Signal')}</span>
+            </li>
+          )) : (
+            <li class="empty-row">
+              {lang === 'zh'
+                ? '接入内容后，这里会显示当天最值得看的更新。'
+                : lang === 'ja'
+                  ? '接続後、ここに今日の重要な更新が並びます。'
+                  : 'The latest important updates will appear here once content is connected.'}
+            </li>
+          )}
+        </ul>
+      </article>
+
+      <article class="desk-card animate-in delay-1">
+        <div class="desk-topline">
+          <span class="desk-tag">02</span>
           <a href={`/${lang}/tools/`} class="desk-link">
             {lang === 'zh' ? '浏览工具评测' : lang === 'ja' ? 'ツールレビューを見る' : 'Browse tool reviews'}
           </a>
@@ -81,10 +116,10 @@ const localizePlaybookCategory = (category?: string) => {
           <h3>{lang === 'zh' ? '工具评测' : lang === 'ja' ? 'ツールレビュー' : 'Tool Reviews'}</h3>
           <p>
             {lang === 'zh'
-              ? '不是工具目录，而是结构化评测：值不值得用、适合谁、怎样接进真实工作流。'
+              ? '选择真正好用的工具。'
               : lang === 'ja'
-                ? '単なるツール一覧ではなく、値段に見合うか、誰に向いているか、仕事の流れにどう入るかを見ます。'
-                : 'Structured reviews that answer whether a tool is worth the money, who it serves, and how it fits a real workflow.'}
+                ? '最適なツールを選ぶ。'
+                : 'Decide what to use.'}
           </p>
         </div>
         <ul class="desk-list">
@@ -96,45 +131,10 @@ const localizePlaybookCategory = (category?: string) => {
           )) : (
             <li class="empty-row">
               {lang === 'zh'
-                ? '优先把最值得长期参考的工具页做成结构化评测。'
+                ? '这里会集中展示值得认真比较的工具。'
                 : lang === 'ja'
-                  ? 'まずは長く参照されるべきツールを、構造化レビューに整えます。'
-                  : 'Start with the tools most worth turning into durable, structured reviews.'}
-            </li>
-          )}
-        </ul>
-      </article>
-
-      <article class="desk-card animate-in delay-1">
-        <div class="desk-topline">
-          <span class="desk-tag">02</span>
-          <a href={`/${lang}/cases/`} class="desk-link">
-            {lang === 'zh' ? '查看案例分析' : lang === 'ja' ? 'ケースを見る' : 'View case studies'}
-          </a>
-        </div>
-        <div class="desk-intro">
-          <h3>{lang === 'zh' ? '案例分析' : lang === 'ja' ? 'ケーススタディ' : 'Case Studies'}</h3>
-          <p>
-            {lang === 'zh'
-              ? '不再按行业堆内容，而是按问题组织案例，看清什么在增长、运营和产品化上真的跑通了。'
-              : lang === 'ja'
-                ? '業界で分けるのではなく、課題ごとに「何が実際に機能したか」を見せるケース集です。'
-                : 'Problem-led cases that show what is actually working in growth, operations, and productization.'}
-          </p>
-        </div>
-        <ul class="desk-list">
-          {cases.length > 0 ? cases.map((item) => (
-            <li>
-              <a href={`/${lang}/cases/${item.slug}/`}>{item.title}</a>
-              <span>{item.problemType || item.revenue || item.industry || (lang === 'zh' ? '案例' : lang === 'ja' ? 'ケース' : 'Case')}</span>
-            </li>
-          )) : (
-            <li class="empty-row">
-              {lang === 'zh'
-                ? '把旧站里最强的行业页，改写成真正有决策价值的案例。'
-                : lang === 'ja'
-                  ? '旧サイトの強い業界ページを、意思決定に役立つケースへ再編集します。'
-                  : 'Rewrite the strongest legacy industry pages into cases that actually help people decide.'}
+                  ? 'ここには、比較して選ぶべきツールが並びます。'
+                  : 'This is where the tools worth proper evaluation should appear.'}
             </li>
           )}
         </ul>
@@ -151,10 +151,10 @@ const localizePlaybookCategory = (category?: string) => {
           <h3>{lang === 'zh' ? '实战手册' : lang === 'ja' ? '実践プレイブック' : 'Playbooks'}</h3>
           <p>
             {lang === 'zh'
-              ? '把评测、案例和日常信号串成一套可以直接照着执行的任务式指南。'
+              ? '一步步完成任务。'
               : lang === 'ja'
-                ? 'レビュー、事例、日々のシグナルを、実際に辿れるひとつの進め方へ組み直すタスク別ガイドです。'
-                : 'Task-based guides that turn reviews, cases, and daily signals into one working stack you can actually follow.'}
+                ? '実際に使って実行する。'
+                : 'Execute step by step.'}
           </p>
         </div>
         <ul class="desk-list">

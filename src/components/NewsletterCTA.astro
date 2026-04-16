@@ -10,33 +10,33 @@ const { lang } = Astro.props;
     <div class="newsletter animate-in">
       <div class="newsletter-copy">
         <p class="newsletter-kicker">
-          {lang === 'zh' ? 'NEWSLETTER' : lang === 'ja' ? 'NEWSLETTER' : 'NEWSLETTER'}
+          {lang === 'zh' ? '订阅' : lang === 'ja' ? 'ニュースレター' : 'NEWSLETTER'}
         </p>
         <h2>
-          {lang === 'zh' ? '如果首页像编辑部，邮件就该像每日头版。' : lang === 'ja' ? 'トップが編集部なら、メールは毎日の一面であるべき。' : 'If the site feels like a newsroom, the email should feel like its daily front page.'}
+          {lang === 'zh' ? '获取真正重要的信息' : lang === 'ja' ? '重要な情報だけを受け取る' : 'Get the signal, not the noise'}
         </h2>
         <p class="sub">
-          {lang === 'zh' ? '这里先保留订阅区，但视觉上更像一则编辑邀请，而不是 SaaS 表单模块。' : lang === 'ja' ? 'ここはSaaSのフォームではなく、編集部からの招待のように見せます。' : 'Keep the email CTA, but style it like an editorial invitation rather than a generic product signup block.'}
+          {lang === 'zh' ? 'AI、工具与商业趋势的精简总结。' : lang === 'ja' ? 'AI、ツール、ビジネス動向を簡潔にまとめて届けます。' : 'A concise briefing on AI, tools, and business impact.'}
         </p>
       </div>
       <form class="newsletter-form" onsubmit="return false;">
-        <input type="email" placeholder={lang === 'zh' ? '输入邮箱，接收每日 brief' : lang === 'ja' ? 'メールアドレスを入力' : 'Enter your email for the daily brief'} />
+        <input type="email" placeholder={lang === 'zh' ? '输入邮箱，接收每日简报' : lang === 'ja' ? 'メールアドレスを入力' : 'Enter your email for the daily brief'} />
         <button class="btn-primary" type="submit">
-          {lang === 'zh' ? '加入收件箱版' : lang === 'ja' ? '購読する' : 'Join the inbox edition'}
+          {lang === 'zh' ? '订阅' : lang === 'ja' ? '登録する' : 'Subscribe'}
         </button>
       </form>
       <div class="newsletter-features">
         <div class="newsletter-feature">
           <span class="check">01</span>
-          {lang === 'zh' ? '每天 3-5 条精编内容' : lang === 'ja' ? '毎日3〜5本の厳選' : '3-5 curated items each day'}
+          {lang === 'zh' ? '每天一封精简总结' : lang === 'ja' ? '毎日、簡潔なまとめを1通' : 'One concise briefing each day'}
         </div>
         <div class="newsletter-feature">
           <span class="check">02</span>
-          {lang === 'zh' ? '附上为什么值得关注' : lang === 'ja' ? 'なぜ重要かを添える' : 'Why it matters for your business'}
+          {lang === 'zh' ? '聚焦 AI、工具与商业影响' : lang === 'ja' ? 'AI、ツール、ビジネス影響に集中' : 'Focused on AI, tools, and business impact'}
         </div>
         <div class="newsletter-feature">
           <span class="check">03</span>
-          {lang === 'zh' ? '工具与案例会定期串联' : lang === 'ja' ? 'ツールと事例を横断' : 'Cross-links to reviews and cases'}
+          {lang === 'zh' ? '读完就知道下一步该看什么' : lang === 'ja' ? '次に何を見るべきかが分かる' : 'Know what to read next'}
         </div>
       </div>
     </div>

@@ -6,12 +6,14 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  keywords?: string[] | string;
   ogImage?: string;
 }
 
-const { title, description = 'AI Solopreneur Guide - Daily briefs, tool reviews, and case studies for building an AI-powered one-person business.', ogImage } = Astro.props;
+const { title, description = 'AI Solopreneur Guide - Daily briefs, tool reviews, and case studies for building an AI-powered one-person business.', keywords, ogImage } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const keywordContent = Array.isArray(keywords) ? keywords.join(', ') : keywords;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const languages = ['en', 'ja', 'zh'];
@@ -21,6 +23,7 @@ const languages = ['en', 'ja', 'zh'];
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="description" content={description} />
+		{keywordContent && <meta name="keywords" content={keywordContent} />}
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />

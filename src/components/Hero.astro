@@ -25,26 +25,26 @@ const editionDate = new Intl.DateTimeFormat(editorialLocale, {
       </p>
       <h1 class={`hero-title animate-in delay-1 ${lang === 'en' ? '' : 'is-cjk'} ${lang === 'ja' ? 'is-ja' : ''}`}>
         {lang === 'zh' ? (
-          <>写给想把 AI 生意做成的人。<span>一份单人公司指南。</span></>
+          <>从 AI 噪音，<span>到商业信号</span></>
         ) : lang === 'ja' ? (
-          <>ひとりでAIビジネスを形にしたい人へ。<span>ひとり会社のためのガイド。</span></>
+          <>AIのノイズを、<span>ビジネスのシグナルへ</span></>
         ) : (
-          <>An editorial guide to building an <span>AI-first business of one.</span></>
+          <>AI, filtered for <span>decisions and execution.</span></>
         )}
       </h1>
       <p class="hero-sub animate-in delay-2">
         {lang === 'zh'
-          ? '不是把工具、新闻和案例堆成目录，而是帮你判断今天该看什么、该试什么、下一步该怎么做。'
+          ? '筛选重要信息，理解趋势，并一步步落地执行。'
           : lang === 'ja'
-            ? 'ニュースやツールや事例を並べるだけではなく、今日どれを見るべきか、何を試すべきか、次にどう動くかまで判断しやすくします。'
-            : 'Less directory, more newsroom. We filter the noise into daily briefs, practical tool reviews, and case studies built for AI solopreneurs.'}
+            ? '重要な情報だけを抽出し、理解し、実行する。'
+            : 'Cut through the noise. Understand what matters. Apply it step by step.'}
       </p>
       <div class="hero-cta animate-in delay-3">
         <a href={`/${lang}/daily/`} class="btn-primary">
-          {lang === 'zh' ? '阅读今日简报' : lang === 'ja' ? '今日のブリーフを読む' : "Read today's brief"}
+          {lang === 'zh' ? '查看每日简报' : lang === 'ja' ? 'デイリーブリーフを見る' : 'Start with Daily Brief'}
         </a>
-        <a href={`/${lang}/cases/`} class="btn-secondary">
-          {lang === 'zh' ? '查看案例库' : lang === 'ja' ? 'ケースを探す' : 'Browse case studies'}
+        <a href={`/${lang}/playbooks/`} class="btn-secondary">
+          {lang === 'zh' ? '浏览实战指南' : lang === 'ja' ? 'プレイブックを見る' : 'Explore Playbooks'}
         </a>
       </div>
     </div>

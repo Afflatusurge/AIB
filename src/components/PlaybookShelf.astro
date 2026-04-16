@@ -37,20 +37,20 @@ const localizeCategory = (category?: string) => {
 <section class="section-block">
   <div class="container">
     <div class="playbooks-head">
-      <div class="section-label">// PLAYBOOKS</div>
+      <div class="section-label">{lang === 'zh' ? '// 实战指南' : lang === 'ja' ? '// プレイブック' : '// PLAYBOOKS'}</div>
       <h2 class="section-title">
         {lang === 'zh'
-          ? '按任务组织的 AI 实战手册'
+          ? '从想法到落地'
           : lang === 'ja'
-            ? 'AIで進めるためのタスク別ガイド'
-            : 'Task-based guides for building with AI'}
+            ? 'アイデアから実行へ'
+            : 'From idea to execution'}
       </h2>
       <p class="section-desc">
         {lang === 'zh'
-          ? '把评测、案例和日常信号，重组为一套可以直接照着推进的做事顺序。'
+          ? '可执行的 AI 工作流，真正能用。'
           : lang === 'ja'
-            ? 'レビュー、事例、日々のシグナルを、実際に辿れるひとつの進め方へ組み直します。'
-            : 'This is where reviews, cases, and daily signals turn into one practical sequence you can actually follow.'}
+            ? '実用的なステップガイド。'
+            : 'Step-by-step workflows you can actually use.'}
       </p>
     </div>
 
@@ -101,6 +101,31 @@ const localizeCategory = (category?: string) => {
 </section>
 
 <style>
+  .section-block { padding: 80px 0; }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 3.8vw, 3.2rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 40px;
+    max-width: 760px;
+    line-height: 1.75;
+  }
   .playbooks-head {
     margin-bottom: 40px;
     max-width: 760px;
@@ -216,6 +241,7 @@ const localizeCategory = (category?: string) => {
     }
   }
   @media (max-width: 768px) {
+    .section-block { padding: 64px 0; }
     .playbook-primary,
     .playbook-row {
       border-radius: 20px;
