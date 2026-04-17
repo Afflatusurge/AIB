@@ -14,6 +14,7 @@ const { title, description = 'AI Solopreneur Guide - Daily briefs, tool reviews,
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const keywordContent = Array.isArray(keywords) ? keywords.join(', ') : keywords;
+const GA_MEASUREMENT_ID = 'G-KRMNDMBYMK';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const languages = ['en', 'ja', 'zh'];
@@ -97,6 +98,78 @@ const languages = ['en', 'ja', 'zh'];
 			<slot />
 		</main>
     <ConsentBanner lang={lang} />
+		<script is:inline define:vars={{ GA_MEASUREMENT_ID }}>
+			(() => {
+				const storageKey = 'aib-analytics-consent';
+				const measurementId = GA_MEASUREMENT_ID;
+				const scriptSrc = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+				const scriptSelector = `script[src="${scriptSrc}"]`;
+
+				const getCookieNames = () =>
+					document.cookie
+						.split(';')
+						.map((chunk) => chunk.trim().split('=')[0])
+						.filter(Boolean);
+
+				const clearCookie = (name) => {
+					const hostname = window.location.hostname;
+					const parts = hostname.split('.').filter(Boolean);
+					const rootDomain = parts.length >= 2 ? `.${parts.slice(-2).join('.')}` : '';
+					const domains = [undefined, hostname, `.${hostname}`, rootDomain].filter(Boolean);
+
+					domains.forEach((domain) => {
+						document.cookie = `${name}=; Max-Age=0; path=/; domain=${domain}; SameSite=Lax`;
+					});
+
+					document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+				};
+
+				const disableAnalytics = () => {
+					window[`ga-disable-${measurementId}`] = true;
+					getCookieNames()
+						.filter((name) => name === '_ga' || name.startsWith('_ga_') || name === '_gid' || name.startsWith('_gat'))
+						.forEach(clearCookie);
+				};
+
+				const enableAnalytics = () => {
+					if (window.__aibAnalyticsLoaded) return;
+
+					window[`ga-disable-${measurementId}`] = false;
+					window.dataLayer = window.dataLayer || [];
+					window.gtag = window.gtag || function gtag(){ window.dataLayer.push(arguments); };
+					window.gtag('js', new Date());
+					window.gtag('config', measurementId, {
+						anonymize_ip: true,
+					});
+
+					const existingScript = document.querySelector(scriptSelector);
+					if (!existingScript) {
+						const script = document.createElement('script');
+						script.async = true;
+						script.src = scriptSrc;
+						document.head.appendChild(script);
+					}
+
+					window.__aibAnalyticsLoaded = true;
+				};
+
+				const applyConsent = (analyticsAllowed) => {
+					if (analyticsAllowed) {
+						enableAnalytics();
+						return;
+					}
+
+					disableAnalytics();
+				};
+
+				const existing = window.localStorage.getItem(storageKey);
+				applyConsent(existing === 'yes');
+
+				window.addEventListener('aib:consent-updated', (event) => {
+					applyConsent(!!event.detail?.analytics);
+				});
+			})();
+		</script>
 		<script is:inline>
 			(() => {
 				const setupTabGroup = (group) => {

@@ -224,7 +224,7 @@ img { max-width: 100%; display: block; }
   margin-bottom: 22px;
   border-radius: 26px;
   overflow: hidden;
-  aspect-ratio: 16 / 8.2;
+  aspect-ratio: 16 / 9;
   background:
     linear-gradient(135deg, rgba(177, 90, 53, 0.14), rgba(61, 100, 120, 0.18)),
     linear-gradient(180deg, rgba(239, 229, 214, 0.92), rgba(251, 248, 241, 0.98));
@@ -1042,7 +1042,7 @@ img { max-width: 100%; display: block; }
 
   .article-cover {
     border-radius: 22px;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
   }
 
   .article-layout {

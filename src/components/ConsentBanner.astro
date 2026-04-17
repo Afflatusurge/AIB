@@ -41,10 +41,16 @@ const c = copy[lang as keyof typeof copy] || copy.en;
     const storageKey = 'aib-analytics-consent';
     const banner = document.querySelector('[data-consent-banner]');
     if (!banner) return;
+    const acceptButton = banner.querySelector('[data-consent-choice="yes"]');
+
+    const openBanner = () => {
+      banner.hidden = false;
+      acceptButton?.focus();
+    };
 
     const existing = window.localStorage.getItem(storageKey);
     if (!existing) {
-      banner.hidden = false;
+      openBanner();
     }
 
     banner.querySelectorAll('[data-consent-choice]').forEach((button) => {
@@ -54,6 +60,10 @@ const c = copy[lang as keyof typeof copy] || copy.en;
         window.dispatchEvent(new CustomEvent('aib:consent-updated', { detail: { analytics: choice === 'yes' } }));
         banner.hidden = true;
       });
+    });
+
+    window.addEventListener('aib:open-consent-settings', () => {
+      openBanner();
     });
   })();
 </script>

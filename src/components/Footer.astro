@@ -22,10 +22,23 @@ const { lang } = Astro.props;
         <a href={`/${lang}/cases/`}>{lang === 'zh' ? '案例分析' : lang === 'ja' ? 'ケーススタディ' : 'Case Studies'}</a>
         <a href={`/${lang}/about/`}>{lang === 'zh' ? '关于' : lang === 'ja' ? 'About' : 'About'}</a>
         <a href={`/${lang}/terms/`}>{lang === 'zh' ? '服务条款' : lang === 'ja' ? '利用規約' : 'Terms of Service'}</a>
+        <button type="button" class="footer-link-button" data-open-consent>
+          {lang === 'zh' ? '隐私设置' : lang === 'ja' ? 'Cookie設定' : 'Cookie Settings'}
+        </button>
       </div>
     </div>
   </div>
 </footer>
+
+<script is:inline>
+  (() => {
+    document.querySelectorAll('[data-open-consent]').forEach((button) => {
+      button.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('aib:open-consent-settings'));
+      });
+    });
+  })();
+</script>
 
 <style>
   .footer {
@@ -66,7 +79,21 @@ const { lang } = Astro.props;
     letter-spacing: 0.08em;
     font-family: var(--font-mono);
   }
+  .footer-link-button {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: var(--font-mono);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
   .footer-links a:hover { color: var(--text-primary); }
+  .footer-link-button:hover { color: var(--text-primary); }
   @media (max-width: 768px) {
     .footer-inner { flex-direction: column; gap: 16px; align-items: start; }
   }
