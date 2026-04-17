@@ -53,21 +53,33 @@ const toolBestFor = tool.category
         : `${tool.category} workflows for solo builders`)
   : (lang === 'zh' ? '需要提高产出的独立创作者和开发者' : lang === 'ja' ? '生産性を上げたい個人制作者や開発者' : 'Independent builders who need leverage');
 const toolWorkflowFit = tool.snippet || (lang === 'zh' ? '建议补充这款工具在真实工作流中的位置。' : lang === 'ja' ? '実際のワークフロー内での位置づけを補足したい。' : 'Add a clearer note on where this fits inside a real workflow.');
+const uiText = {
+  editorTake: lang === 'zh' ? '编辑观点' : lang === 'ja' ? '編集メモ' : 'Editor’s take',
+  bestFit: lang === 'zh' ? '最适合谁' : lang === 'ja' ? '向いている人' : 'Best fit',
+  reviewSnapshot: lang === 'zh' ? '评测速览' : lang === 'ja' ? 'レビュー概要' : 'Review snapshot',
+  verdict: lang === 'zh' ? '结论' : lang === 'ja' ? '評価結論' : 'Verdict',
+  bestFor: lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for',
+  pricing: lang === 'zh' ? '价格' : lang === 'ja' ? '価格' : 'Pricing',
+  workflowFit: lang === 'zh' ? '工作流适配' : lang === 'ja' ? 'ワークフロー適合度' : 'Workflow fit',
+  onThisPage: lang === 'zh' ? '本页目录' : lang === 'ja' ? 'このページ' : 'On this page',
+  moreReviews: lang === 'zh' ? '更多评测' : lang === 'ja' ? 'さらに読むレビュー' : 'More reviews',
+  continueReading: lang === 'zh' ? '继续阅读' : lang === 'ja' ? '続きを読む' : 'Continue reading',
+} as const;
 const summaryCards = [
   {
-    label: lang === 'zh' ? 'Verdict' : lang === 'ja' ? 'Verdict' : 'Verdict',
+    label: uiText.verdict,
     value: tool.verdict || (rating >= 4.5 ? (lang === 'zh' ? '优先尝试' : lang === 'ja' ? '優先して試す価値あり' : 'High-priority pick') : rating >= 4 ? (lang === 'zh' ? '值得评估' : lang === 'ja' ? '十分に検討価値あり' : 'Worth evaluating') : (lang === 'zh' ? '按需考虑' : lang === 'ja' ? '必要に応じて検討' : 'Situational option')),
   },
   {
-    label: lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for',
+    label: uiText.bestFor,
     value: tool.bestFor || toolBestFor,
   },
   {
-    label: lang === 'zh' ? 'Pricing' : lang === 'ja' ? 'Pricing' : 'Pricing',
+    label: uiText.pricing,
     value: tool.pricing || 'N/A',
   },
   {
-    label: lang === 'zh' ? 'Workflow fit' : lang === 'ja' ? 'Workflow fit' : 'Workflow fit',
+    label: uiText.workflowFit,
     value: tool.workflowFit || toolWorkflowFit,
   },
 ];
@@ -106,11 +118,11 @@ const recommendationIntro = lang === 'zh'
           </div>
           <div class="article-lead-grid">
             <div class="article-lead-note">
-              <p class="article-lead-label">{lang === 'zh' ? 'Editor’s take' : lang === 'ja' ? 'Editor’s take' : 'Editor’s take'}</p>
+              <p class="article-lead-label">{uiText.editorTake}</p>
               <p>{tool.verdict || tool.takeaway || tool.workflowFit || tool.snippet}</p>
             </div>
             <div class="article-lead-note alt">
-              <p class="article-lead-label">{lang === 'zh' ? 'Best fit' : lang === 'ja' ? 'Best fit' : 'Best fit'}</p>
+              <p class="article-lead-label">{uiText.bestFit}</p>
               <p>{tool.bestFor || toolBestFor}</p>
             </div>
           </div>
@@ -119,12 +131,12 @@ const recommendationIntro = lang === 'zh'
         <div class="article-layout">
           <aside class="article-rail">
             <div class="rail-card">
-              <p class="rail-label">{lang === 'zh' ? 'Review snapshot' : lang === 'ja' ? 'Review snapshot' : 'Review snapshot'}</p>
+              <p class="rail-label">{uiText.reviewSnapshot}</p>
               <ul class="rail-list">
                 <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.tools')}</span></li>
                 <li><strong>{lang === 'zh' ? '类别' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{tool.category || 'AI'}</span></li>
-                <li><strong>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '対象' : 'Best for'}</strong><span>{tool.bestFor || 'N/A'}</span></li>
-                <li><strong>{lang === 'zh' ? '价格' : lang === 'ja' ? '価格' : 'Pricing'}</strong><span>{tool.pricing || 'N/A'}</span></li>
+                <li><strong>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '対象' : uiText.bestFor}</strong><span>{tool.bestFor || 'N/A'}</span></li>
+                <li><strong>{lang === 'zh' ? '价格' : lang === 'ja' ? '価格' : uiText.pricing}</strong><span>{tool.pricing || 'N/A'}</span></li>
                 <li><strong>{lang === 'zh' ? '评分' : lang === 'ja' ? '評価' : 'Rating'}</strong><span>{rating}/5</span></li>
               </ul>
               {tool.url && (
@@ -135,7 +147,7 @@ const recommendationIntro = lang === 'zh'
             </div>
             {toolHeadingItems.length > 0 && (
               <div class="rail-card">
-                <p class="rail-label">{lang === 'zh' ? 'On this page' : lang === 'ja' ? 'On this page' : 'On this page'}</p>
+                <p class="rail-label">{uiText.onThisPage}</p>
                 <ul class="related-list">
                   {toolHeadingItems.map((item) => (
                     <li><a href={`#${item.id}`}>{item.title}</a></li>
@@ -145,7 +157,7 @@ const recommendationIntro = lang === 'zh'
             )}
             {relatedTools.length > 0 && (
               <div class="rail-card">
-                <p class="rail-label">{lang === 'zh' ? 'More reviews' : lang === 'ja' ? 'More reviews' : 'More reviews'}</p>
+                <p class="rail-label">{uiText.moreReviews}</p>
                 <ul class="related-list">
                   {relatedTools.map((item) => (
                     <li><a href={`/${lang}/tools/${item.slug || item.id}/`}>{item.title}</a></li>
@@ -190,8 +202,8 @@ const recommendationIntro = lang === 'zh'
         {relatedTools.length > 0 && (
           <section class="article-recommendations">
             <div class="article-recommendations-head">
-              <p class="article-recommendations-kicker">{lang === 'zh' ? 'Continue reading' : lang === 'ja' ? 'Continue reading' : 'Continue reading'}</p>
-              <h2>{lang === 'zh' ? '更多工具评测' : lang === 'ja' ? 'More reviews' : 'More reviews'}</h2>
+              <p class="article-recommendations-kicker">{uiText.continueReading}</p>
+              <h2>{uiText.moreReviews}</h2>
               <p>{recommendationIntro}</p>
             </div>
             <div class="article-recommendations-grid">

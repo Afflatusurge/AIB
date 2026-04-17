@@ -15,6 +15,7 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const keywordContent = Array.isArray(keywords) ? keywords.join(', ') : keywords;
 const GA_MEASUREMENT_ID = 'G-KRMNDMBYMK';
+const docsLabel = lang === 'zh' ? '资料库' : lang === 'ja' ? 'ライブラリ' : 'Library';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const languages = ['en', 'ja', 'zh'];
@@ -86,6 +87,14 @@ const languages = ['en', 'ja', 'zh'];
                           {t('nav.cases')}
                       </a>
                   </nav>
+                  <a
+                    href="https://docs.aiandbusiness.com/"
+                    class="archive-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {docsLabel}
+                  </a>
                   <div class="lang-switch" aria-label="Language switcher">
                       <a href={`/en/`} class={lang === 'en' ? 'active' : ''}>EN</a>
                       <a href={`/ja/`} class={lang === 'ja' ? 'active' : ''}>日本語</a>
@@ -274,6 +283,26 @@ const languages = ['en', 'ja', 'zh'];
     color: var(--text-primary);
     background: var(--bg-card);
   }
+  .archive-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--border-subtle);
+    background: rgba(255, 251, 245, 0.88);
+    border-radius: 999px;
+    padding: 8px 12px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(32, 27, 24, 0.04);
+  }
+  .archive-link:hover {
+    border-color: var(--border-hover);
+    background: var(--accent-soft);
+    transform: translateY(-1px);
+  }
   .lang-switch {
     display: flex;
     gap: 2px;
@@ -333,9 +362,17 @@ const languages = ['en', 'ja', 'zh'];
     .header-actions {
       width: 100%;
       justify-content: space-between;
+      gap: 10px;
     }
     .nav-links {
       display: none;
+    }
+    .archive-link {
+      order: 1;
+      margin-right: auto;
+    }
+    .lang-switch {
+      order: 2;
     }
   }
 </style>

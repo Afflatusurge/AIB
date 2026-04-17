@@ -20,6 +20,9 @@ const { lang } = Astro.props;
         <a href={`/${lang}/tools/`}>{lang === 'zh' ? '工具评测' : lang === 'ja' ? 'ツールレビュー' : 'Tool Reviews'}</a>
         <a href={`/${lang}/playbooks/`}>{lang === 'zh' ? '实战指南' : lang === 'ja' ? 'プレイブック' : 'Playbooks'}</a>
         <a href={`/${lang}/cases/`}>{lang === 'zh' ? '案例分析' : lang === 'ja' ? 'ケーススタディ' : 'Case Studies'}</a>
+        <a href="https://docs.aiandbusiness.com/" target="_blank" rel="noopener noreferrer">
+          {lang === 'zh' ? '资料库' : lang === 'ja' ? 'ライブラリ' : 'Library'}
+        </a>
         <a href={`/${lang}/about/`}>{lang === 'zh' ? '关于' : lang === 'ja' ? 'About' : 'About'}</a>
         <a href={`/${lang}/terms/`}>{lang === 'zh' ? '服务条款' : lang === 'ja' ? '利用規約' : 'Terms of Service'}</a>
         <button type="button" class="footer-link-button" data-open-consent>

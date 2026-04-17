@@ -45,18 +45,33 @@ const processedBodyHtml = headingMatches.length
     })
   : bodyHtml;
 const hasBodyContent = !!processedBodyHtml.trim();
+const uiText = {
+  signal: lang === 'zh' ? '信号' : lang === 'ja' ? 'シグナル' : 'Signal',
+  impact: lang === 'zh' ? '影响' : lang === 'ja' ? '影響' : 'Impact',
+  whyItMatters: lang === 'zh' ? '为什么重要' : lang === 'ja' ? 'なぜ重要か' : 'Why it matters',
+  editorsNote: lang === 'zh' ? '编辑注记' : lang === 'ja' ? '編集メモ' : 'Editor’s note',
+  whyNow: lang === 'zh' ? '为什么是现在' : lang === 'ja' ? 'なぜ今か' : 'Why now',
+  thisBrief: lang === 'zh' ? '本篇简报' : lang === 'ja' ? 'このブリーフ' : 'This brief',
+  onThisPage: lang === 'zh' ? '本页目录' : lang === 'ja' ? 'このページ' : 'On this page',
+  moreFromDaily: lang === 'zh' ? '更多每日简报' : lang === 'ja' ? 'さらに読むデイリーブリーフ' : 'More from daily',
+  continueReading: lang === 'zh' ? '继续阅读' : lang === 'ja' ? '続きを読む' : 'Continue reading',
+  summary: lang === 'zh' ? '摘要' : lang === 'ja' ? '要約' : 'Summary',
+  editorialNote: lang === 'zh' ? '编辑说明' : lang === 'ja' ? '編集コメント' : 'Editorial note',
+  source: lang === 'zh' ? '来源' : lang === 'ja' ? '参照元' : 'Source',
+  readOriginalCoverage: lang === 'zh' ? '查看原始报道 →' : lang === 'ja' ? '元記事を読む →' : 'Read the original coverage →',
+} as const;
 
 const summaryCards = [
   {
-    label: lang === 'zh' ? 'Signal' : lang === 'ja' ? 'Signal' : 'Signal',
+    label: uiText.signal,
     value: brief.category || 'AI',
   },
   {
-    label: lang === 'zh' ? 'Impact' : lang === 'ja' ? 'Impact' : 'Impact',
+    label: uiText.impact,
     value: brief.impact || 'Notable',
   },
   {
-    label: lang === 'zh' ? 'Why it matters' : lang === 'ja' ? 'Why it matters' : 'Why it matters',
+    label: uiText.whyItMatters,
     value: brief.whyItMatters || brief.commentary || brief.snippet || (lang === 'zh' ? '需要补充一句判断。' : lang === 'ja' ? '一言の判断を補足すると良いです。' : 'Add one sharp editorial takeaway here.'),
   },
 ];
@@ -85,11 +100,11 @@ const recommendationIntro = lang === 'zh'
           </div>
           <div class="article-lead-grid">
             <div class="article-lead-note">
-              <p class="article-lead-label">{lang === 'zh' ? 'Editor’s note' : lang === 'ja' ? 'Editor’s note' : 'Editor’s note'}</p>
+              <p class="article-lead-label">{uiText.editorsNote}</p>
               <p>{brief.commentary || brief.whyItMatters || brief.snippet}</p>
             </div>
             <div class="article-lead-note alt">
-              <p class="article-lead-label">{lang === 'zh' ? 'Why now' : lang === 'ja' ? 'Why now' : 'Why now'}</p>
+              <p class="article-lead-label">{uiText.whyNow}</p>
               <p>{brief.whyItMatters || brief.snippet || brief.commentary}</p>
             </div>
           </div>
@@ -98,7 +113,7 @@ const recommendationIntro = lang === 'zh'
         <div class="article-layout">
           <aside class="article-rail">
             <div class="rail-card">
-              <p class="rail-label">{lang === 'zh' ? 'This brief' : lang === 'ja' ? 'This brief' : 'This brief'}</p>
+              <p class="rail-label">{uiText.thisBrief}</p>
               <ul class="rail-list">
                 <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.daily')}</span></li>
                 <li><strong>{lang === 'zh' ? '类别' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{brief.category || 'AI'}</span></li>
@@ -112,7 +127,7 @@ const recommendationIntro = lang === 'zh'
             </div>
             {headingItems.length > 0 && (
               <div class="rail-card">
-                <p class="rail-label">{lang === 'zh' ? 'On this page' : lang === 'ja' ? 'On this page' : 'On this page'}</p>
+                <p class="rail-label">{uiText.onThisPage}</p>
                 <ul class="related-list">
                   {headingItems.map((item) => (
                     <li><a href={`#${item.id}`}>{item.title}</a></li>
@@ -122,7 +137,7 @@ const recommendationIntro = lang === 'zh'
             )}
             {relatedBriefs.length > 0 && (
               <div class="rail-card">
-                <p class="rail-label">{lang === 'zh' ? 'More from daily' : lang === 'ja' ? 'More from daily' : 'More from daily'}</p>
+                <p class="rail-label">{uiText.moreFromDaily}</p>
                 <ul class="related-list">
                   {relatedBriefs.map((item) => (
                     <li><a href={`/${lang}/daily/${item.slug || item.id}/`}>{item.title}</a></li>
@@ -148,28 +163,28 @@ const recommendationIntro = lang === 'zh'
                 <>
                   {brief.snippet && (
                     <>
-                      <h2>{lang === 'zh' ? 'Summary' : lang === 'ja' ? 'Summary' : 'Summary'}</h2>
+                      <h2>{uiText.summary}</h2>
                       <p>{brief.snippet}</p>
                     </>
                   )}
                   {brief.commentary && (
                     <>
-                      <h2>{lang === 'zh' ? 'Editorial note' : lang === 'ja' ? 'Editorial note' : 'Editorial note'}</h2>
+                      <h2>{uiText.editorialNote}</h2>
                       <p>{brief.commentary}</p>
                     </>
                   )}
                   {brief.whyItMatters && (
                     <>
-                      <h2>{lang === 'zh' ? 'Why it matters' : lang === 'ja' ? 'Why it matters' : 'Why it matters'}</h2>
+                      <h2>{uiText.whyItMatters}</h2>
                       <p>{brief.whyItMatters}</p>
                     </>
                   )}
                   {brief.sourceUrl && (
                     <>
-                      <h2>{lang === 'zh' ? 'Source' : lang === 'ja' ? 'Source' : 'Source'}</h2>
+                      <h2>{uiText.source}</h2>
                       <p>
                         <a href={brief.sourceUrl} target="_blank" rel="noopener">
-                          {lang === 'zh' ? 'Read the original coverage →' : lang === 'ja' ? 'Read the original coverage →' : 'Read the original coverage →'}
+                          {uiText.readOriginalCoverage}
                         </a>
                       </p>
                     </>
@@ -200,8 +215,8 @@ const recommendationIntro = lang === 'zh'
         {relatedBriefs.length > 0 && (
           <section class="article-recommendations">
             <div class="article-recommendations-head">
-              <p class="article-recommendations-kicker">{lang === 'zh' ? 'Continue reading' : lang === 'ja' ? 'Continue reading' : 'Continue reading'}</p>
-              <h2>{lang === 'zh' ? '更多今日信号' : lang === 'ja' ? 'More daily signals' : 'More daily signals'}</h2>
+              <p class="article-recommendations-kicker">{uiText.continueReading}</p>
+              <h2>{lang === 'zh' ? '更多今日信号' : lang === 'ja' ? 'さらに読む今日のシグナル' : 'More daily signals'}</h2>
               <p>{recommendationIntro}</p>
             </div>
             <div class="article-recommendations-grid">

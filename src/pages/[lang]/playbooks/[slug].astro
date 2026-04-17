@@ -28,6 +28,13 @@ const slug = playbook.slug || Astro.params.slug || '';
 const relatedPlaybooks = allPlaybooks.filter((item) => item.slug !== slug).slice(0, 3);
 const bodyHtml = await getPageContent(playbook.id);
 const renderedBody = bodyHtml || getFallbackPlaybookContent(lang, slug);
+const uiText = {
+  outcome: lang === 'zh' ? '结果' : lang === 'ja' ? '成果' : 'Outcome',
+  bestFor: lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for',
+  useWhen: lang === 'zh' ? '适用时机' : lang === 'ja' ? '使いどき' : 'Use when',
+  playbookSnapshot: lang === 'zh' ? '指南速览' : lang === 'ja' ? 'プレイブック概要' : 'Playbook snapshot',
+  morePlaybooks: lang === 'zh' ? '更多指南' : lang === 'ja' ? 'さらに読むプレイブック' : 'More playbooks',
+} as const;
 ---
 
 <Layout title={`${playbook.title} - ${t('nav.playbooks')} - ${t('site.name')}`} description={playbook.snippet}>
@@ -41,11 +48,11 @@ const renderedBody = bodyHtml || getFallbackPlaybookContent(lang, slug);
 
           <div class="article-lead-grid">
             <div class="article-lead-note">
-              <p class="article-lead-label">{lang === 'zh' ? 'Outcome' : lang === 'ja' ? 'Outcome' : 'Outcome'}</p>
+              <p class="article-lead-label">{uiText.outcome}</p>
               <p>{playbook.outcome}</p>
             </div>
             <div class="article-lead-note alt">
-              <p class="article-lead-label">{lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for'}</p>
+              <p class="article-lead-label">{uiText.bestFor}</p>
               <p>{playbook.bestFor}</p>
             </div>
           </div>
@@ -54,17 +61,17 @@ const renderedBody = bodyHtml || getFallbackPlaybookContent(lang, slug);
         <div class="article-layout">
           <aside class="article-rail">
             <div class="rail-card">
-              <p class="rail-label">{lang === 'zh' ? 'Playbook snapshot' : lang === 'ja' ? 'Playbook snapshot' : 'Playbook snapshot'}</p>
+              <p class="rail-label">{uiText.playbookSnapshot}</p>
               <ul class="rail-list">
                 <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.playbooks')}</span></li>
                 <li><strong>{lang === 'zh' ? '分类' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{playbook.category || 'Playbook'}</span></li>
-                <li><strong>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '対象' : 'Best for'}</strong><span>{playbook.bestFor}</span></li>
-                <li><strong>{lang === 'zh' ? '节奏' : lang === 'ja' ? 'タイミング' : 'Use when'}</strong><span>{playbook.useWhen}</span></li>
+                <li><strong>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '対象' : uiText.bestFor}</strong><span>{playbook.bestFor}</span></li>
+                <li><strong>{lang === 'zh' ? '节奏' : lang === 'ja' ? 'タイミング' : uiText.useWhen}</strong><span>{playbook.useWhen}</span></li>
               </ul>
             </div>
             {relatedPlaybooks.length > 0 && (
               <div class="rail-card">
-                <p class="rail-label">{lang === 'zh' ? 'More playbooks' : lang === 'ja' ? 'More playbooks' : 'More playbooks'}</p>
+                <p class="rail-label">{uiText.morePlaybooks}</p>
                 <ul class="related-list">
                   {relatedPlaybooks.map((item) => (
                     <li><a href={`/${lang}/playbooks/${item.slug}/`}>{item.title}</a></li>
@@ -77,15 +84,15 @@ const renderedBody = bodyHtml || getFallbackPlaybookContent(lang, slug);
           <div class="article-column">
             <div class="summary-grid">
               <section class="summary-card">
-                <p class="summary-label">{lang === 'zh' ? 'Outcome' : lang === 'ja' ? 'Outcome' : 'Outcome'}</p>
+                <p class="summary-label">{uiText.outcome}</p>
                 <div class="summary-value">{playbook.outcome}</div>
               </section>
               <section class="summary-card">
-                <p class="summary-label">{lang === 'zh' ? 'Best for' : lang === 'ja' ? 'Best for' : 'Best for'}</p>
+                <p class="summary-label">{uiText.bestFor}</p>
                 <div class="summary-value">{playbook.bestFor}</div>
               </section>
               <section class="summary-card">
-                <p class="summary-label">{lang === 'zh' ? 'Use when' : lang === 'ja' ? 'Use when' : 'Use when'}</p>
+                <p class="summary-label">{uiText.useWhen}</p>
                 <div class="summary-value">{playbook.useWhen}</div>
               </section>
             </div>

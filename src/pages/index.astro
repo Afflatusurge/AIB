@@ -1,41 +1,30 @@
 ---
-const target = '/en/';
+export const prerender = false;
+
+type Locale = 'en' | 'ja' | 'zh';
+
+const fallbackLocale: Locale = 'en';
+
+const parseAcceptLanguage = () =>
+  (Astro.request.headers.get('accept-language') || '')
+    .split(',')
+    .map((token) => token.split(';')[0]?.trim().toLowerCase())
+    .filter(Boolean);
+
+const requestedLocales = [
+  ...(Astro.preferredLocaleList || []).map((locale) => locale.toLowerCase()),
+  ...parseAcceptLanguage(),
+];
+
+const detectLocale = (): Locale => {
+  for (const locale of requestedLocales) {
+    if (locale.startsWith('ja')) return 'ja';
+    if (locale.startsWith('zh')) return 'zh';
+    if (locale.startsWith('en')) return 'en';
+  }
+
+  return fallbackLocale;
+};
+
+return Astro.redirect(`/${detectLocale()}/`, 302);
 ---
-
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Redirecting...</title>
-    <meta http-equiv="refresh" content={`0;url=${target}`} />
-    <meta name="robots" content="noindex" />
-    <link rel="canonical" href="https://aiandbusiness.com/en/" />
-    <script is:inline define:vars={{ target }}>
-      window.location.replace(target);
-    </script>
-    <style is:inline>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: #f9f6ef;
-        color: #1f1815;
-        font-family: "Manrope", system-ui, sans-serif;
-      }
-
-      .redirect-fallback {
-        font-size: 0.95rem;
-      }
-
-      .redirect-fallback a {
-        color: inherit;
-      }
-    </style>
-  </head>
-  <body>
-    <p class="redirect-fallback">
-      Redirecting to <a href={target}>{target}</a>
-    </p>
-  </body>
-</html>
