@@ -252,6 +252,27 @@ function sortByEditorialPriority<T extends { featured?: boolean; date?: string }
   });
 }
 
+function dedupeBySlug<T extends { id: string; slug?: string; title?: string }>(items: T[], label: string): T[] {
+  const seen = new Map<string, T>();
+
+  for (const item of items) {
+    const slug = normalizeText(item.slug || '').toLowerCase();
+    if (!slug) continue;
+
+    if (seen.has(slug)) {
+      const kept = seen.get(slug)!;
+      console.warn(
+        `[Notion] Duplicate ${label} slug "${slug}" detected. Keeping "${kept.title || kept.id}" and skipping "${item.title || item.id}".`
+      );
+      continue;
+    }
+
+    seen.set(slug, item);
+  }
+
+  return Array.from(seen.values());
+}
+
 // ── Check if Notion is configured ──────────────────────────
 function isConfigured(): boolean {
   return !!(import.meta.env.NOTION_API_KEY);
@@ -307,7 +328,7 @@ export async function getDailyBriefs(lang: Lang = 'en'): Promise<DailyBrief[]> {
       })
       .filter(hasRenderableContent);
 
-    return sortByEditorialPriority(briefs);
+    return dedupeBySlug(sortByEditorialPriority(briefs), `daily briefs (${lang})`);
   } catch (err) {
     console.error(`[Notion] Failed to fetch daily briefs (${lang}):`, err);
     return getMockDailyBriefs();
@@ -372,7 +393,7 @@ export async function getToolReviews(lang: Lang = 'en'): Promise<ToolReview[]> {
       })
       .filter(hasRenderableContent);
 
-    return sortByEditorialPriority(reviews);
+    return dedupeBySlug(sortByEditorialPriority(reviews), `tool reviews (${lang})`);
   } catch (err) {
     console.error(`[Notion] Failed to fetch tool reviews (${lang}):`, err);
     return getMockToolReviews();
@@ -450,7 +471,7 @@ export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
       })
       .filter(hasRenderableContent);
 
-    return sortByEditorialPriority(studies);
+    return dedupeBySlug(sortByEditorialPriority(studies), `case studies (${lang})`);
   } catch (err) {
     console.error(`[Notion] Failed to fetch case studies (${lang}):`, err);
     return getMockCaseStudies();
@@ -492,7 +513,7 @@ export async function getPlaybooks(lang: Lang = 'en'): Promise<Playbook[]> {
       })
       .filter((item) => !!(item.title && item.slug && item.snippet));
 
-    return sortByEditorialPriority(playbooks);
+    return dedupeBySlug(sortByEditorialPriority(playbooks), `playbooks (${lang})`);
   } catch (err) {
     console.error(`[Notion] Failed to fetch playbooks (${lang}):`, err);
     return getMockPlaybooks(lang);
