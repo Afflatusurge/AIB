@@ -51,7 +51,7 @@ const caseApplicability = cs.industry
         ? `${cs.industry}周辺の事業に応用しやすい`
         : `Especially relevant to ${cs.industry} operators`)
   : (lang === 'zh' ? '适合想用 AI 提高效率或创造新产品的人' : lang === 'ja' ? 'AIで効率化や新規商品化を目指す人向け' : 'Useful for builders exploring AI leverage');
-const caseTakeaway = cs.snippet || (lang === 'zh' ? '建议补充一句“这一案例真正值得学的地方”。' : lang === 'ja' ? 'このケースから学ぶべき一言を補うと強くなります。' : 'Add one sentence on the deepest takeaway from this case.');
+const caseTakeaway = cs.takeaway || cs.snippet || (lang === 'zh' ? '真正值得看的不是故事本身，而是哪一段流程、判断或包装方式可以被复制。' : lang === 'ja' ? '注目すべきなのは物語そのものではなく、どの判断や運用が再利用できるかです。' : 'The useful layer is not the story itself, but which decision, workflow, or packaging move can be reused.');
 const uiText = {
   problem: lang === 'zh' ? '问题' : lang === 'ja' ? '課題' : 'Problem',
   outcome: lang === 'zh' ? '结果' : lang === 'ja' ? '成果' : 'Outcome',
@@ -71,7 +71,7 @@ const summaryCards = [
   },
   {
     label: uiText.outcome,
-    value: cs.revenue || (lang === 'zh' ? '结果待补充' : lang === 'ja' ? '結果を補足すると良い' : 'Outcome needs clarification'),
+    value: cs.revenue || (lang === 'zh' ? '重点不是绝对数字，而是这套做法是否明显改变了效率、产出或收入结构。' : lang === 'ja' ? '絶対額よりも、このやり方が効率、成果、収益構造をどう変えたかを見ると役立ちます。' : 'The useful signal is not the headline number alone, but whether the workflow materially changed efficiency, output, or revenue.'),
   },
   {
     label: uiText.applicableTo,

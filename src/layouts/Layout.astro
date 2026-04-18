@@ -68,7 +68,11 @@ const pathWithoutLang = Astro.url.pathname
                     {lang === 'zh' ? 'AI一人公司指南' : lang === 'ja' ? 'AIソロプレナーガイド' : 'AI Solopreneur Guide'}
                   </a>
                   <p class="brand-kicker">
-                    {lang === 'zh' ? 'Daily brief, tool reviews, and case studies for AI-first builders.' : lang === 'ja' ? 'AIファーストな個人起業家のためのデイリーブリーフと実践レビュー。' : 'Daily brief, tool reviews, and case studies for AI-first builders.'}
+                    {lang === 'zh'
+                      ? '为 AI 一人公司提供每日简报、工具评测与真实案例。'
+                      : lang === 'ja'
+                        ? 'AIソロプレナーのためのデイリーブリーフ、ツールレビュー、ケーススタディ。'
+                        : 'Daily brief, tool reviews, and case studies for AI-first builders.'}
                   </p>
                 </div>
                 <div class="header-actions">

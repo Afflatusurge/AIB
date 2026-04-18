@@ -52,7 +52,7 @@ const toolBestFor = tool.category
         ? `${tool.category}系の個人ワークフロー`
         : `${tool.category} workflows for solo builders`)
   : (lang === 'zh' ? '需要提高产出的独立创作者和开发者' : lang === 'ja' ? '生産性を上げたい個人制作者や開発者' : 'Independent builders who need leverage');
-const toolWorkflowFit = tool.snippet || (lang === 'zh' ? '建议补充这款工具在真实工作流中的位置。' : lang === 'ja' ? '実際のワークフロー内での位置づけを補足したい。' : 'Add a clearer note on where this fits inside a real workflow.');
+const toolWorkflowFit = tool.workflowFit || tool.snippet || (lang === 'zh' ? '最适合替代一个明确步骤，而不是再给自己增加新的协调成本。' : lang === 'ja' ? '新しい調整コストを増やすより、既存フローの一段を置き換えられるときに最も効きます。' : 'This is most useful when it can replace one clear step in your workflow without adding new coordination overhead.');
 const uiText = {
   editorTake: lang === 'zh' ? '编辑观点' : lang === 'ja' ? '編集メモ' : 'Editor’s take',
   bestFit: lang === 'zh' ? '最适合谁' : lang === 'ja' ? '向いている人' : 'Best fit',
