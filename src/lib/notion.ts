@@ -889,9 +889,6 @@ export function getFallbackPlaybookContent(lang: Lang, slug: string): string {
     .map((item) => `<section class="playbook-stack-card"><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.role)}</p></section>`)
     .join('');
   const steps = fallback.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('');
-  const sources = fallback.oldSiteSources
-    .map((source) => `<li><a href="${escapeHtml(source.url)}" target="_blank" rel="noopener">${escapeHtml(source.label)}</a></li>`)
-    .join('');
   const notes = fallback.notes.map((note) => `<li>${escapeHtml(note)}</li>`).join('');
   const related = fallback.related
     .map((item) => `<a href="${escapeHtml(item.href)}" class="playbook-related-link">${escapeHtml(item.label)}</a>`)
@@ -902,8 +899,6 @@ export function getFallbackPlaybookContent(lang: Lang, slug: string): string {
     `<div class="playbook-stack-grid">${stack}</div>`,
     `<h2>${escapeHtml(fallback.stepsTitle)}</h2>`,
     `<ol class="playbook-steps">${steps}</ol>`,
-    `<h2>${escapeHtml(fallback.oldSiteTitle)}</h2>`,
-    `<ul class="playbook-source-list">${sources}</ul>`,
     `<h2>${escapeHtml(fallback.notesTitle)}</h2>`,
     `<ul>${notes}</ul>`,
     `<h2>${escapeHtml(fallback.relatedTitle)}</h2>`,

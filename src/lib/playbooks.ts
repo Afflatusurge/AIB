@@ -17,11 +17,6 @@ type PlaybookDefinition = {
   }>;
   stepsTitle: LocalizedString;
   steps: LocalizedString[];
-  oldSiteTitle: LocalizedString;
-  oldSiteSources: Array<{
-    label: string;
-    url: string;
-  }>;
   notesTitle: LocalizedString;
   notes: LocalizedString[];
   relatedTitle: LocalizedString;
@@ -49,11 +44,6 @@ export type PlaybookDetail = PlaybookCard & {
   }>;
   stepsTitle: string;
   steps: string[];
-  oldSiteTitle: string;
-  oldSiteSources: Array<{
-    label: string;
-    url: string;
-  }>;
   notesTitle: string;
   notes: string[];
   relatedTitle: string;
@@ -160,25 +150,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Only after the shell is live, connect CMS, analytics, or richer automation.',
         ja: '外形が出た後に CMS や分析、追加自動化を載せる。',
         zh: '先有一个在线可看的壳子，再接 CMS、分析工具和更复杂的自动化。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Coding Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/coding-tools/README.md',
-      },
-      {
-        label: 'Website Development',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/coding-tools/website-development.md',
-      },
-      {
-        label: 'Cursor Resources & Cases',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/coding-tools/cursor-resources-and-cases.md',
       },
     ],
     notesTitle: {
@@ -320,25 +291,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '看哪种格式真正积累关注，再加码那个方向，不要太早把精力摊开。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Podcasting',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/podcasting/README.md',
-      },
-      {
-        label: 'AI-Generated News Podcasting Cases',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/podcasting/ai-generated-news-podcasting-cases.md',
-      },
-      {
-        label: 'Voice Generation Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/tree/main/tools-and-tech/voice-generation-tools',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -476,25 +428,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Keep one light measurement layer so content decisions improve week over week.',
         ja: '軽い計測を残して、翌週の判断材料にする。',
         zh: '保留一层轻量数据反馈，让下一周的选题和分发变得更准。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Marketing',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/README.md',
-      },
-      {
-        label: 'Social Media',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/social-media.md',
-      },
-      {
-        label: 'AEO',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/aeo-answer-engine-optimization.md',
       },
     ],
     notesTitle: {
@@ -636,25 +569,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '先把人工流程跑顺，再自动化，不要反过来。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
-      },
-      {
-        label: 'Data Analysis',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/data-analysis/README.md',
-      },
-      {
-        label: 'Education',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/education.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -792,25 +706,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Review and ship weekly so the stack is judged by output, not novelty.',
         ja: '毎週レビューして出荷し、新しさではなく成果でスタックを判断する。',
         zh: '每周 review 和出货，让这个栈按结果而不是按新鲜感被检验。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Coding Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/coding-tools/README.md',
-      },
-      {
-        label: 'AI Agent Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/ai-agent-tools/README.md',
-      },
-      {
-        label: 'Website Development',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/coding-tools/website-development.md',
       },
     ],
     notesTitle: {
@@ -952,25 +847,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '保留可复用的决策记录，方便跨周比较模式变化。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Data Analysis',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/data-analysis/README.md',
-      },
-      {
-        label: 'AI + Finance',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-+-finance/README.md',
-      },
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -1108,25 +984,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Review which issue patterns compound subscriber trust and repeat attention.',
         ja: 'どの号の型が信頼と再訪を積み上げるかを見直す。',
         zh: '复盘哪种内容结构真正能积累订阅者信任和回访。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Marketing',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/README.md',
-      },
-      {
-        label: 'Social Media',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/social-media.md',
-      },
-      {
-        label: 'AEO',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/aeo-answer-engine-optimization.md',
       },
     ],
     notesTitle: {
@@ -1268,25 +1125,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '每次研究都要以一个结论和下一个问题收尾。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'AI Research Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/ai-research-tools.md',
-      },
-      {
-        label: 'Research Examples using Perplexity',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/scholar-and-research/research-examples-using-perplexity.md',
-      },
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -1424,25 +1262,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Keep improving the course through objections, student questions, and proof-of-work content.',
         ja: '反論、受講者の質問、公開コンテンツを通じて講座を更新していく。',
         zh: '用用户异议、学员问题和公开内容持续迭代课程。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Education',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/education.md',
-      },
-      {
-        label: 'AI Education/Learning Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/ai-education-learning-tools/README.md',
-      },
-      {
-        label: 'Writing',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/writing/README.md',
       },
     ],
     notesTitle: {
@@ -1584,25 +1403,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '用批量 redeploy 保持语言版本长期同步。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Marketing',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/README.md',
-      },
-      {
-        label: 'Social Media',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/social-media.md',
-      },
-      {
-        label: 'Voice Generation Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/voice-generation-tools/README.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -1740,25 +1540,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'End every project by capturing strong phrasing, scope lessons, and case-study material.',
         ja: '案件ごとに、使えた言い回し、scope の学び、事例素材を残して終える。',
         zh: '每个项目结束时，都把高质量话术、scope 经验和案例素材留下来。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Writing',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/writing/README.md',
-      },
-      {
-        label: 'Negotiation',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/negotiation.md',
-      },
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
       },
     ],
     notesTitle: {
@@ -1900,25 +1681,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '把最强的框架和表达沉淀下来，让你的判断持续积累成未来的 IP。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Data Analysis',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/data-analysis/README.md',
-      },
-      {
-        label: 'Negotiation',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/negotiation.md',
-      },
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -2056,25 +1818,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Save strong hooks, scripts, and transitions as reusable content modules.',
         ja: '使えた hook、script、つなぎ方を再利用可能なモジュールとして残す。',
         zh: '把高质量 hook、script 和转场结构沉淀成可复用模块。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Social Media',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/social-media.md',
-      },
-      {
-        label: 'Podcasting',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/podcasting/README.md',
-      },
-      {
-        label: 'Writing',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/writing/README.md',
       },
     ],
     notesTitle: {
@@ -2216,25 +1959,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '看续费和重复价值，而不只是报名数和 launch 峰值。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Social Media',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/social-media.md',
-      },
-      {
-        label: 'Podcasting',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/podcasting/README.md',
-      },
-      {
-        label: 'Marketing',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/README.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -2372,25 +2096,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Save your best patterns so future delivery gets lighter while judgment quality rises.',
         ja: '良かった pattern を保存し、 delivery を軽くしながら判断品質を上げる。',
         zh: '把好的 pattern 存下来，让交付越来越轻，同时判断质量越来越高。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Negotiation',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/negotiation.md',
-      },
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
-      },
-      {
-        label: 'Data Analysis',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/data-analysis/README.md',
       },
     ],
     notesTitle: {
@@ -2532,25 +2237,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '把 open questions 和强 excerpt 留下来，让下一期带着 momentum 开始。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'AI Research Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/ai-research-tools.md',
-      },
-      {
-        label: 'Research Examples using Perplexity',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/scholar-and-research/research-examples-using-perplexity.md',
-      },
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -2688,25 +2374,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Treat the archive and teaser excerpts as part of the product, not as leftovers.',
         ja: 'archive と teaser excerpt を leftovers ではなく product の一部として扱う。',
         zh: '把 archive 和 teaser excerpts 当成产品的一部分，而不是剩余边角料。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'AI-Generated News Podcasting Cases',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/podcasting/ai-generated-news-podcasting-cases.md',
-      },
-      {
-        label: 'AI Research Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/ai-research-tools.md',
-      },
-      {
-        label: 'AEO',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/aeo-answer-engine-optimization.md',
       },
     ],
     notesTitle: {
@@ -2848,25 +2515,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '让每个 surface 都回流到 durable home，把 attention 变成 owned media。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Podcasting',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/podcasting/README.md',
-      },
-      {
-        label: 'Social Media',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/social-media.md',
-      },
-      {
-        label: 'Writing',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/writing/README.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -3004,25 +2652,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Build a lightweight update loop so the archive keeps becoming more useful over time.',
         ja: '軽い update loop を作り、 archive が時間とともに useful になるようにする。',
         zh: '建立一个轻量 update loop，让 archive 随时间越来越有用。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'About',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/other/about.md',
-      },
-      {
-        label: 'AI Research Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/ai-research-tools.md',
-      },
-      {
-        label: 'DeepWiki',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/coding-tools/README.md',
       },
     ],
     notesTitle: {
@@ -3164,25 +2793,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '维持 relationship loop，让 access 越来越深，而不是越用越冷。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
-      },
-      {
-        label: 'Scholar & Research GPTs',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/scholar-and-research/research-and-scholar-gpts.md',
-      },
-      {
-        label: 'Negotiation',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/negotiation.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -3320,25 +2930,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         en: 'Design a paid access layer that is easier to browse than an inbox of old issues.',
         ja: 'old issue の inbox より browse しやすい paid access layer を設計する。',
         zh: '设计一层比旧 issues inbox 更好浏览的 paid access layer。',
-      },
-    ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'Podcast Summaries',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/podcasting/podcast-summaries.md',
-      },
-      {
-        label: 'AI Research Tools',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/tools-and-tech/ai-research-tools.md',
-      },
-      {
-        label: 'About',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/other/about.md',
       },
     ],
     notesTitle: {
@@ -3480,25 +3071,6 @@ const playbookDefinitions: PlaybookDefinition[] = [
         zh: '复盘真正 shipped 了什么，让 system 保持 calm，而不是越来越 chaotic。',
       },
     ],
-    oldSiteTitle: {
-      en: 'Best source material from the old site',
-      ja: '旧サイトから引き継ぐ価値の高い素材',
-      zh: '旧站里最值得迁来的原材料',
-    },
-    oldSiteSources: [
-      {
-        label: 'AI in Working',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/ai-in-working.md',
-      },
-      {
-        label: 'Social Media',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/marketing/social-media.md',
-      },
-      {
-        label: 'AI-Generated News Podcasting Cases',
-        url: 'https://github.com/Afflatusurge/aiandbusiness/blob/main/by-industry-cases/podcasting/ai-generated-news-podcasting-cases.md',
-      },
-    ],
     notesTitle: {
       en: 'What this playbook should become',
       ja: '最終的に目指す形',
@@ -3558,8 +3130,6 @@ function localizePlaybook(playbook: PlaybookDefinition, lang: Lang): PlaybookDet
     })),
     stepsTitle: playbook.stepsTitle[lang],
     steps: playbook.steps.map((item) => item[lang]),
-    oldSiteTitle: playbook.oldSiteTitle[lang],
-    oldSiteSources: playbook.oldSiteSources,
     notesTitle: playbook.notesTitle[lang],
     notes: playbook.notes.map((item) => item[lang]),
     relatedTitle: playbook.relatedTitle[lang],

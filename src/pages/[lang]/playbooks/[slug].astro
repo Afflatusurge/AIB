@@ -26,8 +26,13 @@ const t = useTranslations(lang);
 const { playbook, playbooks: allPlaybooks } = Astro.props;
 const slug = playbook.slug || Astro.params.slug || '';
 const relatedPlaybooks = allPlaybooks.filter((item) => item.slug !== slug).slice(0, 3);
+const stripLegacySourceSection = (html: string) =>
+  html.replace(
+    /<h2>(Best source material from the old site|旧サイトから引き継ぐ価値の高い素材|旧站里最值得迁来的原材料)<\/h2>[\s\S]*?(?=<h2>|$)/g,
+    '',
+  );
 const bodyHtml = await getPageContent(playbook.id);
-const renderedBody = bodyHtml || getFallbackPlaybookContent(lang, slug);
+const renderedBody = stripLegacySourceSection(bodyHtml || getFallbackPlaybookContent(lang, slug));
 const uiText = {
   outcome: lang === 'zh' ? '结果' : lang === 'ja' ? '成果' : 'Outcome',
   bestFor: lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for',
