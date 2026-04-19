@@ -1,37 +1,27 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import Footer from '../../../components/Footer.astro';
-import { getDailyBriefs, getPageContent } from '../../../lib/notion';
+import { getBriefBySlug, listPublishedBriefs } from '../../../lib/supabase';
 import { useTranslations, getLangFromUrl } from '../../../i18n/utils';
 
-export async function getStaticPaths() {
-  const langs: Array<'en' | 'ja' | 'zh'> = ['en', 'ja', 'zh'];
-  const all: any[] = [];
-  for (const l of langs) {
-    const briefs = await getDailyBriefs(l);
-    briefs.forEach((brief, idx) => {
-      all.push({
-        params: { lang: l, slug: brief.slug || brief.id },
-        props: { brief, briefs, idx },
-      });
-    });
-  }
-  return all;
-}
+export const prerender = false;
 
-interface Props {
-  brief: any;
-  briefs: any[];
-  idx: number;
-}
-
-const { brief, briefs, idx } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
-const prevBrief = idx > 0 ? briefs[idx - 1] : null;
-const nextBrief = idx < briefs.length - 1 ? briefs[idx + 1] : null;
-const bodyHtml = await getPageContent(brief.id);
-const relatedBriefs = briefs.filter((item) => item.id !== brief.id).slice(0, 3);
+const slug = String(Astro.params.slug || '').trim();
+
+if (!slug) return Astro.redirect(`/${lang}/daily/`);
+
+const brief = await getBriefBySlug(slug, lang as 'en' | 'zh' | 'ja');
+if (!brief) return new Response('Not found', { status: 404 });
+
+const allBriefs = await listPublishedBriefs(lang as 'en' | 'zh' | 'ja', 120);
+const idx = allBriefs.findIndex((b) => b.id === brief.id);
+const prevBrief = idx > 0 ? allBriefs[idx - 1] : null;
+const nextBrief = idx >= 0 && idx < allBriefs.length - 1 ? allBriefs[idx + 1] : null;
+const relatedBriefs = allBriefs.filter((b) => b.id !== brief.id).slice(0, 3);
+
+const bodyHtml = brief.bodyHtml || '';
 const headingMatches = Array.from(bodyHtml.matchAll(/<h2>(.*?)<\/h2>/g));
 const headingItems = headingMatches.map((match, i) => ({
   id: `section-${i + 1}`,
@@ -40,11 +30,17 @@ const headingItems = headingMatches.map((match, i) => ({
 const headingQueue = [...headingItems];
 const processedBodyHtml = headingMatches.length
   ? bodyHtml.replace(/<h2>/g, () => {
-      const heading = headingQueue.shift();
-      return heading ? `<h2 id="${heading.id}">` : '<h2>';
+      const h = headingQueue.shift();
+      return h ? `<h2 id="${h.id}">` : '<h2>';
     })
   : bodyHtml;
 const hasBodyContent = !!processedBodyHtml.trim();
+
+Astro.response.headers.set(
+  'Cache-Control',
+  'public, s-maxage=600, stale-while-revalidate=86400'
+);
+
 const uiText = {
   signal: lang === 'zh' ? '信号' : lang === 'ja' ? 'シグナル' : 'Signal',
   impact: lang === 'zh' ? '影响' : lang === 'ja' ? '影響' : 'Impact',
@@ -62,17 +58,14 @@ const uiText = {
 } as const;
 
 const summaryCards = [
-  {
-    label: uiText.signal,
-    value: brief.category || 'AI',
-  },
-  {
-    label: uiText.impact,
-    value: brief.impact || 'Notable',
-  },
+  { label: uiText.signal, value: brief.category || 'AI' },
+  { label: uiText.impact, value: brief.impact || 'Notable' },
   {
     label: uiText.whyItMatters,
-    value: brief.whyItMatters || brief.commentary || brief.snippet || (lang === 'zh' ? '关键不是消息本身，而是它会改变独立创业者接下来该关注什么。' : lang === 'ja' ? '重要なのはニュースそのものではなく、次に何へ注意を向けるべきかが変わる点です。' : 'What matters is not the headline alone, but what it changes for solo builders next.'),
+    value: brief.whyItMatters || brief.commentary || brief.snippet ||
+      (lang === 'zh' ? '关键不是消息本身，而是它会改变独立创业者接下来该关注什么。'
+        : lang === 'ja' ? '重要なのはニュースそのものではなく、次に何へ注意を向けるべきかが変わる点です。'
+          : 'What matters is not the headline alone, but what it changes for solo builders next.'),
   },
 ];
 const recommendationIntro = lang === 'zh'
@@ -97,6 +90,7 @@ const recommendationIntro = lang === 'zh'
             <time datetime={brief.date}>{brief.date}</time>
             <span>·</span>
             <span>{brief.category}</span>
+            {brief.sourceName && <><span>·</span><span>{brief.sourceName}</span></>}
           </div>
           <div class="article-lead-grid">
             <div class="article-lead-note">

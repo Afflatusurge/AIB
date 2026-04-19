@@ -44,7 +44,7 @@ export async function GET() {
     <language>en-us</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <image>
-      <url>${SITE_URL}/favicon.svg</url>
+      <url>${SITE_URL}/icon-512.png</url>
       <title>AI Solopreneur Guide</title>
       <link>${SITE_URL}</link>
     </image>

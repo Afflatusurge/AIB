@@ -54,7 +54,7 @@ const dayOfWeek = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja
       {lang === 'zh' ? '筛选真正重要的信息，用结构化方式呈现。' : lang === 'ja' ? '重要な情報だけを整理して提供。' : 'What matters today, filtered and structured for quick reading.'}
     </p>
 
-    <div class="signal-feed animate-in">
+    <div class="signal-feed animate-in" data-signal-feed data-lang={lang}>
       <div class="signal-summary">
         <p class="summary-kicker">{t('nav.daily')}</p>
         <h3>{lang === 'zh' ? '过去 24 小时，哪些 AI 动向值得独立创作者和小团队现在就关注？' : lang === 'ja' ? '過去24時間で、ひとり起業家が今すぐ見るべきAIの動きは何か。' : 'What mattered in AI over the last 24 hours for independent builders?'}</h3>
@@ -63,14 +63,14 @@ const dayOfWeek = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja
         </p>
         <div class="summary-date">{today} · {dayOfWeek}</div>
       </div>
-      <div class="signal-items">
+      <div class="signal-items" data-signal-items>
         {briefs.length > 0 ? briefs.slice(0, 6).map((brief, i) => (
           <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="signal-item">
             <div class="signal-index">{String(i + 1).padStart(2, '0')}</div>
             <div class="signal-main">
               <div class="signal-row">
                 <span class={`signal-category ${categoryClass[brief.category] || 'llm'}`}>{brief.category || 'AI'}</span>
-                <span class={`signal-impact ${brief.impact.toLowerCase()}`}>{brief.impact || 'Notable'}</span>
+                <span class={`signal-impact ${(brief.impact || 'notable').toLowerCase()}`}>{brief.impact || 'Notable'}</span>
               </div>
               <h4>{brief.title}</h4>
               <p>{brief.snippet}</p>
@@ -78,17 +78,77 @@ const dayOfWeek = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja
           </a>
         )) : (
           <div class="signal-empty">
-            <p>{lang === 'zh' ? '暂无信号数据。连接 Notion 后将显示实时内容。' : lang === 'ja' ? 'シグナルデータがありません。Notion接続後にライブコンテンツが表示されます。' : 'No signal data yet. Live content will appear once Notion is connected.'}</p>
+            <p>{lang === 'zh' ? '正在加载最新信号…' : lang === 'ja' ? '最新シグナルを読み込み中…' : 'Loading the latest signals…'}</p>
           </div>
         )}
       </div>
       <div class="signal-footer">
         <a href={`/${lang}/daily/`}>
           {lang === 'zh' ? '查看最新 →' : lang === 'ja' ? '最新ブリーフを見る →' : 'View latest brief →'}
-          {briefs.length > 6 && ` ${briefs.length - 6} more signals`}
         </a>
       </div>
     </div>
+
+    <script>
+      // Client-side hydration: replace the build-time Notion briefs with the
+      // latest live Supabase data. If the fetch fails we simply keep the
+      // server-rendered fallback so the page still shows something useful.
+      const CATEGORY_CLASS = {
+        LLM: 'llm', Agent: 'agent', Business: 'business', Coding: 'coding',
+        Hardware: 'hardware', Image: 'image', Video: 'video',
+        Research: 'llm', Funding: 'business',
+      };
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      async function hydrateSignalFeed(container) {
+        const lang = container.dataset.lang || 'en';
+        const items = container.querySelector('[data-signal-items]');
+        if (!items) return;
+        try {
+          const resp = await fetch(`/api/briefs?lang=${encodeURIComponent(lang)}&limit=6`, {
+            headers: { Accept: 'application/json' },
+          });
+          if (!resp.ok) return;
+          const payload = await resp.json();
+          if (!payload.ok || !Array.isArray(payload.briefs) || payload.briefs.length === 0) return;
+          items.innerHTML = payload.briefs.map((brief, i) => {
+            const category = brief.category || 'AI';
+            const impact = brief.impact || 'Notable';
+            const catClass = CATEGORY_CLASS[category] || 'llm';
+            const impactClass = impact.toLowerCase();
+            const href = `/${lang}/daily/${brief.slug || brief.id}/`;
+            return `
+              <a href="${escapeHtml(href)}" class="signal-item">
+                <div class="signal-index">${String(i + 1).padStart(2, '0')}</div>
+                <div class="signal-main">
+                  <div class="signal-row">
+                    <span class="signal-category ${escapeHtml(catClass)}">${escapeHtml(category)}</span>
+                    <span class="signal-impact ${escapeHtml(impactClass)}">${escapeHtml(impact)}</span>
+                  </div>
+                  <h4>${escapeHtml(brief.title)}</h4>
+                  <p>${escapeHtml(brief.snippet || '')}</p>
+                </div>
+              </a>
+            `;
+          }).join('');
+        } catch (err) {
+          // Swallow errors; server-rendered fallback stays visible.
+          console.warn('[signal-feed] hydrate failed', err);
+        }
+      }
+
+      document.querySelectorAll('[data-signal-feed]').forEach((el) => {
+        hydrateSignalFeed(el);
+      });
+    </script>
   </div>
 </section>
 
