@@ -66,7 +66,7 @@ function env(name: string): string | undefined {
 
 const DISCOVERY_SYSTEM = `You are a news-scout for "AI and Business", a daily publication for independent builders and small-team founders.
 
-Use the web_search tool to find the most important AI / AI-business news from the last 24 hours. Focus on things that actually change what an indie builder could do this week: foundational model launches, pricing / access changes, new agent or coding tools, meaningful funding or acquisitions, credible research with near-term practical impact. Skip press-release filler, rumor posts, and minor point updates.
+Use the web search tool to find the most important AI / AI-business news from the last 24 hours. Focus on things that actually change what an indie builder could do this week: foundational model launches, pricing / access changes, new agent or coding tools, meaningful funding or acquisitions, credible research with near-term practical impact. Skip press-release filler, rumor posts, and minor point updates.
 
 RULES
 - Every item MUST have a real URL returned by the web search. Never fabricate URLs, titles, numbers, or quotes.
@@ -74,7 +74,14 @@ RULES
 - If you cannot find a credible source for a story, drop it.
 - Keep summaries strictly factual — no opinion, no marketing adjectives.
 
-OUTPUT (JSON only)
+OUTPUT FORMAT — CRITICAL
+Your entire response must be a single JSON object and nothing else.
+- No prose before or after.
+- No markdown code fences.
+- No headings, no commentary, no disclaimers.
+- Your output is fed directly into JSON.parse(); any non-JSON text will break the pipeline.
+
+Schema:
 {
   "items": [
     {
@@ -86,9 +93,7 @@ OUTPUT (JSON only)
       "key_facts":    ["short fact 1", "short fact 2", "..."]
     }
   ]
-}
-
-Return ONLY this JSON object.`;
+}`;
 
 function buildDiscoveryUser(opts: GenerateOptions): string {
   const target = Math.min(Math.max(opts.max ?? 6, 1), 12);
@@ -117,8 +122,9 @@ export async function discoverNews(opts: GenerateOptions = {}): Promise<Discover
     web_search_options: {
       search_context_size: 'medium',
     },
-    // NOTE: temperature is NOT supported by search-preview models.
-    response_format: { type: 'json_object' },
+    // NOTE: search-preview models disallow BOTH `temperature` AND `response_format`
+    // when web search is enabled. We constrain output via the system prompt and
+    // recover JSON below with defensive extraction.
     messages: [
       { role: 'system', content: DISCOVERY_SYSTEM },
       { role: 'user', content: buildDiscoveryUser(opts) },
@@ -140,14 +146,39 @@ export async function discoverNews(opts: GenerateOptions = {}): Promise<Discover
   const json: any = await resp.json();
   const raw = json?.choices?.[0]?.message?.content || '';
   if (!raw) throw new Error('[discover] empty response');
-  let parsed: any;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
+  const parsed = extractJsonObject(raw);
+  if (!parsed) {
     throw new Error(`[discover] non-JSON response: ${String(raw).slice(0, 400)}`);
   }
   const items = Array.isArray(parsed?.items) ? parsed.items : [];
   return items.map(normalizeDiscovered).filter(Boolean) as DiscoveredItem[];
+}
+
+/**
+ * Defensive JSON extraction — search-preview models sometimes add
+ * markdown fences or a short lead-in paragraph despite strict prompting.
+ * Tries, in order:
+ *   1. raw JSON.parse
+ *   2. contents of ```json ... ``` (or bare ``` ... ```) fence
+ *   3. substring from first `{` through the matching last `}`
+ * Returns null if none parse.
+ */
+function extractJsonObject(raw: string): any | null {
+  const s = String(raw).trim();
+  // 1) raw
+  try { return JSON.parse(s); } catch {}
+  // 2) fenced code block
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence?.[1]) {
+    try { return JSON.parse(fence[1].trim()); } catch {}
+  }
+  // 3) first { … last }
+  const first = s.indexOf('{');
+  const last = s.lastIndexOf('}');
+  if (first !== -1 && last > first) {
+    try { return JSON.parse(s.slice(first, last + 1)); } catch {}
+  }
+  return null;
 }
 
 function normalizeDiscovered(x: any): DiscoveredItem | null {

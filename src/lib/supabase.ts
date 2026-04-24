@@ -20,8 +20,25 @@ function resolve(name: string): string {
   return (globalThis as any)?.process?.env?.[name] || '';
 }
 
+function normalizeUrl(raw: string): string {
+  if (!raw) return '';
+  const trimmed = raw.trim().replace(/\/+$/, '');
+  // Guard: dashboard URL is a common copy-paste mistake — reject with a clear msg.
+  if (/supabase\.com\/dashboard\//i.test(trimmed)) {
+    throw new Error(
+      'SUPABASE_URL is a Supabase dashboard link; it must be the API URL, e.g. https://<project-ref>.supabase.co'
+    );
+  }
+  // Must be https://<something>.supabase.co (self-hosted Supabase uses different
+  // domains, which we don't try to validate here).
+  if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+    throw new Error(`SUPABASE_URL missing protocol (got: "${trimmed}")`);
+  }
+  return trimmed;
+}
+
 export function getSupabaseUrl(): string {
-  return resolve('SUPABASE_URL') || resolve('PUBLIC_SUPABASE_URL');
+  return normalizeUrl(resolve('SUPABASE_URL') || resolve('PUBLIC_SUPABASE_URL'));
 }
 
 export function getPublishableKey(): string {
