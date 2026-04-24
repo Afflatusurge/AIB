@@ -3,7 +3,7 @@
 //   Stage 1 (discovery) — gpt-4o-mini-search-preview, Chat Completions
 //     Uses built-in web search to surface 5-8 notable AI / AI-business
 //     stories from the last 24 hours. Returns a compact JSON list of
-//     { url, title, source_name, published_at, summary, key_facts }.
+//     { url, title, source_name, published_at, summary }.
 //
 //   Stage 2 (editor) — gpt-4.1, Chat Completions (json_schema strict)
 //     Takes the stage-1 list and, per item, produces the full editorial
@@ -46,7 +46,6 @@ export interface DiscoveredItem {
   source_name: string;
   published_at: string;
   summary: string;     // 2-4 sentence neutral summary, used by the editor
-  key_facts: string[]; // bullet-form facts preserved for the editor
 }
 
 export interface GenerateOptions {
@@ -89,11 +88,12 @@ Schema:
       "title":        "concise, accurate headline",
       "source_name":  "publisher name",
       "published_at": "ISO 8601 timestamp if available, otherwise today's date at 12:00 UTC",
-      "summary":      "2-4 sentences, neutral, factual",
-      "key_facts":    ["short fact 1", "short fact 2", "..."]
+      "summary":      "2-4 sentences, neutral, factual"
     }
   ]
-}`;
+}
+
+Keep each summary under ~500 characters. Do not add any extra fields.`;
 
 function buildDiscoveryUser(opts: GenerateOptions): string {
   const target = Math.min(Math.max(opts.max ?? 6, 1), 12);
@@ -125,6 +125,9 @@ export async function discoverNews(opts: GenerateOptions = {}): Promise<Discover
     // NOTE: search-preview models disallow BOTH `temperature` AND `response_format`
     // when web search is enabled. We constrain output via the system prompt and
     // recover JSON below with defensive extraction.
+    // Default output cap on search-preview is low enough that 6 items can be
+    // truncated mid-JSON; bump it so we always get a complete object.
+    max_tokens: 6000,
     messages: [
       { role: 'system', content: DISCOVERY_SYSTEM },
       { role: 'user', content: buildDiscoveryUser(opts) },
@@ -146,39 +149,113 @@ export async function discoverNews(opts: GenerateOptions = {}): Promise<Discover
   const json: any = await resp.json();
   const raw = json?.choices?.[0]?.message?.content || '';
   if (!raw) throw new Error('[discover] empty response');
-  const parsed = extractJsonObject(raw);
-  if (!parsed) {
+  const items = extractItems(raw);
+  if (items === null) {
     throw new Error(`[discover] non-JSON response: ${String(raw).slice(0, 400)}`);
   }
-  const items = Array.isArray(parsed?.items) ? parsed.items : [];
   return items.map(normalizeDiscovered).filter(Boolean) as DiscoveredItem[];
 }
 
 /**
- * Defensive JSON extraction — search-preview models sometimes add
- * markdown fences or a short lead-in paragraph despite strict prompting.
- * Tries, in order:
- *   1. raw JSON.parse
- *   2. contents of ```json ... ``` (or bare ``` ... ```) fence
- *   3. substring from first `{` through the matching last `}`
- * Returns null if none parse.
+ * Extract the `items` array from the model's discovery output.
+ *
+ * Search-preview models occasionally (a) wrap output in markdown fences,
+ * (b) prepend a short lead-in, or (c) — most disruptively — truncate the
+ * JSON mid-object because of token limits. This helper tries, in order:
+ *
+ *   1. raw JSON.parse                      (clean response)
+ *   2. ```json ... ``` fence contents
+ *   3. first `{` through last `}` slice    (lead-in / trailing prose)
+ *   4. salvage: walk the items[] array and keep every complete {…} item,
+ *      silently dropping a trailing incomplete one
+ *
+ * Returns the items array, or null if nothing could be parsed.
  */
-function extractJsonObject(raw: string): any | null {
+function extractItems(raw: string): any[] | null {
   const s = String(raw).trim();
+
+  const tryParseObj = (txt: string): any[] | null => {
+    try {
+      const obj = JSON.parse(txt);
+      if (Array.isArray(obj?.items)) return obj.items;
+    } catch {}
+    return null;
+  };
+
   // 1) raw
-  try { return JSON.parse(s); } catch {}
-  // 2) fenced code block
+  const a = tryParseObj(s);
+  if (a) return a;
+
+  // 2) fenced
   const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence?.[1]) {
-    try { return JSON.parse(fence[1].trim()); } catch {}
+    const b = tryParseObj(fence[1].trim());
+    if (b) return b;
   }
+
   // 3) first { … last }
   const first = s.indexOf('{');
   const last = s.lastIndexOf('}');
   if (first !== -1 && last > first) {
-    try { return JSON.parse(s.slice(first, last + 1)); } catch {}
+    const c = tryParseObj(s.slice(first, last + 1));
+    if (c) return c;
   }
-  return null;
+
+  // 4) salvage from truncation
+  return salvageItems(s);
+}
+
+/**
+ * Walk forward from `"items":[`, brace-matching each object so we can keep
+ * the complete ones and drop a final truncated tail. Respects JSON string
+ * escaping (so `"}"` inside a value doesn't fool the counter).
+ */
+function salvageItems(s: string): any[] | null {
+  const keyIdx = s.indexOf('"items"');
+  if (keyIdx === -1) return null;
+  const arrStart = s.indexOf('[', keyIdx);
+  if (arrStart === -1) return null;
+
+  const items: any[] = [];
+  let i = arrStart + 1;
+  const n = s.length;
+
+  while (i < n) {
+    // skip whitespace / commas
+    while (i < n && (s[i] === ' ' || s[i] === '\t' || s[i] === '\n' || s[i] === '\r' || s[i] === ',')) i++;
+    if (i >= n) break;
+    if (s[i] === ']') break;
+    if (s[i] !== '{') break;
+
+    const objStart = i;
+    let depth = 0;
+    let inStr = false;
+    let escape = false;
+    let objEnd = -1;
+    for (; i < n; i++) {
+      const c = s[i];
+      if (escape) { escape = false; continue; }
+      if (inStr) {
+        if (c === '\\') { escape = true; }
+        else if (c === '"') { inStr = false; }
+        continue;
+      }
+      if (c === '"') { inStr = true; continue; }
+      if (c === '{') { depth++; continue; }
+      if (c === '}') {
+        depth--;
+        if (depth === 0) { objEnd = i + 1; i++; break; }
+      }
+    }
+    if (objEnd === -1) break; // truncated mid-object — stop here
+    try {
+      items.push(JSON.parse(s.slice(objStart, objEnd)));
+    } catch {
+      break;
+    }
+  }
+
+  return items.length > 0 ? items : null;
 }
 
 function normalizeDiscovered(x: any): DiscoveredItem | null {
@@ -190,7 +267,6 @@ function normalizeDiscovered(x: any): DiscoveredItem | null {
     source_name: String(x.source_name || '').trim() || 'Unknown',
     published_at: toIso(x.published_at) || new Date().toISOString(),
     summary: String(x.summary || '').trim(),
-    key_facts: Array.isArray(x.key_facts) ? x.key_facts.map((k: any) => String(k).trim()).filter(Boolean) : [],
   };
 }
 
@@ -206,7 +282,7 @@ EDITORIAL VOICE
 - Calm, analytical, concrete. Never hype. Avoid empty marketing words.
 - Tie everything back to: what this changes for a solo operator, what decision or experiment it unlocks, or why they can ignore it.
 - No emojis. No "stay tuned". No "exciting". No filler lead-ins.
-- Do not invent facts, company names, numbers, or features that aren't supported by the provided summary / key_facts.
+- Do not invent facts, company names, numbers, or features that aren't supported by the provided summary.
 
 FIELDS (per brief)
 - source_url:   exactly the url provided.
