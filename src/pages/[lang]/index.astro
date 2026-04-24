@@ -6,22 +6,21 @@ import SignalFeed from '../../components/SignalFeed.astro';
 import FeaturedCards from '../../components/FeaturedCards.astro';
 import PlaybookShelf from '../../components/PlaybookShelf.astro';
 import Footer from '../../components/Footer.astro';
-import { getDailyBriefs, getToolReviews, getCaseStudies, getPlaybooks } from '../../lib/notion';
+import { getToolReviews, getCaseStudies, getPlaybooks } from '../../lib/notion';
+import { listPublishedBriefs } from '../../lib/supabase';
 import { useTranslations, getLangFromUrl } from '../../i18n/utils';
 
-export function getStaticPaths() {
-  return [
-    { params: { lang: 'en' } },
-    { params: { lang: 'ja' } },
-    { params: { lang: 'zh' } },
-  ];
-}
+// SSR at request time — daily briefs come from Supabase (populated by the
+// /api/cron/ingest job), so the homepage always reflects the latest cron
+// run without waiting for a redeploy.
+export const prerender = false;
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-// Fetch content from Notion (language-aware)
-const dailyBriefs = await getDailyBriefs(lang as 'en' | 'zh' | 'ja');
+// Daily briefs: live from Supabase.
+// Tools / cases / playbooks: still Notion-backed (not yet migrated).
+const dailyBriefs = await listPublishedBriefs(lang as 'en' | 'zh' | 'ja');
 const toolReviews = await getToolReviews(lang as 'en' | 'zh' | 'ja');
 const caseStudies = await getCaseStudies(lang as 'en' | 'zh' | 'ja');
 const playbooks = await getPlaybooks(lang as 'en' | 'zh' | 'ja');
