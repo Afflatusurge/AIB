@@ -43,21 +43,35 @@ export async function runIngest(opts: { max?: number } = {}): Promise<IngestRepo
   const db = supabaseAdmin();
 
   // Gather recent URLs/titles so the LLM can avoid covering the same stories.
-  const { data: recentRows, error: recentErr } = await db
+  // Two simple queries (avoids PostgREST embedded-resource filter quirks).
+  const { data: recentBriefs, error: briefErr } = await db
     .from('briefs')
-    .select('source_url, brief_translations!inner(title, lang)')
-    .eq('brief_translations.lang', 'en')
+    .select('id, source_url')
     .order('published_at', { ascending: false })
     .limit(40);
-  if (recentErr) throw new Error(`recent lookup failed: ${recentErr.message}`);
+  if (briefErr) throw new Error(`recent briefs lookup failed: ${briefErr.message}`);
 
-  const excludeUrls = (recentRows || [])
+  const excludeUrls = (recentBriefs || [])
     .map((r: any) => r.source_url)
     .filter(Boolean) as string[];
-  const excludeTitles = (recentRows || [])
-    .flatMap((r: any) => (Array.isArray(r.brief_translations) ? r.brief_translations : []))
-    .map((t: any) => t?.title)
-    .filter(Boolean) as string[];
+
+  let excludeTitles: string[] = [];
+  const briefIds = (recentBriefs || []).map((r: any) => r.id).filter(Boolean);
+  if (briefIds.length > 0) {
+    const { data: trRows, error: trErr } = await db
+      .from('brief_translations')
+      .select('title')
+      .eq('lang', 'en')
+      .in('brief_id', briefIds);
+    if (trErr) {
+      // Non-fatal: we can still run ingest without title hints.
+      console.warn('[ingest] recent titles lookup failed (continuing):', trErr.message);
+    } else {
+      excludeTitles = (trRows || [])
+        .map((t: any) => t?.title)
+        .filter(Boolean) as string[];
+    }
+  }
 
   // Call the LLM (one shot: search + summarize + translate).
   const briefs = await generateDailyBriefs({
