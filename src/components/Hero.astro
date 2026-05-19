@@ -59,10 +59,10 @@ const editionDate = new Intl.DateTimeFormat(editorialLocale, {
         </span>
       </div>
       <div class="edition-list">
-        <a href={`/${lang}/daily/${leadBrief?.slug || ''}`} class={`edition-item ${leadBrief ? '' : 'is-disabled'}`}>
+        <a href={`/${lang}/daily/${leadBrief?.slug || ''}`} class={`edition-item ${leadBrief ? '' : 'is-disabled'}`} data-live-hero-brief>
           <span class="edition-label">{t('nav.daily')}</span>
-          <strong>{leadBrief?.title || (lang === 'zh' ? '等待 Notion 内容同步' : lang === 'ja' ? 'Notion同期を待機中' : 'Waiting for Notion content')}</strong>
-          <span class="edition-meta">{leadBrief?.commentary || leadBrief?.category || (lang === 'zh' ? '每日信号' : lang === 'ja' ? 'デイリーシグナル' : 'Daily signals')}</span>
+          <strong data-live-hero-title>{leadBrief?.title || (lang === 'zh' ? '等待内容同步' : lang === 'ja' ? '同期を待機中' : 'Waiting for content')}</strong>
+          <span class="edition-meta" data-live-hero-meta>{leadBrief?.commentary || leadBrief?.category || (lang === 'zh' ? '每日信号' : lang === 'ja' ? 'デイリーシグナル' : 'Daily signals')}</span>
         </a>
         <a href={`/${lang}/tools/${leadTool?.slug || ''}`} class={`edition-item ${leadTool ? '' : 'is-disabled'}`}>
           <span class="edition-label">{t('nav.tools')}</span>

@@ -26,14 +26,14 @@ export const GET: APIRoute = async ({ url }) => {
       category: b.category,
       impact: b.impact,
       date: b.date,
+      commentary: b.commentary,
       sourceName: b.sourceName,
     }));
     return new Response(JSON.stringify({ ok: true, lang, briefs: payload }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        // Short edge cache; cron runs daily so staleness is bounded.
-        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=900',
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
     });
   } catch (err: any) {

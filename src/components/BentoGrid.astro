@@ -87,7 +87,7 @@ const localizePlaybookCategory = (category?: string) => {
                 : 'Track what matters today.'}
           </p>
         </div>
-        <ul class="desk-list">
+        <ul class="desk-list" data-live-bento-briefs>
           {briefs.length > 0 ? briefs.map((brief) => (
             <li>
               <a href={`/${lang}/daily/${brief.slug}/`}>{brief.title}</a>

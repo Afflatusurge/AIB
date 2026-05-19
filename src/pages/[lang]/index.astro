@@ -10,20 +10,29 @@ import { getToolReviews, getCaseStudies, getPlaybooks } from '../../lib/notion';
 import { listPublishedBriefs } from '../../lib/supabase';
 import { useTranslations, getLangFromUrl } from '../../i18n/utils';
 
-// SSR at request time — daily briefs come from Supabase (populated by the
-// /api/cron/ingest job), so the homepage always reflects the latest cron
-// run without waiting for a redeploy.
-export const prerender = false;
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'ja' } },
+    { params: { lang: 'zh' } },
+  ];
+}
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-// Daily briefs: live from Supabase.
-// Tools / cases / playbooks: still Notion-backed (not yet migrated).
-const dailyBriefs = await listPublishedBriefs(lang as 'en' | 'zh' | 'ja');
-const toolReviews = await getToolReviews(lang as 'en' | 'zh' | 'ja');
-const caseStudies = await getCaseStudies(lang as 'en' | 'zh' | 'ja');
-const playbooks = await getPlaybooks(lang as 'en' | 'zh' | 'ja');
+let dailyBriefs = [] as Awaited<ReturnType<typeof listPublishedBriefs>>;
+try {
+  dailyBriefs = await listPublishedBriefs(lang as 'en' | 'zh' | 'ja');
+} catch (error) {
+  console.error('[homepage] Failed to fetch daily briefs at build time:', error);
+}
+
+const [toolReviews, caseStudies, playbooks] = await Promise.all([
+  getToolReviews(lang as 'en' | 'zh' | 'ja'),
+  getCaseStudies(lang as 'en' | 'zh' | 'ja'),
+  getPlaybooks(lang as 'en' | 'zh' | 'ja'),
+]);
 
 const leadBrief = dailyBriefs.find((item) => item.featured) || dailyBriefs[0];
 const leadTool = toolReviews.find((item) => item.featured) || toolReviews[0];
@@ -96,4 +105,101 @@ const homepageKeywords = lang === 'en'
   <div class="section-divider"></div>
   <PlaybookShelf lang={lang} playbooks={playbooks.slice(0, 4)} />
   <Footer lang={lang} />
+  <script is:inline define:vars={{ lang }}>
+    (() => {
+      const endpoint = `/api/briefs?lang=${lang}&limit=6`;
+      const escapeHtml = (value) =>
+        String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+
+      const setText = (selector, value) => {
+        const node = document.querySelector(selector);
+        if (node) node.textContent = value;
+      };
+
+      const updateHero = (brief) => {
+        if (!brief) return;
+        const link = document.querySelector('[data-live-hero-brief]');
+        if (!(link instanceof HTMLAnchorElement)) return;
+        link.href = `/${lang}/daily/${brief.slug || brief.id}/`;
+        const title = link.querySelector('[data-live-hero-title]');
+        const meta = link.querySelector('[data-live-hero-meta]');
+        if (title) title.textContent = brief.title;
+        if (meta) meta.textContent = brief.commentary || brief.category || '';
+        link.classList.remove('is-disabled');
+      };
+
+      const updateBento = (briefs) => {
+        const list = document.querySelector('[data-live-bento-briefs]');
+        if (!list) return;
+        const items = briefs.slice(0, 3);
+        if (!items.length) return;
+        list.innerHTML = items
+          .map(
+            (brief) => `
+              <li>
+                <a href="/${lang}/daily/${escapeHtml(brief.slug || brief.id)}">${escapeHtml(brief.title)}</a>
+                <span>${escapeHtml(brief.commentary || brief.category || '')}</span>
+              </li>
+            `
+          )
+          .join('');
+      };
+
+      const updateSignalFeed = (briefs) => {
+        const container = document.querySelector('[data-live-signal-items]');
+        if (!container) return;
+        if (!briefs.length) return;
+
+        const categoryClass = {
+          LLM: 'llm',
+          Agent: 'agent',
+          Business: 'business',
+          Coding: 'coding',
+          Hardware: 'hardware',
+          Image: 'image',
+          Video: 'video',
+        };
+
+        container.innerHTML = briefs
+          .slice(0, 6)
+          .map((brief, index) => {
+            const category = brief.category || 'AI';
+            const impact = brief.impact || 'Notable';
+            const categorySlug = categoryClass[category] || 'llm';
+            const impactSlug = String(impact).toLowerCase();
+            return `
+              <a href="/${lang}/daily/${escapeHtml(brief.slug || brief.id)}" class="signal-item">
+                <div class="signal-index">${String(index + 1).padStart(2, '0')}</div>
+                <div class="signal-main">
+                  <div class="signal-row">
+                    <span class="signal-category ${escapeHtml(categorySlug)}">${escapeHtml(category)}</span>
+                    <span class="signal-impact ${escapeHtml(impactSlug)}">${escapeHtml(impact)}</span>
+                  </div>
+                  <h4>${escapeHtml(brief.title)}</h4>
+                  <p>${escapeHtml(brief.snippet || '')}</p>
+                </div>
+              </a>
+            `;
+          })
+          .join('');
+      };
+
+      fetch(endpoint, { headers: { accept: 'application/json' } })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload) => {
+          if (!payload?.ok || !Array.isArray(payload.briefs) || !payload.briefs.length) return;
+          updateHero(payload.briefs[0]);
+          updateBento(payload.briefs);
+          updateSignalFeed(payload.briefs);
+        })
+        .catch((error) => {
+          console.warn('[homepage] brief refresh skipped:', error);
+        });
+    })();
+  </script>
 </Layout>

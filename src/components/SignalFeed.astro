@@ -64,7 +64,7 @@ const dayOfWeek = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja
         </p>
         <div class="summary-date">{today} · {dayOfWeek}</div>
       </div>
-      <div class="signal-items">
+      <div class="signal-items" data-live-signal-items>
         {briefs.length > 0 ? briefs.slice(0, 6).map((brief, i) => (
           <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="signal-item">
             <div class="signal-index">{String(i + 1).padStart(2, '0')}</div>

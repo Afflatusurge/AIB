@@ -16,11 +16,9 @@ const t = useTranslations(lang);
 const briefs = await listPublishedBriefs(lang as 'en' | 'zh' | 'ja');
 const listing = getPaginatedListing(briefs, 1);
 
-// Short edge cache so the page feels instant; cron runs once per day,
-// stale-while-revalidate keeps responses fresh without blocking users.
 Astro.response.headers.set(
   'Cache-Control',
-  'public, s-maxage=300, stale-while-revalidate=3600'
+  'public, s-maxage=3600, stale-while-revalidate=86400'
 );
 ---
 

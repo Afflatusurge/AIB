@@ -1,30 +1,44 @@
 ---
-export const prerender = false;
-
-type Locale = 'en' | 'ja' | 'zh';
-
-const fallbackLocale: Locale = 'en';
-
-const parseAcceptLanguage = () =>
-  (Astro.request.headers.get('accept-language') || '')
-    .split(',')
-    .map((token) => token.split(';')[0]?.trim().toLowerCase())
-    .filter(Boolean);
-
-const requestedLocales = [
-  ...(Astro.preferredLocaleList || []).map((locale) => locale.toLowerCase()),
-  ...parseAcceptLanguage(),
-];
-
-const detectLocale = (): Locale => {
-  for (const locale of requestedLocales) {
-    if (locale.startsWith('ja')) return 'ja';
-    if (locale.startsWith('zh')) return 'zh';
-    if (locale.startsWith('en')) return 'en';
-  }
-
-  return fallbackLocale;
-};
-
-return Astro.redirect(`/${detectLocale()}/`, 302);
+const fallbackPath = '/en/';
 ---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AIandBusiness</title>
+    <meta http-equiv="refresh" content={`0;url=${fallbackPath}`} />
+    <script is:inline define:vars={{ fallbackPath }}>
+      (() => {
+        const detectLocale = () => {
+          const locales = Array.from(navigator.languages || []).concat(navigator.language || []);
+          for (const locale of locales) {
+            const normalized = String(locale || '').toLowerCase();
+            if (normalized.startsWith('ja')) return 'ja';
+            if (normalized.startsWith('zh')) return 'zh';
+            if (normalized.startsWith('en')) return 'en';
+          }
+          return 'en';
+        };
+
+        const locale = detectLocale();
+        const target = `/${locale}/`;
+        window.location.replace(target || fallbackPath);
+      })();
+    </script>
+    <style>
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: #f6f0e6;
+        font-family: system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <p><a href={fallbackPath}>Continue to AIandBusiness</a></p>
+    </noscript>
+  </body>
+</html>
