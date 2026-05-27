@@ -46,8 +46,14 @@ export const GET: APIRoute = async ({ request, url }) => {
   const max = Number(url.searchParams.get('max') || '6');
   try {
     const report = await runIngest({ max: Number.isFinite(max) && max > 0 ? Math.min(max, 12) : 6 });
+    const noNewBriefs = report.inserted === 0;
+    if (noNewBriefs) {
+      console.error('[cron/ingest] no briefs inserted', report);
+    } else {
+      console.log('[cron/ingest] success', report);
+    }
     return new Response(JSON.stringify({ ok: true, report }, null, 2), {
-      status: 200,
+      status: noNewBriefs ? 500 : 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: any) {

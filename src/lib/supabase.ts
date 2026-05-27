@@ -124,6 +124,7 @@ export interface BriefView {
   category: string;
   impact: string;
   date: string;
+  sourcePublishedDate: string;
   sourceUrl: string;
   sourceName: string;
   commentary: string;
@@ -146,7 +147,8 @@ function toView(brief: BriefRecord, tr: BriefTranslationRecord | undefined): Bri
     snippet: tr.snippet || '',
     category: brief.category || 'AI',
     impact: cap(brief.impact) || 'Notable',
-    date: brief.published_at.slice(0, 10),
+    date: brief.created_at.slice(0, 10),
+    sourcePublishedDate: brief.published_at.slice(0, 10),
     sourceUrl: brief.source_url || '',
     sourceName: brief.source_name || '',
     commentary: tr.commentary || '',
@@ -154,6 +156,24 @@ function toView(brief: BriefRecord, tr: BriefTranslationRecord | undefined): Bri
     bodyHtml: tr.body_html || '',
     featured: !!brief.featured,
   };
+}
+
+function isRenderableBrief(view: BriefView): boolean {
+  const text = `${view.title} ${view.snippet} ${view.commentary} ${view.whyItMatters}`.toLowerCase();
+
+  // Filter out obvious placeholder / fabricated-company outputs that slipped
+  // through earlier ingest runs.
+  if (/\b(xyz|abc|def|mno|jkl)\b/i.test(view.title)) return false;
+
+  // Require a real source and some editorial substance.
+  if (!view.sourceUrl || !view.sourceName || view.sourceName === 'Unknown') return false;
+  if (!view.title.trim()) return false;
+  if (!view.snippet.trim() && !view.commentary.trim() && !view.whyItMatters.trim()) return false;
+
+  // Another lightweight guard against template-like filler.
+  if (text.includes('placeholder') || text.includes('lorem ipsum')) return false;
+
+  return true;
 }
 
 /** List all published briefs for a language, newest first. */
@@ -168,7 +188,7 @@ export async function listPublishedBriefs(lang: Lang, limit = 60): Promise<Brief
     `)
     .eq('status', 'published')
     .eq('brief_translations.lang', lang)
-    .order('published_at', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -179,7 +199,7 @@ export async function listPublishedBriefs(lang: Lang, limit = 60): Promise<Brief
   for (const row of (data as any[]) || []) {
     const tr = row.brief_translations?.[0];
     const v = toView(row, tr);
-    if (v) views.push(v);
+    if (v && isRenderableBrief(v)) views.push(v);
   }
   return views;
 }
@@ -207,5 +227,6 @@ export async function getBriefBySlug(slug: string, lang: Lang): Promise<BriefVie
     translations.find((t: any) => t.lang === lang) ||
     translations.find((t: any) => t.lang === 'en') ||
     translations[0];
-  return toView(data as any, preferred);
+  const view = toView(data as any, preferred);
+  return view && isRenderableBrief(view) ? view : null;
 }

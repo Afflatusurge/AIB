@@ -91,6 +91,9 @@ const recommendationIntro = lang === 'zh'
             <span>·</span>
             <span>{brief.category}</span>
             {brief.sourceName && <><span>·</span><span>{brief.sourceName}</span></>}
+            {brief.sourcePublishedDate && brief.sourcePublishedDate !== brief.date && (
+              <><span>·</span><span>{lang === 'zh' ? `来源日期 ${brief.sourcePublishedDate}` : lang === 'ja' ? `元記事日付 ${brief.sourcePublishedDate}` : `Source date ${brief.sourcePublishedDate}`}</span></>
+            )}
           </div>
           <div class="article-lead-grid">
             <div class="article-lead-note">

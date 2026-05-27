@@ -74,11 +74,12 @@ export async function runIngest(opts: { max?: number } = {}): Promise<IngestRepo
   }
 
   // Call the LLM (one shot: search + summarize + translate).
-  const briefs = await generateDailyBriefs({
+  const generatedBriefs = await generateDailyBriefs({
     max: target,
     excludeUrls,
     excludeTitles,
   });
+  const briefs = generatedBriefs.filter(isAcceptableBrief);
   report.generated = briefs.length;
   if (briefs.length === 0) return report;
 
@@ -111,6 +112,20 @@ export async function runIngest(opts: { max?: number } = {}): Promise<IngestRepo
   }
 
   return report;
+}
+
+function isAcceptableBrief(brief: StructuredBrief): boolean {
+  const title = `${brief.en?.title || ''} ${brief.zh?.title || ''} ${brief.ja?.title || ''}`;
+  if (/\b(XYZ|ABC|DEF|MNO|JKL)\b/i.test(title)) return false;
+  if (!brief.source_url || !brief.source_name || brief.source_name === 'Unknown') return false;
+
+  const published = new Date(brief.published_at);
+  if (Number.isNaN(published.getTime())) return false;
+
+  const ageHours = (Date.now() - published.getTime()) / (1000 * 60 * 60);
+  if (ageHours > 72) return false;
+
+  return true;
 }
 
 async function upsertBrief(s: StructuredBrief): Promise<void> {
