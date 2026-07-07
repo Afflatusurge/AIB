@@ -25,73 +25,93 @@ function impactClass(impact: string): string {
   if (i.includes('notable') || i === 'medium') return 'impact-notable';
   return 'impact-routine';
 }
+
+const categories = [...new Set(briefs.map((brief) => brief.category).filter(Boolean))] as string[];
+
+const ui = {
+  home: t('nav.home'),
+  count: lang === 'zh' ? '每日更新' : lang === 'ja' ? '毎日更新' : 'daily, not weekly',
+  lede:
+    lang === 'zh'
+      ? '每天 5 分钟，掌握真正影响一人公司判断的 AI 动态——按实用性排序，不追热点。'
+      : lang === 'ja'
+        ? '1日5分。ひとりビジネスの判断に本当に影響するAIの動きだけを、有用性の順で。'
+        : 'Track what matters — in 5 minutes a day. Ranked by usefulness to independent builders, not by hype.',
+  all: lang === 'zh' ? '全部' : lang === 'ja' ? 'すべて' : 'All',
+  editorPick: lang === 'zh' ? '主编推荐' : lang === 'ja' ? '編集部ピック' : 'Editor pick',
+  readBrief: lang === 'zh' ? '阅读简报' : lang === 'ja' ? 'ブリーフを読む' : 'Read the brief',
+  why: lang === 'zh' ? '为什么重要：' : lang === 'ja' ? 'なぜ重要か：' : 'Why it matters:',
+};
 ---
 
-<section class="page-section">
+<header class="page-head c-yellow">
   <div class="container">
-    <div class="page-header fade-in">
-      <p class="section-kicker">Daily Desk</p>
+    <div class="crumb"><a href={`/${lang}/`}>{ui.home}</a> / {t('nav.daily')}</div>
+    <div class="page-title-row">
       <h1>{t('nav.daily')}</h1>
-      <p>{lang === 'zh' ? '每天挑出真正会影响 AI 一人公司判断的几条更新，配上足够简洁但有方向感的编辑说明。' : lang === 'ja' ? 'AIソロプレナーに本当に影響する更新だけを選び、短くても判断に役立つ文脈を添えます。' : 'A daily desk for AI solopreneurs: fewer items, sharper judgment, and enough context to decide what matters next.'}</p>
+      <span class="count-pill">✦ {ui.count}</span>
     </div>
+    <p class="lede">{ui.lede}</p>
+  </div>
+</header>
 
-    {leadBrief ? (
-      <div class="list-shell fade-in">
-        <article class="lead-entry">
-          <div class="lead-entry-meta">
+{categories.length > 1 && (
+  <div class="filter-bar">
+    <div class="container">
+      <div class="filter-chips" data-filter-chips>
+        <button class="f-chip on" data-filter="*">{ui.all}</button>
+        {categories.map((category) => (
+          <button class="f-chip" data-filter={category}>{category}</button>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
+<main class="section">
+  <div class="container">
+    {leadBrief && (
+      <a class="lead-review lead-brief fade-in" href={`/${lang}/daily/${leadBrief.slug || leadBrief.id}/`}>
+        <div class="lead-body">
+          <div class="lead-top">
             <span class="card-badge">{leadBrief.category || 'AI'}</span>
             {leadBrief.impact && <span class={`card-badge ${impactClass(leadBrief.impact)}`}>{leadBrief.impact}</span>}
+            <span class="lead-date">{leadBrief.date}</span>
           </div>
-          <div class="lead-entry-date">{leadBrief.date}</div>
-          <h2>
-            <a href={`/${lang}/daily/${leadBrief.slug || leadBrief.id}/`}>{leadBrief.title}</a>
-          </h2>
-          <p>{leadBrief.whyItMatters || leadBrief.commentary || leadBrief.snippet || ''}</p>
-          <div class="lead-entry-actions">
-            <a href={`/${lang}/daily/${leadBrief.slug || leadBrief.id}/`} class="read-more">
-              {t('read.more')} →
-            </a>
-            <span class="lead-entry-note">
-              {lang === 'zh' ? '主编推荐' : lang === 'ja' ? '編集部ピック' : 'Editor pick'}
-            </span>
-          </div>
-        </article>
+          <div class="lead-kicker kicker-ink">{ui.editorPick}</div>
+          <h2>{leadBrief.title}</h2>
+          <p>{leadBrief.snippet}</p>
+          {(leadBrief.whyItMatters || leadBrief.commentary) && (
+            <div class="lead-why">
+              <b>{ui.why}</b> {leadBrief.whyItMatters || leadBrief.commentary}
+            </div>
+          )}
+          <div class="lead-cta">{ui.readBrief} <span>→</span></div>
+        </div>
+      </a>
+    )}
 
-        <aside class="list-aside">
-          <div class="aside-card">
-            <h3>{lang === 'zh' ? '今天这一栏怎么读' : lang === 'ja' ? '今日の読み方' : 'How to read today’s desk'}</h3>
-            <p>{lang === 'zh' ? '先看主条目，再按影响等级快速扫其余更新。首页与列表页都应该帮助读者在几分钟内形成判断。' : lang === 'ja' ? 'まず主役記事を読み、その後に影響度の高い順で他の更新を追う構成です。' : 'Start with the lead item, then scan the rest by impact. The goal is quick judgment, not infinite scrolling.'}</p>
-          </div>
-          <div class="aside-card">
-            <h3>{lang === 'zh' ? '什么值得出现在这里' : lang === 'ja' ? 'ここに載せる基準' : 'What makes the cut'}</h3>
-            <ul class="aside-list">
-              <li>{lang === 'zh' ? '会改变工具选择、工作流或商业判断的更新' : lang === 'ja' ? 'ツール選択、ワークフロー、事業判断に影響する更新' : 'Updates that change tool choice, workflow, or business judgment'}</li>
-              <li>{lang === 'zh' ? '优先保留原始来源清晰、影响明确的条目' : lang === 'ja' ? '一次ソースが明確で、影響がはっきりした項目を優先' : 'Items with clear primary sources and clear practical impact'}</li>
-              <li>{lang === 'zh' ? '不是所有 AI 新闻，而是值得独立创作者立即注意的那几条' : lang === 'ja' ? 'AIニュース全部ではなく、ひとり起業家が今すぐ見るべき数本' : 'Not all AI news, only the few pieces worth an indie builder’s attention now'}</li>
-            </ul>
-          </div>
-        </aside>
-      </div>
-    ) : null}
-
-    <div class="card-grid editorial-list" data-paginated-list>
+    <div class="card-grid" data-paginated-list>
       {briefs.map((brief, i) => (
-        <article class="content-card fade-in" style={`animation-delay: ${i * 60}ms`}>
+        <a
+          class="content-card fade-in"
+          style={`animation-delay: ${i * 60}ms`}
+          href={`/${lang}/daily/${brief.slug || brief.id}/`}
+          data-category={brief.category || ''}
+        >
           <div class="card-meta">
-            <span class="card-badge">{brief.category || 'AI'}</span>
-            {brief.impact && <span class={`card-badge ${impactClass(brief.impact)}`}>{brief.impact}</span>}
+            <span class="chips-row">
+              <span class="card-badge">{brief.category || 'AI'}</span>
+              {brief.impact && <span class={`card-badge ${impactClass(brief.impact)}`}>{brief.impact}</span>}
+            </span>
+            <span class="card-date">{brief.date}</span>
           </div>
-          <div class="card-date">{brief.date}</div>
-          <h2>
-            <a href={`/${lang}/daily/${brief.slug || brief.id}/`}>{brief.title}</a>
-          </h2>
+          <h2>{brief.title}</h2>
           <p class="card-snippet">{brief.whyItMatters || brief.commentary || brief.snippet}</p>
           <div class="card-footer">
-            <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="read-more">
-              {t('read.more')} →
-            </a>
+            <span class="read-more">{t('read.more')} →</span>
           </div>
-        </article>
+        </a>
       ))}
       {!leadBrief && briefs.length === 0 && (
         <div class="empty-state">No daily briefs yet.</div>
@@ -105,100 +125,50 @@ function impactClass(impact: string): string {
       labels={paginationLabels}
     />
   </div>
-</section>
+</main>
+
+<script is:inline>
+  (() => {
+    const chips = document.querySelectorAll('[data-filter-chips] .f-chip');
+    if (!chips.length) return;
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        chips.forEach((other) => other.classList.remove('on'));
+        chip.classList.add('on');
+        const filter = chip.dataset.filter;
+        document.querySelectorAll('[data-paginated-list] [data-category]').forEach((card) => {
+          card.style.display = filter === '*' || card.dataset.category === filter ? '' : 'none';
+        });
+      });
+    });
+  })();
+</script>
 
 <style>
-  .list-shell {
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.46fr);
-    gap: 18px;
-    margin-bottom: 28px;
-  }
-  .lead-entry,
-  .aside-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px;
-    padding: 24px;
-  }
-  .lead-entry {
-    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
-  }
-  .lead-entry-meta {
+  .section { padding: 56px 0 88px; }
+  .lead-brief { grid-template-columns: 1fr; }
+  .lead-top {
     display: flex;
+    align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .lead-entry-date {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-muted);
     margin-bottom: 16px;
   }
-  .lead-entry h2 {
-    font-family: var(--font-display);
-    font-size: clamp(2.5rem, 5vw, 4.2rem);
-    line-height: 0.96;
-    letter-spacing: -0.05em;
-    margin-bottom: 14px;
+  .lead-date { font-size: 12.5px; color: var(--ink-3); margin-left: auto; }
+  .kicker-ink { color: var(--ink-3); }
+  .lead-why {
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: rgba(255,212,61,0.18);
+    border-left: 3px solid var(--yellow);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 720px;
   }
-  .lead-entry p {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    line-height: 1.8;
-    max-width: 46rem;
-  }
-  .lead-entry-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-top: 22px;
-    padding-top: 18px;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .lead-entry-note {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  .list-aside {
-    display: grid;
-    gap: 18px;
-  }
-  .aside-card h3 {
-    font-family: var(--font-display);
-    font-size: 1.85rem;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    margin-bottom: 12px;
-  }
-  .aside-card p,
-  .aside-list li {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.75;
-  }
-  .aside-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 10px;
-  }
-  .aside-list li {
-    padding-top: 10px;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .editorial-list {
-    margin-top: 0;
-  }
-  @media (max-width: 900px) {
-    .list-shell {
-      grid-template-columns: 1fr;
-    }
-  }
+  .lead-why b { color: var(--ink); font-weight: 700; }
+  .chips-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .content-card .card-date { margin-bottom: 0; }
+  .content-card .card-meta { margin-bottom: 12px; }
 </style>

@@ -16,7 +16,7 @@ interface Props {
 
 const { lang, playbooks } = Astro.props;
 const primary = playbooks[0];
-const secondary = playbooks.slice(1);
+const secondary = playbooks.slice(1, 4);
 
 const localizeCategory = (category?: string) => {
   if (!category) {
@@ -32,223 +32,252 @@ const localizeCategory = (category?: string) => {
 
   return labels[category]?.[lang as 'en' | 'ja' | 'zh'] ?? category;
 };
+
+const chipClass = (category?: string) => {
+  switch (category) {
+    case 'Growth': return 'c-growth';
+    case 'Operations': return 'c-ops';
+    case 'Media': return 'c-media';
+    default: return 'c-default';
+  }
+};
+
+const ui = {
+  tag: lang === 'zh' ? '实战指南' : lang === 'ja' ? 'プレイブック' : 'Playbooks',
+  title: lang === 'zh' ? '从想法到落地' : lang === 'ja' ? 'アイデアから実行へ' : 'From idea to execution',
+  sub:
+    lang === 'zh'
+      ? '真正可执行的分步工作流——写给一个人的团队。'
+      : lang === 'ja'
+        ? '実際に使えるステップ形式のワークフロー。チーム1人のために。'
+        : 'Step-by-step workflows you can actually use — written for a team of one.',
+  all: lang === 'zh' ? '全部指南 →' : lang === 'ja' ? 'すべて見る →' : 'All playbooks →',
+  outcome: lang === 'zh' ? '能得到什么' : lang === 'ja' ? '得られる結果' : 'Outcome',
+  bestFor: lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for',
+  whyNow: lang === 'zh' ? '为什么现在' : lang === 'ja' ? '今読む理由' : 'Why now',
+  open: lang === 'zh' ? '打开这份指南' : lang === 'ja' ? 'このプレイブックを開く' : 'Open the playbook',
+  read: lang === 'zh' ? '查看 →' : lang === 'ja' ? '読む →' : 'Read →',
+};
 ---
 
-<section class="section-block">
-  <div class="container">
-    <div class="playbooks-head">
-      <div class="section-label">{lang === 'zh' ? '// 实战指南' : lang === 'ja' ? '// プレイブック' : '// PLAYBOOKS'}</div>
-      <h2 class="section-title">
-        {lang === 'zh'
-          ? '从想法到落地'
-          : lang === 'ja'
-            ? 'アイデアから実行へ'
-            : 'From idea to execution'}
-      </h2>
-      <p class="section-desc">
-        {lang === 'zh'
-          ? '可执行的 AI 工作流，真正能用。'
-          : lang === 'ja'
-            ? '実用的なステップガイド。'
-            : 'Step-by-step workflows you can actually use.'}
-      </p>
-    </div>
+{(primary || secondary.length > 0) && (
+  <section class="section pbk-section">
+    <div class="container">
+      <div class="sec-head">
+        <div>
+          <span class="sec-tag tag-purple">{ui.tag}</span>
+          <h2 class="sec-title">{ui.title}</h2>
+          <p class="sec-sub">{ui.sub}</p>
+        </div>
+        <a href={`/${lang}/playbooks/`} class="sec-link">{ui.all}</a>
+      </div>
 
-    <div class="playbooks-grid">
-      {primary && (
-        <article class="playbook-primary">
-          <div class="playbook-primary-copy">
-            <p class="playbook-tag">{localizeCategory(primary.category)}</p>
-            <h3><a href={`/${lang}/playbooks/${primary.slug}/`}>{primary.title}</a></h3>
-            <p class="playbook-dek">{primary.snippet}</p>
-            <div class="playbook-stat-list">
-              <div>
-                <span>{lang === 'zh' ? '能得到什么' : lang === 'ja' ? '得られる結果' : 'Outcome'}</span>
-                <p>{primary.outcome}</p>
-              </div>
-              <div>
-                <span>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for'}</span>
-                <p>{primary.bestFor}</p>
-              </div>
+      <div class="pbk-grid">
+        {primary && (
+          <a class="pbk-main" href={`/${lang}/playbooks/${primary.slug}/`}>
+            <span class="pbk-cat">{localizeCategory(primary.category)}</span>
+            <h3>{primary.title}</h3>
+            <p>{primary.snippet}</p>
+            <div class="pbk-facts">
+              {primary.outcome && (
+                <div class="pbk-fact">
+                  <div class="pbk-fact-label">{ui.outcome}</div>
+                  <p>{primary.outcome}</p>
+                </div>
+              )}
+              {primary.bestFor && (
+                <div class="pbk-fact">
+                  <div class="pbk-fact-label">{ui.bestFor}</div>
+                  <p>{primary.bestFor}</p>
+                </div>
+              )}
+              {primary.useWhen && (
+                <div class="pbk-fact">
+                  <div class="pbk-fact-label">{ui.whyNow}</div>
+                  <p>{primary.useWhen}</p>
+                </div>
+              )}
             </div>
-          </div>
-          <div class="playbook-primary-side">
-            <p class="playbook-note-label">{lang === 'zh' ? '为什么现在读' : lang === 'ja' ? '今読む理由' : 'Why now'}</p>
-            <p class="playbook-note">{primary.useWhen}</p>
-            <a class="playbook-link" href={`/${lang}/playbooks/${primary.slug}/`}>
-              {lang === 'zh' ? '打开这份 playbook →' : lang === 'ja' ? 'この playbook を読む →' : 'Open the playbook →'}
+            <div class="pbk-open">{ui.open} <span>→</span></div>
+          </a>
+        )}
+
+        <div class="pbk-side">
+          {secondary.map((playbook) => (
+            <a class="pbk-card" href={`/${lang}/playbooks/${playbook.slug}/`}>
+              <div class="pbk-card-top">
+                <span class={`pbk-chip ${chipClass(playbook.category)}`}>{localizeCategory(playbook.category)}</span>
+                <span class="pbk-read">{ui.read}</span>
+              </div>
+              <h4>{playbook.title}</h4>
+              <p>{playbook.snippet}</p>
             </a>
-          </div>
-        </article>
-      )}
-
-      <div class="playbook-list">
-        {secondary.map((playbook) => (
-          <article class="playbook-row">
-            <div class="playbook-row-top">
-              <p class="playbook-tag">{localizeCategory(playbook.category)}</p>
-              <a href={`/${lang}/playbooks/${playbook.slug}/`} class="playbook-row-link">
-                {lang === 'zh' ? '查看' : lang === 'ja' ? '読む' : 'Read'}
-              </a>
-            </div>
-            <h3><a href={`/${lang}/playbooks/${playbook.slug}/`}>{playbook.title}</a></h3>
-            <p class="playbook-row-dek">{playbook.snippet}</p>
-          </article>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+)}
 
 <style>
-  .section-block { padding: 68px 0; }
-  .section-label {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 12px;
-  }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 3.8vw, 3.2rem);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    margin-bottom: 16px;
-    line-height: 1;
-  }
-  .section-desc {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    margin-bottom: 40px;
-    max-width: 760px;
-    line-height: 1.75;
-  }
-  .playbooks-head {
-    margin-bottom: 40px;
-    max-width: 760px;
-  }
-  .playbooks-head .section-desc {
-    margin-bottom: 0;
-  }
-  .playbooks-grid {
+  .section { padding: 88px 0; }
+  .pbk-section { padding-top: 0; }
+  .tag-purple { background: var(--purple); color: #fff; }
+
+  .pbk-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
-    gap: 18px;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 24px;
+    align-items: stretch;
   }
-  .playbook-primary,
-  .playbook-row {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px;
-    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
+  .pbk-main {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: var(--purple);
+    color: #fff;
+    box-shadow: var(--shadow);
+    padding: 36px 38px;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  .playbook-primary {
-    padding: 28px;
-    display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.7fr);
-    gap: 26px;
+  .pbk-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.16) 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
   }
-  .playbook-primary-copy h3,
-  .playbook-row h3 {
-    font-family: var(--font-display);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    line-height: 0.98;
+  .pbk-main > :global(*) { position: relative; }
+  .pbk-main:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: var(--shadow-lg);
+    color: #fff;
   }
-  .playbook-primary-copy h3 {
-    font-size: clamp(2.2rem, 4vw, 3.25rem);
+  .pbk-cat {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: var(--display);
+    font-size: 12.5px;
+    font-weight: 700;
+    background: var(--yellow);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 5px 14px;
+    border-radius: 99px;
+    transform: rotate(-2deg);
+    margin-bottom: 18px;
+  }
+  .pbk-main h3 {
+    font-family: var(--display);
+    font-size: clamp(28px, 2.8vw, 40px);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
     margin-bottom: 14px;
-    max-width: 14ch;
   }
-  .playbook-tag {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.12em;
+  .pbk-main > p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.85);
+    max-width: 480px;
+  }
+  .pbk-facts { margin-top: 26px; display: grid; gap: 14px; }
+  .pbk-fact {
+    background: rgba(255,255,255,0.12);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+  }
+  .pbk-fact-label {
+    font-family: var(--display);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 12px;
+    color: var(--yellow);
+    margin-bottom: 4px;
   }
-  .playbook-dek,
-  .playbook-row-dek,
-  .playbook-note {
-    color: var(--text-secondary);
-    line-height: 1.75;
-    font-size: 0.98rem;
+  .pbk-fact p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.9);
   }
-  .playbook-stat-list {
-    display: grid;
-    gap: 14px;
-    margin-top: 22px;
+  .pbk-open {
+    margin-top: 26px;
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.15s;
   }
-  .playbook-stat-list div {
-    padding-top: 14px;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .playbook-stat-list span,
-  .playbook-note-label {
+  .pbk-main:hover .pbk-open { gap: 14px; }
+
+  .pbk-side { display: flex; flex-direction: column; gap: 20px; }
+  .pbk-card {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: #fff;
+    box-shadow: var(--shadow);
+    padding: 24px 28px;
+    transition: all 0.18s;
+    flex: 1;
     display: block;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--ink);
+  }
+  .pbk-card:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: var(--shadow-lg);
+    color: var(--ink);
+  }
+  .pbk-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .pbk-chip {
+    font-family: var(--display);
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 1.5px solid var(--ink);
+  }
+  .pbk-chip.c-growth { background: var(--pink); }
+  .pbk-chip.c-ops { background: var(--yellow); }
+  .pbk-chip.c-media { background: var(--sky); }
+  .pbk-chip.c-default { background: var(--paper-2); }
+  .pbk-read {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-3);
+    transition: color 0.15s;
+  }
+  .pbk-card:hover .pbk-read { color: var(--coral); }
+  .pbk-card h4 {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
     margin-bottom: 8px;
   }
-  .playbook-stat-list p {
-    color: var(--text-primary);
-    line-height: 1.7;
+  .pbk-card p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .playbook-primary-side {
-    display: grid;
-    align-content: space-between;
-    gap: 18px;
-    padding-left: 4px;
-  }
-  .playbook-link,
-  .playbook-row-link {
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 0.88rem;
-  }
-  .playbook-list {
-    display: grid;
-    gap: 16px;
-  }
-  .playbook-row {
-    padding: 22px 24px;
-  }
-  .playbook-row-top {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .playbook-row h3 {
-    font-size: 2rem;
-    margin-bottom: 10px;
-  }
-  @media (max-width: 980px) {
-    .playbooks-grid,
-    .playbook-primary {
-      grid-template-columns: 1fr;
-    }
-    .playbook-primary-copy h3 {
-      max-width: none;
-    }
+
+  @media (max-width: 960px) {
+    .pbk-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
-    .section-block { padding: 54px 0; }
-    .playbook-primary,
-    .playbook-row {
-      border-radius: 20px;
-      padding: 22px;
-    }
-    .playbook-row h3 {
-      font-size: 1.75rem;
-    }
+    .pbk-main { padding: 28px 24px; }
   }
 </style>

@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Hero from '../../components/Hero.astro';
+import Marquee from '../../components/Marquee.astro';
 import BentoGrid from '../../components/BentoGrid.astro';
 import SignalFeed from '../../components/SignalFeed.astro';
 import FeaturedCards from '../../components/FeaturedCards.astro';
@@ -84,7 +85,7 @@ const homepageKeywords = lang === 'en'
     leadTool={leadTool}
     leadCase={leadCase}
   />
-  <div class="section-divider"></div>
+  <Marquee headlines={dailyBriefs.map((brief) => brief.title)} />
   <BentoGrid
     lang={lang}
     t={t}
@@ -92,9 +93,7 @@ const homepageKeywords = lang === 'en'
     tools={prioritizedTools.slice(0, 3)}
     playbooks={playbooks.slice(0, 3)}
   />
-  <div class="section-divider"></div>
   <SignalFeed lang={lang} t={t} briefs={dailyBriefs} />
-  <div class="section-divider"></div>
   <FeaturedCards
     lang={lang}
     t={t}
@@ -102,7 +101,6 @@ const homepageKeywords = lang === 'en'
     tools={prioritizedTools}
     cases={prioritizedCases}
   />
-  <div class="section-divider"></div>
   <PlaybookShelf lang={lang} playbooks={playbooks.slice(0, 4)} />
   <Footer lang={lang} />
   <script is:inline define:vars={{ lang }}>
@@ -119,18 +117,6 @@ const homepageKeywords = lang === 'en'
       const setText = (selector, value) => {
         const node = document.querySelector(selector);
         if (node) node.textContent = value;
-      };
-
-      const updateHero = (brief) => {
-        if (!brief) return;
-        const link = document.querySelector('[data-live-hero-brief]');
-        if (!(link instanceof HTMLAnchorElement)) return;
-        link.href = `/${lang}/daily/${brief.slug || brief.id}/`;
-        const title = link.querySelector('[data-live-hero-title]');
-        const meta = link.querySelector('[data-live-hero-meta]');
-        if (title) title.textContent = brief.title;
-        if (meta) meta.textContent = brief.commentary || brief.category || '';
-        link.classList.remove('is-disabled');
       };
 
       const updateBento = (briefs) => {
@@ -165,7 +151,7 @@ const homepageKeywords = lang === 'en'
         const container = document.querySelector('[data-live-signal-items]');
         if (!container) return;
         const rows = Array.from(container.querySelectorAll('.signal-item'));
-        const entries = briefs.slice(0, 6);
+        const entries = briefs.slice(0, 4);
         if (!entries.length || !rows.length) return;
 
         const categoryClass = {
@@ -207,6 +193,17 @@ const homepageKeywords = lang === 'en'
           if (titleNode) titleNode.textContent = brief.title;
           if (snippetNode) snippetNode.textContent = brief.snippet || '';
 
+          const whyNode = row.querySelector('.brief-why');
+          const whyTextNode = row.querySelector('.brief-why-text');
+          if (whyNode) {
+            if (brief.whyItMatters) {
+              whyNode.style.display = '';
+              if (whyTextNode) whyTextNode.textContent = brief.whyItMatters;
+            } else {
+              whyNode.style.display = 'none';
+            }
+          }
+
           row.style.display = '';
         });
 
@@ -219,7 +216,6 @@ const homepageKeywords = lang === 'en'
         .then((response) => (response.ok ? response.json() : null))
         .then((payload) => {
           if (!payload?.ok || !Array.isArray(payload.briefs) || !payload.briefs.length) return;
-          updateHero(payload.briefs[0]);
           updateBento(payload.briefs);
           updateSignalFeed(payload.briefs);
         })

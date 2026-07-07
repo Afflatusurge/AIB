@@ -17,6 +17,32 @@ const t = useTranslations(lang);
 const playbooks = await getPlaybooks(lang as 'en' | 'ja' | 'zh');
 const leadPlaybook = playbooks[0];
 const supportingPlaybooks = playbooks.slice(1);
+
+const chipClass = (category?: string) => {
+  switch (category) {
+    case 'Growth': return 'c-growth';
+    case 'Operations': return 'c-ops';
+    case 'Media': return 'c-media';
+    case 'Build': return 'c-build';
+    default: return 'c-default';
+  }
+};
+
+const ui = {
+  home: t('nav.home'),
+  count: lang === 'zh' ? '分步指南' : lang === 'ja' ? 'ステップガイド' : 'step-by-step',
+  lede:
+    lang === 'zh'
+      ? '从想法到落地。每篇指南把工具、案例和简报重组成一套真正可执行的工作流——写给一个人的团队。'
+      : lang === 'ja'
+        ? 'アイデアから実行へ。レビュー、事例、ブリーフを実際に使えるワークフローに再構成。チーム1人のために。'
+        : 'From idea to execution. Step-by-step workflows you can actually use — written for a team of one.',
+  outcome: lang === 'zh' ? '能得到什么' : lang === 'ja' ? '得られる結果' : 'Outcome',
+  bestFor: lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for',
+  whyNow: lang === 'zh' ? '为什么现在' : lang === 'ja' ? '今読む理由' : 'Why now',
+  open: lang === 'zh' ? '打开这份指南' : lang === 'ja' ? 'このプレイブックを開く' : 'Open the playbook',
+  read: lang === 'zh' ? '查看 →' : lang === 'ja' ? '読む →' : 'Read →',
+};
 ---
 
 <Layout
@@ -27,178 +53,241 @@ const supportingPlaybooks = playbooks.slice(1);
       ? 'AIソロビジネスを前に進めるための、タスク別 playbooks 集。'
       : 'Task-led playbooks for building an AI-first business of one.'}
 >
-  <section class="page-section">
+  <header class="page-head c-green">
     <div class="container">
-      <header class="playbook-page-header fade-in">
-        <div class="section-label">{lang === 'zh' ? '// PLAYBOOKS' : lang === 'ja' ? '// PLAYBOOKS' : '// PLAYBOOKS'}</div>
-        <h1>
-          {lang === 'zh'
-            ? '按任务组织，而不是按工具堆砌'
-            : lang === 'ja'
-              ? 'ツール一覧ではなく、仕事の進め方で整理する'
-              : 'Task-led playbooks for building the business'}
-        </h1>
-        <p>
-          {lang === 'zh'
-            ? '这里不是另一个工具目录。每篇 playbook 都把工具评测、案例和 daily brief 重组成一套更接近真实工作的组合。'
-            : lang === 'ja'
-              ? 'ここは別のツール一覧ではありません。レビュー、事例、daily brief を実際の仕事に近い流れへ組み替えます。'
-              : 'This desk is where reviews, cases, and briefs become one recommended stack for a real business task.'}
-        </p>
-      </header>
+      <div class="crumb"><a href={`/${lang}/`}>{ui.home}</a> / {t('nav.playbooks')}</div>
+      <div class="page-title-row">
+        <h1>{t('nav.playbooks')}</h1>
+        <span class="count-pill">✦ {ui.count}</span>
+      </div>
+      <p class="lede">{ui.lede}</p>
+    </div>
+  </header>
 
+  <main class="section">
+    <div class="container">
       {leadPlaybook && (
-        <section class="playbook-lead">
-          <div class="playbook-lead-copy">
-            <p class="playbook-tag">{leadPlaybook.category || 'Playbook'}</p>
-            <h2><a href={`/${lang}/playbooks/${leadPlaybook.slug}/`}>{leadPlaybook.title}</a></h2>
-            <p class="playbook-lead-dek">{leadPlaybook.snippet}</p>
+        <a class="pbk-main fade-in" href={`/${lang}/playbooks/${leadPlaybook.slug}/`}>
+          <span class="pbk-cat">{leadPlaybook.category || 'Playbook'}</span>
+          <h2>{leadPlaybook.title}</h2>
+          <p class="pbk-dek">{leadPlaybook.snippet}</p>
+          <div class="pbk-facts">
+            {leadPlaybook.outcome && (
+              <div class="pbk-fact">
+                <div class="pbk-fact-label">{ui.outcome}</div>
+                <p>{leadPlaybook.outcome}</p>
+              </div>
+            )}
+            {leadPlaybook.bestFor && (
+              <div class="pbk-fact">
+                <div class="pbk-fact-label">{ui.bestFor}</div>
+                <p>{leadPlaybook.bestFor}</p>
+              </div>
+            )}
+            {leadPlaybook.useWhen && (
+              <div class="pbk-fact">
+                <div class="pbk-fact-label">{ui.whyNow}</div>
+                <p>{leadPlaybook.useWhen}</p>
+              </div>
+            )}
           </div>
-          <div class="playbook-lead-rail">
-            <div>
-              <span>{lang === 'zh' ? '结果' : lang === 'ja' ? '成果' : 'Outcome'}</span>
-              <p>{leadPlaybook.outcome}</p>
-            </div>
-            <div>
-              <span>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for'}</span>
-              <p>{leadPlaybook.bestFor}</p>
-            </div>
-            <div>
-              <span>{lang === 'zh' ? '为什么是现在' : lang === 'ja' ? 'なぜ今か' : 'Why now'}</span>
-              <p>{leadPlaybook.useWhen}</p>
-            </div>
-          </div>
-        </section>
+          <div class="pbk-open">{ui.open} <span>→</span></div>
+        </a>
       )}
 
-      <div class="playbook-index-list">
+      <div class="pbk-list">
         {supportingPlaybooks.map((playbook) => (
-          <article class="playbook-index-row">
-            <div class="playbook-index-main">
-              <p class="playbook-tag">{playbook.category || 'Playbook'}</p>
-              <h3><a href={`/${lang}/playbooks/${playbook.slug}/`}>{playbook.title}</a></h3>
-              <p>{playbook.snippet}</p>
+          <a class="pbk-card fade-in" href={`/${lang}/playbooks/${playbook.slug}/`}>
+            <div class="pbk-card-top">
+              <span class={`pbk-chip ${chipClass(playbook.category)}`}>{playbook.category || 'Playbook'}</span>
+              <span class="pbk-read">{ui.read}</span>
             </div>
-            <div class="playbook-index-side">
-              <p>{playbook.outcome}</p>
-              <a href={`/${lang}/playbooks/${playbook.slug}/`}>
-                {lang === 'zh' ? '打开这份 playbook →' : lang === 'ja' ? 'この playbook を読む →' : 'Open the playbook →'}
-              </a>
-            </div>
-          </article>
+            <h3>{playbook.title}</h3>
+            <p>{playbook.snippet}</p>
+            {playbook.outcome && (
+              <div class="pbk-outcome"><b>{ui.outcome}:</b> {playbook.outcome}</div>
+            )}
+          </a>
         ))}
+        {playbooks.length === 0 && <div class="empty-state">No playbooks yet.</div>}
       </div>
     </div>
-  </section>
+  </main>
   <Footer lang={lang} />
 </Layout>
 
 <style>
-  .playbook-page-header {
-    max-width: 920px;
-    margin-bottom: 42px;
+  .section { padding: 56px 0 88px; }
+  .pbk-main {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: var(--purple);
+    color: #fff;
+    box-shadow: var(--shadow);
+    padding: 36px 38px;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 48px;
   }
-  .playbook-page-header h1 {
-    font-family: var(--font-display);
-    font-size: clamp(2.8rem, 5vw, 4.7rem);
+  .pbk-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.16) 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+  }
+  .pbk-main > :global(*) { position: relative; }
+  .pbk-main:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: var(--shadow-lg);
+    color: #fff;
+  }
+  .pbk-cat {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: var(--display);
+    font-size: 12.5px;
     font-weight: 700;
-    letter-spacing: -0.04em;
-    line-height: 0.96;
-    margin-bottom: 14px;
-  }
-  .playbook-page-header p {
-    max-width: 760px;
-    font-size: 1.04rem;
-    color: var(--text-secondary);
-    line-height: 1.8;
-  }
-  .playbook-lead {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
-    gap: 24px;
-    padding: 28px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 28px;
+    background: var(--yellow);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 5px 14px;
+    border-radius: 99px;
+    transform: rotate(-2deg);
     margin-bottom: 18px;
   }
-  .playbook-lead h2,
-  .playbook-index-row h3 {
-    font-family: var(--font-display);
-    letter-spacing: -0.03em;
-    line-height: 0.98;
-  }
-  .playbook-lead h2 {
-    font-size: clamp(2.4rem, 4vw, 3.7rem);
+  .pbk-main h2 {
+    font-family: var(--display);
+    font-size: clamp(28px, 2.8vw, 40px);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
     margin-bottom: 14px;
-    max-width: 14ch;
   }
-  .playbook-lead-dek,
-  .playbook-index-row p {
-    color: var(--text-secondary);
-    line-height: 1.75;
-    font-size: 0.98rem;
+  .pbk-dek {
+    font-size: 15px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.85);
+    max-width: 560px;
   }
-  .playbook-lead-rail {
+  .pbk-facts {
+    margin-top: 26px;
     display: grid;
-    gap: 16px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
   }
-  .playbook-lead-rail div {
-    padding-top: 14px;
-    border-top: 1px solid var(--border-subtle);
+  .pbk-fact {
+    background: rgba(255,255,255,0.12);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
   }
-  .playbook-lead-rail span {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.12em;
+  .pbk-fact-label {
+    font-family: var(--display);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 8px;
+    color: var(--yellow);
+    margin-bottom: 4px;
   }
-  .playbook-index-list {
-    display: grid;
-    gap: 18px;
+  .pbk-fact p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.9);
   }
-  .playbook-index-row {
+  .pbk-open {
+    margin-top: 26px;
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.15s;
+  }
+  .pbk-main:hover .pbk-open { gap: 14px; }
+
+  .pbk-list {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
-    gap: 20px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .pbk-card {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: #fff;
+    box-shadow: var(--shadow);
     padding: 24px 28px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px;
+    transition: all 0.18s;
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
   }
-  .playbook-index-row h3 {
-    font-size: 2rem;
+  .pbk-card:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: var(--shadow-lg);
+    color: var(--ink);
+  }
+  .pbk-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 10px;
   }
-  .playbook-index-side {
-    display: grid;
-    align-content: space-between;
-    gap: 18px;
-  }
-  .playbook-index-side a {
-    color: var(--accent);
+  .pbk-chip {
+    font-family: var(--display);
+    font-size: 11.5px;
     font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 1.5px solid var(--ink);
   }
+  .pbk-chip.c-growth { background: var(--pink); }
+  .pbk-chip.c-ops { background: var(--yellow); }
+  .pbk-chip.c-media { background: var(--sky); }
+  .pbk-chip.c-build { background: var(--purple); color: #fff; }
+  .pbk-chip.c-default { background: var(--paper-2); }
+  .pbk-read {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-3);
+    transition: color 0.15s;
+  }
+  .pbk-card:hover .pbk-read { color: var(--coral); }
+  .pbk-card h3 {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    margin-bottom: 8px;
+  }
+  .pbk-card > p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    flex: 1;
+  }
+  .pbk-outcome {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1.5px dashed rgba(27,26,23,0.2);
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.55;
+  }
+  .pbk-outcome b { color: var(--ink-2); font-weight: 600; }
+
   @media (max-width: 960px) {
-    .playbook-lead,
-    .playbook-index-row {
-      grid-template-columns: 1fr;
-    }
-    .playbook-lead h2 {
-      max-width: none;
-    }
+    .pbk-facts { grid-template-columns: 1fr; }
+    .pbk-list { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
-    .playbook-lead,
-    .playbook-index-row {
-      padding: 22px;
-      border-radius: 20px;
-    }
-    .playbook-index-row h3 {
-      font-size: 1.75rem;
-    }
+    .pbk-main { padding: 28px 24px; }
   }
 </style>

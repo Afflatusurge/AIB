@@ -32,89 +32,117 @@ const { lang, briefs, tools, cases } = Astro.props;
 
 const leadTool = tools[0];
 const leadCase = cases[0];
-const leadToolDetails = [
-  leadTool?.bestFor || (lang === 'zh' ? '适合对象待补齐' : lang === 'ja' ? '向いている読者を補完' : 'Audience fit'),
-  leadTool?.pricing || (lang === 'zh' ? '定价与门槛' : lang === 'ja' ? '価格と導入ハードル' : 'Pricing and setup cost'),
-  leadTool?.category || (lang === 'zh' ? '工作流位置' : lang === 'ja' ? 'ワークフロー上の位置' : 'Workflow role'),
-].filter(Boolean).slice(0, 3);
+
+const audiencePills = (leadTool?.bestFor || '')
+  .split(/[,，、]/)
+  .map((item) => item.trim())
+  .filter(Boolean)
+  .slice(0, 3);
+
+const caseStats = [leadCase?.revenue, leadCase?.industry, leadCase?.problemType].filter(Boolean).slice(0, 3);
+
 const recentReads = [
-  ...briefs.slice(0, 2).map((item) => ({ type: 'brief', href: `/${lang}/daily/${item.slug}/`, title: item.title, meta: item.category || 'Daily Brief' })),
-  ...tools.slice(1, 3).map((item) => ({ type: 'tool', href: `/${lang}/tools/${item.slug}/`, title: item.title, meta: item.bestFor || item.pricing || item.category || 'Tool Review' })),
-  ...cases.slice(1, 3).map((item) => ({ type: 'case', href: `/${lang}/cases/${item.slug}/`, title: item.title, meta: item.problemType || item.industry || 'Case Study' })),
-].slice(0, 4);
+  ...briefs.slice(0, 2).map((item) => ({ href: `/${lang}/daily/${item.slug}/`, title: item.title, meta: item.category || 'Daily Brief' })),
+  ...tools.slice(1, 3).map((item) => ({ href: `/${lang}/tools/${item.slug}/`, title: item.title, meta: item.bestFor || item.category || 'Tool Review' })),
+  ...cases.slice(1, 3).map((item) => ({ href: `/${lang}/cases/${item.slug}/`, title: item.title, meta: item.problemType || item.industry || 'Case Study' })),
+].slice(0, 3);
+
+const ui = {
+  tag: lang === 'zh' ? '值得你花时间' : lang === 'ja' ? '読む価値あり' : 'Worth your time',
+  title: lang === 'zh' ? '本周深度内容' : lang === 'ja' ? '今週のディープダイブ' : "This week's deep dives",
+  library: lang === 'zh' ? '进入资料库 →' : lang === 'ja' ? 'ライブラリへ →' : 'Visit the library →',
+  leadKicker: lang === 'zh' ? '主打 · 工具评测' : lang === 'ja' ? 'リード · ツールレビュー' : 'Lead story · Tool review',
+  leadFallbackTitle:
+    lang === 'zh'
+      ? '优先打造一篇足够代表站点气质的标杆评测'
+      : lang === 'ja'
+        ? 'サイトを代表する基幹レビューをまず一本'
+        : 'Start with one flagship review that sets the tone for the whole site',
+  leadFallbackCopy:
+    lang === 'zh'
+      ? '首页需要一篇足够"厚"的主文章，承担品牌解释、方法论和差异化感知。'
+      : lang === 'ja'
+        ? '厚みのある主役記事は、ブランドの違いと方法論を最短で伝えます。'
+        : 'A substantial lead review helps explain the site’s judgment, standards, and point of view at a glance.',
+  caseKicker: lang === 'zh' ? '案例分析 · 最新' : lang === 'ja' ? 'ケーススタディ · 新着' : 'Case study · New',
+  caseFallbackTitle:
+    lang === 'zh'
+      ? '案例页应该回答"别人是怎么做成的"'
+      : lang === 'ja'
+        ? 'ケースは「他の人はどうやったか」に答える'
+        : 'Case studies should answer how others actually made it work',
+  reads: lang === 'zh' ? '继续阅读' : lang === 'ja' ? '最近の記事' : 'Recent reads',
+  fresh: lang === 'zh' ? '新' : lang === 'ja' ? '新着' : 'Fresh',
+  readsEmpty:
+    lang === 'zh'
+      ? '内容同步后这里会显示最近更新。'
+      : lang === 'ja'
+        ? '同期後に最新記事が表示されます。'
+        : 'Recent stories will appear here after content sync.',
+};
 ---
 
-<section class="section-block">
+<section class="section">
   <div class="container">
-    <div class="section-label">{lang === 'zh' ? '// 编辑精选' : lang === 'ja' ? '// 編集部ピック' : "// EDITOR'S PICKS"}</div>
-    <h2 class="section-title">
-      {lang === 'zh' ? '值得你花时间的内容' : lang === 'ja' ? '読む価値のある記事' : "What's worth your time"}
-    </h2>
-    <p class="section-desc">
-      {lang === 'zh' ? '一篇深度评测，一个真实案例，加几篇精选文章。' : lang === 'ja' ? 'レビュー、事例、厳選コンテンツ。' : 'One deep review, one real case, plus a few pieces worth reading.'}
-    </p>
+    <div class="sec-head">
+      <div>
+        <span class="sec-tag tag-yellow">{ui.tag}</span>
+        <h2 class="sec-title">{ui.title}</h2>
+      </div>
+      <a href="https://docs.aiandbusiness.com/" target="_blank" rel="noopener noreferrer" class="sec-link">{ui.library}</a>
+    </div>
 
-    <div class="feature-grid">
-      <a href={leadTool ? `/${lang}/tools/${leadTool.slug}/` : `/${lang}/tools/`} class="lead-story animate-in">
-        <div class={`lead-story-shell ${leadTool?.coverImage ? 'has-image' : ''}`}>
-          <div class="lead-story-copy">
-            <span class="story-tag">{lang === 'zh' ? '主故事 / 工具评测' : lang === 'ja' ? '主役 / ツールレビュー' : 'Lead story / Tool review'}</span>
-            <h3>{leadTool?.title || (lang === 'zh' ? '优先打造一篇足够代表站点气质的标杆评测' : lang === 'ja' ? 'サイトの空気感を代表する一本のレビューを先に' : 'Start with one flagship review that sets the tone for the whole site')}</h3>
-            <p>{leadTool?.snippet || (lang === 'zh' ? '首页需要一篇足够“厚”的主文章，承担品牌解释、方法论和差异化感知。' : lang === 'ja' ? '厚みのある主役記事は、ブランドの違いと方法論を最短で伝えます。' : 'A substantial lead review helps explain the site’s judgment, standards, and point of view at a glance.')}</p>
-          </div>
-          {leadTool?.coverImage && (
-            <div class="lead-story-media">
-              <div class="story-image-wrap feature-card">
-                <img src={leadTool.coverImage} alt={leadTool.title} class="story-image" loading="lazy" />
-              </div>
+    <div class="feat-grid">
+      <a class="feat-main" href={leadTool ? `/${lang}/tools/${leadTool.slug}/` : `/${lang}/tools/`}>
+        <div class="feat-visual">
+          {leadTool?.coverImage ? (
+            <img src={leadTool.coverImage} alt={leadTool.title} loading="lazy" />
+          ) : (
+            <span class="feat-glyph" aria-hidden="true">A!</span>
+          )}
+          {leadTool?.category && <span class="chip-float">{leadTool.category}</span>}
+        </div>
+        <div class="feat-body">
+          <div class="feat-kicker">{ui.leadKicker}</div>
+          <div class="feat-title">{leadTool?.title || ui.leadFallbackTitle}</div>
+          <p>{leadTool?.snippet || ui.leadFallbackCopy}</p>
+          {audiencePills.length > 0 && (
+            <div class="feat-meta">
+              {audiencePills.map((pill) => (
+                <span class="meta-pill">{pill}</span>
+              ))}
             </div>
           )}
-          <div class="story-briefing">
-            <p class="story-briefing-label">{lang === 'zh' ? '这篇会回答什么' : lang === 'ja' ? 'このレビューで分かること' : 'What this review clarifies'}</p>
-            <ul class="story-points">
-              {leadToolDetails.map((item) => (
-                <li>{item}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        <div class="story-meta">
-          <span>{leadTool?.category || (lang === 'zh' ? '核心评测' : lang === 'ja' ? '基幹レビュー' : 'Cornerstone review')}</span>
-          <span>{leadTool?.bestFor || leadTool?.pricing || (lang === 'zh' ? '定价 / 工作流 / 适配度' : lang === 'ja' ? '価格 / ワークフロー / 適合性' : 'Pricing / workflow / fit')}</span>
         </div>
       </a>
 
-      <div class="side-column">
-        <a href={leadCase ? `/${lang}/cases/${leadCase.slug}/` : `/${lang}/cases/`} class="support-story animate-in delay-1">
-          {leadCase?.coverImage && (
-            <div class="story-image-wrap compact">
-              <img src={leadCase.coverImage} alt={leadCase.title} class="story-image" loading="lazy" />
+      <div class="feat-side">
+        <a class="case-card" href={leadCase ? `/${lang}/cases/${leadCase.slug}/` : `/${lang}/cases/`}>
+          <div class="case-kicker">{ui.caseKicker}</div>
+          <h3>{leadCase?.title || ui.caseFallbackTitle}</h3>
+          <p>{leadCase?.snippet || ''}</p>
+          {caseStats.length > 0 && (
+            <div class="case-stats">
+              {caseStats.map((stat) => (
+                <span class="case-stat">{stat}</span>
+              ))}
             </div>
           )}
-          <span class="story-tag alt">{lang === 'zh' ? '辅助故事 / 案例' : lang === 'ja' ? '補助 / ケース' : 'Supporting / Case study'}</span>
-          <h4>{leadCase?.title || (lang === 'zh' ? '案例页应该回答“别人是怎么做成的”' : lang === 'ja' ? 'ケースは「他の人はどうやったか」に答える' : 'Case studies should answer how others actually made it work')}</h4>
-          <p>{leadCase?.snippet || (lang === 'zh' ? '收入、效率、流程变化，比单纯“行业分类”更能让读者记住。' : lang === 'ja' ? '業界分類より、収益や効率、変化の物語の方が記憶に残ります。' : 'Revenue, workflow shifts, and practical outcomes are more memorable than broad industry buckets.')}</p>
-          <div class="story-meta">
-            <span>{leadCase?.problemType || leadCase?.industry || (lang === 'zh' ? '问题导向' : lang === 'ja' ? '課題起点' : 'Problem-led')}</span>
-            <span>{leadCase?.revenue || (lang === 'zh' ? '结果导向案例' : lang === 'ja' ? '結果重視のケース' : 'Outcome-driven case')}</span>
-          </div>
         </a>
 
-        <div class="reads-panel animate-in delay-2">
-          <div class="reads-head">
-            <h4>{lang === 'zh' ? '继续阅读' : lang === 'ja' ? '続けて読む' : 'Recent reads'}</h4>
-            <a href={`/${lang}/`}>{lang === 'zh' ? '回到首页' : lang === 'ja' ? 'ホームへ' : 'Home'}</a>
-          </div>
-          <ul>
-            {recentReads.length > 0 ? recentReads.map((item) => (
-              <li>
-                <a href={item.href}>{item.title}</a>
-                <span>{item.meta}</span>
-              </li>
-            )) : (
-              <li class="reads-empty">{lang === 'zh' ? '内容同步后这里会显示最近更新。' : lang === 'ja' ? '同期後に最新記事が表示されます。' : 'Recent stories will appear here after content sync.'}</li>
-            )}
-          </ul>
+        <div class="reads-card">
+          <div class="reads-title">{ui.reads} <span class="tag-mini">{ui.fresh}</span></div>
+          {recentReads.length > 0 ? recentReads.map((item, i) => (
+            <a class="read-item" href={item.href}>
+              <span class="read-num">{String(i + 1).padStart(2, '0')}</span>
+              <span class="read-copy">
+                <span class="read-title">{item.title}</span>
+                <span class="read-meta">{item.meta}</span>
+              </span>
+            </a>
+          )) : (
+            <p class="reads-empty">{ui.readsEmpty}</p>
+          )}
         </div>
       </div>
     </div>
@@ -122,259 +150,223 @@ const recentReads = [
 </section>
 
 <style>
-  .section-block { padding: 68px 0; }
-  .section-label {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 12px;
-  }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 3.8vw, 3.2rem);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    margin-bottom: 16px;
-    line-height: 1;
-  }
-  .section-desc {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    margin-bottom: 40px;
-    max-width: 760px;
-    line-height: 1.75;
-  }
-  .feature-grid {
+  .section { padding: 88px 0; }
+  .tag-yellow { background: var(--yellow); }
+
+  .feat-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.72fr);
-    gap: 20px;
-    align-items: start;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 24px;
+    align-items: stretch;
   }
-  .lead-story,
-  .support-story,
-  .reads-panel {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px;
-    padding: 24px;
-    text-decoration: none;
-    color: inherit;
-    display: block;
-  }
-  .lead-story {
+  .feat-main {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: #fff;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: all 0.18s;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
+    color: var(--ink);
   }
-  .lead-story-shell {
-    display: grid;
-    gap: 20px;
-    align-items: start;
+  .feat-main:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: var(--shadow-lg);
+    color: var(--ink);
   }
-  .lead-story-shell.has-image {
-    grid-template-columns: 1fr;
-  }
-  .lead-story-copy {
-    display: grid;
-    align-content: start;
-    max-width: 40rem;
-  }
-  .lead-story-media {
-    width: 100%;
-  }
-  .lead-story:hover,
-  .support-story:hover {
-    transform: translateY(-4px);
-    border-color: var(--border-hover);
-  }
-  .side-column {
-    display: grid;
-    grid-template-rows: auto 1fr;
-    gap: 20px;
-    height: 100%;
-  }
-  .story-tag {
-    display: inline-flex;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--accent);
-    margin-bottom: 18px;
-  }
-  .story-tag.alt {
-    color: var(--accent-blue);
-  }
-  .story-image-wrap {
-    margin: -8px -8px 18px;
-    border-radius: 18px;
+  .feat-visual {
+    border-bottom: 2px solid var(--ink);
+    position: relative;
     overflow: hidden;
-    aspect-ratio: 16 / 9;
-    background: linear-gradient(135deg, rgba(177, 90, 53, 0.12), rgba(61, 100, 120, 0.14));
+    background: var(--blue);
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  .story-image-wrap.feature {
-    margin: 0;
-    aspect-ratio: 4 / 5;
-    min-height: 100%;
+  .feat-visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.22) 1.5px, transparent 1.5px);
+    background-size: 20px 20px;
   }
-  .story-image-wrap.feature-card {
-    margin: 0;
-    aspect-ratio: 16 / 9;
-    border-radius: 24px;
-    border: 1px solid rgba(177, 90, 53, 0.14);
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08)),
-      linear-gradient(135deg, rgba(177, 90, 53, 0.1), rgba(61, 100, 120, 0.12));
-    box-shadow: 0 18px 42px rgba(39, 29, 23, 0.08);
-    padding: 10px;
-  }
-  .story-image-wrap.feature-card .story-image {
-    border-radius: 16px;
-  }
-  .story-image-wrap.compact {
-    aspect-ratio: 16 / 9;
-  }
-  .story-image {
+  .feat-visual img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-  .lead-story h3 {
-    font-family: var(--font-display);
-    font-size: clamp(2.4rem, 4vw, 4rem);
-    line-height: 0.96;
-    letter-spacing: -0.05em;
-    margin-bottom: 16px;
-  }
-  .lead-story p,
-  .support-story p {
-    color: var(--text-secondary);
-    font-size: 0.98rem;
-    line-height: 1.75;
-    margin-bottom: 22px;
-  }
-  .story-briefing {
-    margin: 0 0 14px;
-    padding: 18px 0 0;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .story-briefing-label {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted);
-    margin-bottom: 10px;
-  }
-  .story-points {
-    list-style: none;
-    display: grid;
-    gap: 8px;
-    padding: 0;
-    margin: 0;
-  }
-  .story-points li {
-    color: var(--text-secondary);
-    font-size: 0.92rem;
-    line-height: 1.5;
-    padding-left: 14px;
     position: relative;
   }
-  .story-points li::before {
-    content: '';
-    width: 5px;
-    height: 5px;
-    border-radius: 999px;
-    background: var(--accent);
-    position: absolute;
-    left: 0;
-    top: 0.62rem;
+  .feat-glyph {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 64px;
+    color: #fff;
+    opacity: 0.4;
+    transform: rotate(-3deg);
+    position: relative;
   }
-  .support-story h4,
-  .reads-head h4 {
-    font-family: var(--font-display);
-    font-size: 2rem;
-    line-height: 1;
-    letter-spacing: -0.04em;
+  .chip-float {
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--yellow);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 6px 14px;
+    border-radius: 99px;
+    transform: rotate(4deg);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .feat-body { padding: 28px 32px 30px; flex: 1; }
+  .feat-kicker {
+    font-family: var(--display);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .feat-title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 6px 0 10px;
+  }
+  .feat-body p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink-2);
+  }
+  .feat-meta { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+
+  .feat-side { display: flex; flex-direction: column; gap: 20px; }
+  .case-card {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: var(--green);
+    color: #fff;
+    box-shadow: var(--shadow);
+    padding: 28px 30px;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+    display: block;
+  }
+  .case-card:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: var(--shadow-lg);
+    color: #fff;
+  }
+  .case-kicker {
+    font-family: var(--display);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 10px;
+  }
+  .case-card h3 {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
     margin-bottom: 12px;
   }
-  .story-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    font-family: var(--font-mono);
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+  .case-card p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.8);
   }
-  .reads-panel {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
+  .case-stats { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .case-stat {
+    background: rgba(255,255,255,0.14);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 700;
   }
-  .reads-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .reads-head a {
-    font-size: 0.82rem;
-    color: var(--accent);
-  }
-  .reads-panel ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
+
+  .reads-card {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: #fff;
+    box-shadow: var(--shadow);
+    padding: 24px 30px;
     flex: 1;
   }
-  .reads-panel li {
-    display: grid;
-    gap: 6px;
-    padding: 14px 0;
-    border-top: 1px solid var(--border-subtle);
+  .reads-title {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .reads-panel li:first-child {
-    border-top: 0;
-    padding-top: 0;
+  .reads-title .tag-mini {
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 99px;
+    background: var(--pink);
+    border: 1.5px solid var(--ink);
+    transform: rotate(-2deg);
   }
-  .reads-panel li a {
-    font-weight: 700;
-    line-height: 1.45;
+  .read-item {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1.5px dashed rgba(27,26,23,0.2);
+    color: var(--ink);
   }
-  .reads-panel li span,
+  .read-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .read-item:hover .read-title { color: var(--coral); }
+  .read-num {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--ink-3);
+    flex-shrink: 0;
+  }
+  .read-copy { display: block; min-width: 0; }
+  .read-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    transition: color 0.15s;
+  }
+  .read-meta {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-3);
+    margin-top: 1px;
+  }
   .reads-empty {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    font-size: 13.5px;
+    color: var(--ink-3);
+    line-height: 1.6;
+    padding-top: 8px;
+  }
+
+  @media (max-width: 960px) {
+    .feat-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
-    .feature-grid { grid-template-columns: 1fr; }
-    .lead-story-shell.has-image {
-      grid-template-columns: 1fr;
-    }
-    .lead-story,
-    .support-story,
-    .reads-panel {
-      border-radius: 20px;
-    }
-    .lead-story h3,
-    .support-story h4,
-    .reads-head h4 {
-      font-size: 2rem;
-    }
-    .story-image-wrap.feature-card {
-      padding: 8px;
-      border-radius: 20px;
-    }
-    .story-image-wrap.feature-card .story-image {
-      border-radius: 14px;
-    }
+    .section { padding: 64px 0; }
+    .feat-body { padding: 24px 24px 26px; }
   }
 </style>

@@ -140,14 +140,9 @@ const nextHref = currentPage < totalPages ? buildPageHref(basePath, currentPage 
 <style>
   .pager {
     display: grid;
-    gap: 14px;
-    margin: 28px auto 0;
-    padding: 18px 22px 20px;
-    max-width: 560px;
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px;
-    background: rgba(251, 248, 241, 0.78);
-    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
+    gap: 16px;
+    margin: 56px auto 0;
+    max-width: 640px;
   }
   .pager-nav {
     display: grid;
@@ -162,18 +157,21 @@ const nextHref = currentPage < totalPages ? buildPageHref(basePath, currentPage 
     align-items: center;
     justify-content: center;
     gap: 10px;
-    border-radius: 999px;
-    background: var(--bg-strong);
-    color: #f7f0e8;
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    border: 1px solid var(--bg-strong);
-    transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease;
+    border-radius: 99px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 700;
+    border: 2px solid var(--ink);
+    box-shadow: 3px 3px 0 rgba(27,26,23,0.25);
+    transition: all 0.15s;
   }
   .pager-load-more:hover {
-    transform: translateY(-1px);
+    background: var(--coral);
+    color: var(--paper);
+    transform: translate(-1px,-1px);
+    box-shadow: 4px 4px 0 rgba(27,26,23,0.25);
   }
   .pager-load-more.is-loading {
     opacity: 0.72;
@@ -183,7 +181,7 @@ const nextHref = currentPage < totalPages ? buildPageHref(basePath, currentPage 
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
   }
   .pager-page,
@@ -193,15 +191,14 @@ const nextHref = currentPage < totalPages ? buildPageHref(basePath, currentPage 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 999px;
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-card);
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+    border-radius: 99px;
+    border: 2px solid var(--ink);
+    background: #fff;
+    color: var(--ink);
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 700;
+    transition: all 0.15s;
   }
   .pager-arrow {
     padding: 0 14px;
@@ -209,38 +206,38 @@ const nextHref = currentPage < totalPages ? buildPageHref(basePath, currentPage 
   }
   .pager-page:hover,
   .pager-arrow:hover {
-    border-color: var(--border-hover);
-    color: var(--accent);
-    transform: translateY(-1px);
+    background: var(--paper-2);
+    color: var(--ink);
+    transform: translate(-1px,-1px);
+    box-shadow: 2px 2px 0 var(--ink);
   }
   .pager-page.is-current {
-    background: var(--bg-strong);
-    border-color: var(--bg-strong);
-    color: #f7f0e8;
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
   }
   .pager-arrow.is-disabled {
     pointer-events: none;
     opacity: 0.42;
   }
   .pager-ellipsis {
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: 1rem;
+    color: var(--ink-3);
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 15px;
     padding: 0 2px;
   }
   .pager-summary {
     grid-column: 1 / -1;
     text-align: center;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+    font-family: var(--display);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-3);
   }
   @media (max-width: 720px) {
     .pager {
       gap: 12px;
-      padding: 16px;
     }
     .pager-nav {
       grid-template-columns: 1fr;

@@ -7,6 +7,7 @@ interface Brief {
   category: string;
   impact: string;
   date: string;
+  whyItMatters?: string;
 }
 
 interface Props {
@@ -15,9 +16,14 @@ interface Props {
   briefs: Brief[];
 }
 
-const { lang, t, briefs } = Astro.props;
+const { lang, briefs } = Astro.props;
 const editorialTimeZone = 'America/Los_Angeles';
-const editorialNow = new Date();
+const editorialLocale = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-US';
+const editionDay = new Intl.DateTimeFormat(editorialLocale, {
+  timeZone: editorialTimeZone,
+  month: 'short',
+  day: 'numeric',
+}).format(new Date());
 
 const categoryClass: Record<string, string> = {
   'LLM': 'llm',
@@ -29,253 +35,177 @@ const categoryClass: Record<string, string> = {
   'Video': 'video',
 };
 
-const dateParts = new Intl.DateTimeFormat('en-US', {
-  timeZone: editorialTimeZone,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-}).formatToParts(editorialNow);
-const year = dateParts.find((part) => part.type === 'year')?.value || '';
-const month = dateParts.find((part) => part.type === 'month')?.value || '';
-const day = dateParts.find((part) => part.type === 'day')?.value || '';
-const today = `${year}-${month}-${day}`;
-const dayOfWeek = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-US', {
-  timeZone: editorialTimeZone,
-  weekday: 'long',
-}).format(editorialNow);
+const ui = {
+  tag: lang === 'zh' ? `今日 · ${editionDay}` : lang === 'ja' ? `本日 · ${editionDay}` : `Today · ${editionDay}`,
+  title: lang === 'zh' ? '只看信号，不看噪音。' : lang === 'ja' ? 'シグナルだけ。ノイズは無し。' : 'Signal, not noise.',
+  sub:
+    lang === 'zh'
+      ? '过去 24 小时的 AI 动态——按对独立创业者的实用性排序，而不是按热度。'
+      : lang === 'ja'
+        ? '過去24時間のAIの動き。話題性ではなく、個人ビルダーへの有用性でランク付け。'
+        : 'What mattered in AI over the last 24 hours — ranked by usefulness to independent builders, not by hype.',
+  full: lang === 'zh' ? '完整简报 →' : lang === 'ja' ? 'ブリーフ全文 →' : 'Full brief →',
+  why: lang === 'zh' ? '为什么重要：' : lang === 'ja' ? 'なぜ重要か：' : 'Why it matters:',
+  empty: lang === 'zh' ? '今日暂无新信号' : lang === 'ja' ? '本日の新しいシグナルはありません' : 'No new signals today',
+};
 ---
 
-<section class="section-block">
+<section class="brief-band section">
   <div class="container">
-    <div class="section-label">{lang === 'zh' ? '// 每日简报' : lang === 'ja' ? '// デイリーブリーフ' : '// DAILY BRIEF'}</div>
-    <h2 class="section-title">
-      {lang === 'zh' ? '只看关键信号' : lang === 'ja' ? 'ノイズではなくシグナル' : 'Signal, not noise'}
-    </h2>
-    <p class="section-desc">
-      {lang === 'zh' ? '筛选真正重要的信息，用结构化方式呈现。' : lang === 'ja' ? '重要な情報だけを整理して提供。' : 'What matters today, filtered and structured for quick reading.'}
-    </p>
+    <div class="sec-head">
+      <div>
+        <span class="sec-tag band-tag">{ui.tag}</span>
+        <h2 class="sec-title band-title">{ui.title}</h2>
+        <p class="sec-sub band-sub">{ui.sub}</p>
+      </div>
+      <a href={`/${lang}/daily/`} class="sec-link band-link">{ui.full}</a>
+    </div>
 
-    <div class="signal-feed animate-in">
-      <div class="signal-summary">
-        <p class="summary-kicker">{t('nav.daily')}</p>
-        <h3>{lang === 'zh' ? '过去 24 小时，哪些 AI 动向值得独立创作者和小团队现在就关注？' : lang === 'ja' ? '過去24時間で、ひとり起業家が今すぐ見るべきAIの動きは何か。' : 'What mattered in AI over the last 24 hours for independent builders?'}</h3>
-        <p class="summary-copy">
-          {lang === 'zh' ? '按影响力和可执行性排序，而不是按热度堆砌。' : lang === 'ja' ? '話題性ではなく、影響と実行可能性で優先順位をつけます。' : 'Ranked by business impact and immediate usefulness, not by hype alone.'}
-        </p>
-        <div class="summary-date">{today} · {dayOfWeek}</div>
-      </div>
-      <div class="signal-items" data-live-signal-items>
-        {briefs.length > 0 ? briefs.slice(0, 6).map((brief, i) => (
-          <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="signal-item">
-            <div class="signal-index">{String(i + 1).padStart(2, '0')}</div>
-            <div class="signal-main">
-              <div class="signal-row">
-                <span class={`signal-category ${categoryClass[brief.category] || 'llm'}`}>{brief.category || 'AI'}</span>
-                <span class={`signal-impact ${(brief.impact || 'notable').toLowerCase()}`}>{brief.impact || 'Notable'}</span>
-              </div>
-              <h4>{brief.title}</h4>
-              <p>{brief.snippet}</p>
-            </div>
-          </a>
-        )) : (
-          <div class="signal-empty">
-            <p>{lang === 'zh' ? '今日暂无新信号' : lang === 'ja' ? '本日の新しいシグナルはありません' : 'No new signals today'}</p>
+    <div class="brief-grid" data-live-signal-items>
+      {briefs.length > 0 ? briefs.slice(0, 4).map((brief, i) => (
+        <a href={`/${lang}/daily/${brief.slug || brief.id}/`} class="signal-item brief-card">
+          <span class="signal-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <div class="signal-row brief-top">
+            <span class={`signal-category ${categoryClass[brief.category] || 'llm'}`}>{brief.category || 'AI'}</span>
+            <span class={`signal-impact ${(brief.impact || 'notable').toLowerCase()}`}>{brief.impact || 'Notable'}</span>
           </div>
-        )}
-      </div>
-      <div class="signal-footer">
-        <a href={`/${lang}/daily/`}>
-          {lang === 'zh' ? '查看最新 →' : lang === 'ja' ? '最新ブリーフを見る →' : 'View latest brief →'}
+          <h4>{brief.title}</h4>
+          <p>{brief.snippet}</p>
+          <div class="brief-why" style={brief.whyItMatters ? '' : 'display:none'}>
+            <b>{ui.why}</b> <span class="brief-why-text">{brief.whyItMatters || ''}</span>
+          </div>
         </a>
-      </div>
+      )) : (
+        <div class="signal-empty">
+          <p>{ui.empty}</p>
+        </div>
+      )}
     </div>
   </div>
 </section>
 
 <style>
-  .section-block { padding: 68px 0; }
-  .section-label {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 12px;
+  .section { padding: 88px 0; }
+  .brief-band {
+    background: var(--ink);
+    border-top: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    color: var(--paper);
   }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: clamp(2.1rem, 4vw, 3.8rem);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    margin-bottom: 16px;
-    line-height: 1;
-    white-space: nowrap;
+  .band-tag {
+    background: transparent;
+    border-color: var(--paper);
+    color: var(--yellow);
+    transform: rotate(1.5deg);
   }
-  .section-desc {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    margin-bottom: 40px;
-    max-width: 720px;
-    line-height: 1.75;
+  .band-title { color: var(--paper); }
+  .band-sub { color: rgba(255,251,242,0.6); }
+  .band-link {
+    background: var(--yellow);
+    color: var(--ink);
+    border-color: var(--yellow);
+    box-shadow: 3px 3px 0 rgba(255,212,61,0.35);
   }
-  .signal-feed {
-    background: linear-gradient(180deg, rgba(239, 229, 214, 0.48), rgba(251, 248, 241, 0.92));
-    border: 1px solid var(--border-subtle);
-    border-radius: 28px;
-    overflow: hidden;
+  .band-link:hover {
+    box-shadow: 5px 5px 0 rgba(255,212,61,0.35);
+    background: var(--yellow);
+    color: var(--ink);
+  }
+
+  .brief-grid {
     display: grid;
-    grid-template-columns: minmax(280px, 0.42fr) minmax(0, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
   }
-  .signal-summary {
-    padding: 28px 24px;
-    border-right: 1px solid var(--border-subtle);
-    display: flex;
-    flex-direction: column;
+  .brief-card {
+    border: 2px solid rgba(255,251,242,0.18);
+    border-radius: var(--r);
+    padding: 26px 28px;
+    background: rgba(255,251,242,0.04);
+    transition: all 0.18s;
+    display: block;
+    color: var(--paper);
   }
-  .summary-kicker {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--accent);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 14px;
+  .brief-card:hover {
+    border-color: var(--yellow);
+    background: rgba(255,212,61,0.06);
+    transform: translateY(-3px);
+    color: var(--paper);
   }
-  .signal-summary h3 {
-    font-family: var(--font-display);
-    font-size: 2.2rem;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    margin-bottom: 14px;
-  }
-  .summary-copy {
-    color: var(--text-secondary);
-    font-size: 0.96rem;
-    line-height: 1.75;
-    margin-bottom: auto;
-  }
-  .summary-date {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-  }
-  .signal-items {
-    padding: 12px;
-  }
-  .signal-item {
-    display: grid;
-    grid-template-columns: 52px minmax(0, 1fr);
-    gap: 16px;
-    padding: 18px 16px;
-    border-radius: 18px;
-    transition: background 0.2s, transform 0.2s;
-    text-decoration: none;
-    color: inherit;
-  }
-  .signal-item:hover {
-    background: rgba(255, 255, 255, 0.36);
-    transform: translateX(2px);
-  }
-  .signal-index {
-    font-family: var(--font-mono);
-    font-size: 0.86rem;
-    color: var(--text-muted);
-    padding-top: 4px;
-  }
-  .signal-main {
-    min-width: 0;
-  }
-  .signal-row {
+  .signal-index { display: none; }
+  .brief-top {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
   }
-  .signal-category {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 999px;
-    text-align: center;
-    white-space: nowrap;
-  }
-  .signal-category.llm { background: rgba(177, 90, 53, 0.12); color: var(--accent); }
-  .signal-category.agent { background: rgba(61, 100, 120, 0.12); color: var(--accent-cyan); }
-  .signal-category.business { background: rgba(79, 122, 90, 0.12); color: var(--accent-green); }
-  .signal-category.coding { background: rgba(61, 100, 120, 0.12); color: var(--accent-blue); }
-  .signal-category.hardware { background: rgba(159, 107, 47, 0.12); color: var(--accent-amber); }
-  .signal-category.image { background: rgba(154, 87, 111, 0.12); color: var(--accent-pink); }
-  .signal-category.video { background: rgba(154, 87, 111, 0.12); color: var(--accent-pink); }
-  .signal-text h4 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 2px;
-    line-height: 1.4;
-  }
-  .signal-main h4 {
-    font-family: var(--font-display);
-    font-size: 1.7rem;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    margin-bottom: 8px;
-  }
-  .signal-main p {
-    font-size: 0.92rem;
-    color: var(--text-secondary);
-    line-height: 1.65;
-  }
+  .signal-category,
   .signal-impact {
-    font-family: var(--font-mono);
-    font-size: 10px;
+    font-family: var(--display);
+    font-size: 11.5px;
     font-weight: 700;
-    padding: 4px 9px;
-    border-radius: 999px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 1.5px solid currentColor;
+    letter-spacing: 0.02em;
     white-space: nowrap;
   }
-  .signal-impact.major { background: rgba(154, 87, 111, 0.12); color: var(--accent-pink); }
-  .signal-impact.notable { background: rgba(159, 107, 47, 0.12); color: var(--accent-amber); }
-  .signal-impact.routine { background: rgba(82, 72, 63, 0.08); color: var(--text-muted); }
+  .signal-category.coding { color: #FF8669; }
+  .signal-category.image { color: #7FB5FF; }
+  .signal-category.agent { color: #5ED696; }
+  .signal-category.video { color: #FFD43D; }
+  .signal-category.llm { color: #C9A9FF; }
+  .signal-category.business { color: #FFB0D3; }
+  .signal-category.hardware { color: #9AE0E8; }
+  .signal-impact.major {
+    background: var(--coral);
+    border-color: var(--coral);
+    color: #fff;
+  }
+  .signal-impact.notable { color: rgba(255,251,242,0.5); }
+  .signal-impact.routine { color: rgba(255,251,242,0.35); }
+  .brief-card h4 {
+    font-family: var(--display);
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    margin-bottom: 10px;
+    color: var(--paper);
+  }
+  .brief-card:hover h4 { color: var(--yellow); }
+  .brief-card > p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255,251,242,0.55);
+  }
+  .brief-why {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(255,212,61,0.08);
+    border-left: 3px solid var(--yellow);
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(255,251,242,0.75);
+  }
+  .brief-why b { color: var(--yellow); font-weight: 600; }
   .signal-empty {
+    grid-column: 1 / -1;
     padding: 48px 24px;
     text-align: center;
-    color: var(--text-muted);
+    color: rgba(255,251,242,0.5);
     font-size: 14px;
+    border: 2px dashed rgba(255,251,242,0.2);
+    border-radius: var(--r);
   }
-  .signal-footer {
-    padding: 20px 24px;
-    border-top: 1px solid var(--border-subtle);
-    text-align: center;
-    grid-column: 1 / -1;
+
+  @media (max-width: 960px) {
+    .brief-grid { grid-template-columns: 1fr; }
   }
-  .signal-footer a {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-  .signal-footer a:hover { color: var(--text-primary); }
   @media (max-width: 768px) {
-    .section-title {
-      white-space: normal;
-    }
-    .signal-feed {
-      grid-template-columns: 1fr;
-      border-radius: 22px;
-    }
-    .signal-summary {
-      border-right: 0;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    .signal-item {
-      grid-template-columns: 40px minmax(0, 1fr);
-      gap: 10px;
-      padding: 14px 12px;
-    }
-    .signal-main h4 {
-      font-size: 1.35rem;
-    }
+    .section { padding: 64px 0; }
+    .brief-card { padding: 22px 22px; }
   }
 </style>

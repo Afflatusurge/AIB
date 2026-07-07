@@ -18,81 +18,100 @@ const paginationLabels = {
   page: lang === 'zh' ? '页码' : lang === 'ja' ? 'ページ' : 'Page',
   loadMore: lang === 'zh' ? '加载更多' : lang === 'ja' ? 'もっと見る' : 'Load more',
 };
+
+const visualColors = ['v-green', 'v-pink', 'v-blue', 'v-purple', 'v-coral', 'v-yellow'];
+const glyph = (cs: CaseStudy) => (cs.problemType || cs.industry || cs.title || 'CS').replace(/\s/g, '').slice(0, 2);
+
+const categories = [...new Set(cases.map((cs) => cs.problemType || cs.industry).filter(Boolean))] as string[];
+
+const ui = {
+  home: t('nav.home'),
+  count: lang === 'zh' ? '真实案例' : lang === 'ja' ? '実例' : 'real builders',
+  lede:
+    lang === 'zh'
+      ? '别人是怎么做成的？按问题和结果组织的案例库——收入、流程、可复制的做法。'
+      : lang === 'ja'
+        ? '他の人はどうやって成功したのか。課題と成果で整理されたケースライブラリ。'
+        : 'How others actually made it work. A case library organized around problems and outcomes — revenue, workflow shifts, repeatable moves.',
+  all: lang === 'zh' ? '全部' : lang === 'ja' ? 'すべて' : 'All',
+  breakdown: lang === 'zh' ? '案例拆解' : lang === 'ja' ? 'ケース分解' : 'Case breakdown',
+  readCase: lang === 'zh' ? '阅读案例' : lang === 'ja' ? 'ケースを読む' : 'Read the case',
+};
 ---
 
-<section class="page-section">
+<header class="page-head c-purple">
   <div class="container">
-    <div class="page-header fade-in">
-      <p class="section-kicker">Case Desk</p>
+    <div class="crumb"><a href={`/${lang}/`}>{ui.home}</a> / {t('nav.cases')}</div>
+    <div class="page-title-row">
       <h1>{t('nav.cases')}</h1>
-      <p>{lang === 'zh' ? '不再按行业松散堆内容，而是用增长、自动化、产品化和一人公司路径去重组案例。' : lang === 'ja' ? '業界別の断片ではなく、成長・自動化・商品化・ひとり起業の視点でケースを再編集します。' : 'A case library organized around problems and outcomes, not loose industry buckets.'}</p>
+      <span class="count-pill">✦ {ui.count}</span>
     </div>
+    <p class="lede">{ui.lede}</p>
+  </div>
+</header>
 
-    {leadCase ? (
-      <div class="list-shell fade-in">
-        <article class="lead-entry">
-          {leadCase.coverImage && (
-            <div class="lead-entry-image">
-              <img src={leadCase.coverImage} alt={leadCase.title} loading="lazy" />
-            </div>
-          )}
-          <div class="lead-entry-meta">
-            {(leadCase.problemType || leadCase.industry) && <span class="card-badge">{leadCase.problemType || leadCase.industry}</span>}
-            {leadCase.revenue && <span class="card-badge impact-routine">{leadCase.revenue}</span>}
-          </div>
-          <div class="lead-entry-date">{leadCase.date}</div>
-          <h2>
-            <a href={`/${lang}/cases/${leadCase.slug || leadCase.id}/`}>{leadCase.title}</a>
-          </h2>
-          <p>{leadCase.snippet}</p>
-          <div class="lead-entry-actions">
-            <a href={`/${lang}/cases/${leadCase.slug || leadCase.id}/`} class="read-more">
-              {t('read.more')} →
-            </a>
-            <span class="lead-entry-note">{lang === 'zh' ? '案例拆解' : lang === 'ja' ? 'ケース分解' : 'Case breakdown'}</span>
-          </div>
-        </article>
-
-        <aside class="list-aside">
-          <div class="aside-card">
-            <h3>{lang === 'zh' ? '一人公司能借鉴什么' : lang === 'ja' ? 'ひとり起業家が持ち帰れること' : 'What solo builders can borrow'}</h3>
-            <ul class="aside-list">
-              <li>{lang === 'zh' ? '哪些问题类型值得参考' : lang === 'ja' ? '参考にしやすい課題パターン' : 'Which problem patterns are worth borrowing?'}</li>
-              <li>{lang === 'zh' ? '哪些变化对效率或收入有实际帮助' : lang === 'ja' ? '効率や収益に効く変化は何か' : 'Which changes clearly improved efficiency or revenue?'}</li>
-              <li>{lang === 'zh' ? '哪些流程不靠团队也能复制' : lang === 'ja' ? 'チームなしでも再現しやすい流れは何か' : 'What parts can work without a larger team?'}</li>
-            </ul>
-          </div>
-          <div class="aside-card">
-            <h3>{lang === 'zh' ? '怎么使用这一栏' : lang === 'ja' ? 'この欄の読み方' : 'How to use this desk'}</h3>
-            <p>{lang === 'zh' ? '先按问题类型找最接近你现状的案例，再看结果和可复制的做法。这里不是为了讲励志故事，而是帮你更快找到能借用的经营动作。' : lang === 'ja' ? 'まず自分に近い課題タイプから読み始め、その後に成果と再現できる動きを見る使い方です。物語を消費するためではなく、持ち帰れる運用判断を増やすための欄です。' : 'Start with the case closest to your problem, then read for outcomes and repeatable moves. This desk is not here to tell inspiring stories; it is here to surface operating lessons you can actually reuse.'}</p>
-          </div>
-        </aside>
+{categories.length > 1 && (
+  <div class="filter-bar">
+    <div class="container">
+      <div class="filter-chips" data-filter-chips>
+        <button class="f-chip on" data-filter="*">{ui.all}</button>
+        {categories.map((category) => (
+          <button class="f-chip" data-filter={category}>{category}</button>
+        ))}
       </div>
-    ) : null}
+    </div>
+  </div>
+)}
 
-    <div class="card-grid editorial-list" data-paginated-list>
-      {cases.map((cs, i) => (
-        <article class="content-card fade-in" style={`animation-delay: ${i * 60}ms`}>
-          {cs.coverImage && (
-            <div class="card-cover">
-              <img src={cs.coverImage} alt={cs.title} loading="lazy" />
-            </div>
+<main class="section">
+  <div class="container">
+    {leadCase && (
+      <a class="lead-review fade-in" href={`/${lang}/cases/${leadCase.slug || leadCase.id}/`}>
+        <div class={`lead-img ${leadCase.coverImage ? '' : 'v-green'}`}>
+          {leadCase.coverImage && <img src={leadCase.coverImage} alt={leadCase.title} loading="lazy" />}
+          {(leadCase.problemType || leadCase.industry) && (
+            <span class="chip-float">{leadCase.problemType || leadCase.industry}</span>
           )}
+        </div>
+        <div class="lead-body">
+          <div class="lead-kicker kicker-purple">{ui.breakdown}</div>
+          <h2>{leadCase.title}</h2>
+          <p>{leadCase.snippet}</p>
+          <div class="lead-meta">
+            {[leadCase.revenue, leadCase.industry, leadCase.problemType].filter(Boolean).slice(0, 3).map((stat) => (
+              <span class="meta-pill">{stat}</span>
+            ))}
+          </div>
+          <div class="lead-cta">{ui.readCase} <span>→</span></div>
+        </div>
+      </a>
+    )}
+
+    <div class="card-grid" data-paginated-list>
+      {cases.map((cs, i) => (
+        <a
+          class="content-card fade-in"
+          style={`animation-delay: ${i * 60}ms`}
+          href={`/${lang}/cases/${cs.slug || cs.id}/`}
+          data-category={cs.problemType || cs.industry || ''}
+        >
+          <div class={`rv-visual ${visualColors[i % visualColors.length]}`}>
+            <span class="rv-glyph">{glyph(cs)}</span>
+            {cs.coverImage && <img src={cs.coverImage} alt={cs.title} loading="lazy" />}
+          </div>
           <div class="card-meta">
             <span class="card-badge">{cs.problemType || cs.industry || 'Business'}</span>
-            {cs.revenue && <span class="card-badge impact-routine">{cs.revenue}</span>}
+            <span class="card-date">{cs.date}</span>
           </div>
-          <div class="card-date">{cs.date}</div>
-          <h2>
-            <a href={`/${lang}/cases/${cs.slug || cs.id}/`}>{cs.title}</a>
-          </h2>
+          <h2>{cs.title}</h2>
           <p class="card-snippet">{cs.snippet}</p>
-          <div class="card-footer">
-            <a href={`/${lang}/cases/${cs.slug || cs.id}/`} class="read-more">
-              {t('read.more')} →
-            </a>
-          </div>
-        </article>
+          {cs.revenue && (
+            <div class="card-footer">
+              <span class="read-more">{t('read.more')} →</span>
+              <span class="case-revenue">{cs.revenue}</span>
+            </div>
+          )}
+        </a>
       ))}
       {!leadCase && cases.length === 0 && (
         <div class="empty-state">No case studies yet.</div>
@@ -106,117 +125,38 @@ const paginationLabels = {
       labels={paginationLabels}
     />
   </div>
-</section>
+</main>
+
+<script is:inline>
+  (() => {
+    const chips = document.querySelectorAll('[data-filter-chips] .f-chip');
+    if (!chips.length) return;
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        chips.forEach((other) => other.classList.remove('on'));
+        chip.classList.add('on');
+        const filter = chip.dataset.filter;
+        document.querySelectorAll('[data-paginated-list] [data-category]').forEach((card) => {
+          card.style.display = filter === '*' || card.dataset.category === filter ? '' : 'none';
+        });
+      });
+    });
+  })();
+</script>
 
 <style>
-  .list-shell {
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.46fr);
-    gap: 18px;
-    margin-bottom: 28px;
-  }
-  .lead-entry,
-  .aside-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px;
-    padding: 24px;
-  }
-  .lead-entry {
-    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
-  }
-  .lead-entry-image {
-    margin: -8px -8px 18px;
-    border-radius: 18px;
-    overflow: hidden;
-    aspect-ratio: 16 / 8.6;
-    background: linear-gradient(135deg, rgba(177, 90, 53, 0.12), rgba(61, 100, 120, 0.14));
-  }
-  .lead-entry-image img,
-  .card-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .lead-entry-meta {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .lead-entry-date {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    margin-bottom: 16px;
-  }
-  .lead-entry h2 {
-    font-family: var(--font-display);
-    font-size: clamp(2.5rem, 5vw, 4.2rem);
-    line-height: 0.96;
-    letter-spacing: -0.05em;
-    margin-bottom: 14px;
-  }
-  .lead-entry p {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    line-height: 1.8;
-    max-width: 46rem;
-  }
-  .lead-entry-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-top: 22px;
-    padding-top: 18px;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .lead-entry-note {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  .list-aside {
-    display: grid;
-    gap: 18px;
-  }
-  .aside-card h3 {
-    font-family: var(--font-display);
-    font-size: 1.85rem;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    margin-bottom: 12px;
-  }
-  .aside-card p,
-  .aside-list li {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.75;
-  }
-  .aside-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 10px;
-  }
-  .aside-list li {
-    padding-top: 10px;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .card-cover {
-    margin: -6px -6px 18px;
-    border-radius: 16px;
-    overflow: hidden;
-    aspect-ratio: 16 / 9;
-    background: linear-gradient(135deg, rgba(177, 90, 53, 0.12), rgba(61, 100, 120, 0.14));
-  }
-  @media (max-width: 900px) {
-    .list-shell {
-      grid-template-columns: 1fr;
-    }
+  .section { padding: 56px 0 88px; }
+  .kicker-purple { color: var(--purple); }
+  .content-card .card-date { margin-bottom: 0; }
+  .content-card .card-meta { margin-bottom: 12px; }
+  .case-revenue {
+    font-family: var(--display);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: var(--paper-2);
+    border: 1.5px solid rgba(27,26,23,0.25);
+    color: var(--ink-2);
   }
 </style>

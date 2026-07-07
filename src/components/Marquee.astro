@@ -1,0 +1,47 @@
+---
+interface Props {
+  headlines: string[];
+}
+const { headlines } = Astro.props;
+const items = headlines.filter(Boolean).slice(0, 6);
+---
+
+{items.length > 0 && (
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-inner">
+      {[0, 1].map(() =>
+        items.map((headline) => (
+          <>
+            <span class="mq-item">{headline}</span>
+            <span class="mq-star">✦</span>
+          </>
+        ))
+      )}
+    </div>
+  </div>
+)}
+
+<style>
+  .marquee {
+    background: var(--yellow);
+    border-top: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    padding: 13px 0;
+    overflow: hidden;
+  }
+  .marquee-inner {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: scroll 28s linear infinite;
+  }
+  .marquee-inner:hover { animation-play-state: paused; }
+  .mq-item {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 0 18px;
+    white-space: nowrap;
+  }
+  .mq-star { font-size: 15px; }
+</style>

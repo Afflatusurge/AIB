@@ -7,14 +7,6 @@ interface ToolCard {
   bestFor?: string;
 }
 
-interface CaseCard {
-  title: string;
-  slug: string;
-  industry?: string;
-  revenue?: string;
-  problemType?: string;
-}
-
 interface PlaybookCard {
   title: string;
   slug: string;
@@ -28,12 +20,12 @@ interface PlaybookCard {
 interface Props {
   lang: string;
   t: (key: string) => string;
-  briefs: Array<{ title: string; slug: string; category?: string; commentary?: string }>;
+  briefs: Array<{ title: string; slug: string; category?: string; impact?: string; commentary?: string }>;
   tools: ToolCard[];
   playbooks: PlaybookCard[];
 }
 
-const { lang, briefs, tools, playbooks } = Astro.props;
+const { lang, t, briefs, tools, playbooks } = Astro.props;
 
 const localizePlaybookCategory = (category?: string) => {
   if (!category) {
@@ -43,251 +35,256 @@ const localizePlaybookCategory = (category?: string) => {
   const labels: Record<string, { en: string; ja: string; zh: string }> = {
     Build: { en: 'Build', ja: '構築', zh: '搭建' },
     Media: { en: 'Media', ja: 'メディア', zh: '媒体' },
-    Growth: { en: 'Growth', ja: '增长', zh: '增长' },
+    Growth: { en: 'Growth', ja: '成長', zh: '增长' },
     Operations: { en: 'Operations', ja: '運営', zh: '运营' },
   };
 
   return labels[category]?.[lang as 'en' | 'ja' | 'zh'] ?? category;
 };
+
+const ui = {
+  tag: lang === 'zh' ? '从这里开始' : lang === 'ja' ? 'まずはここから' : 'Start here',
+  sub:
+    lang === 'zh'
+      ? '看趋势用简报，做决策看评测，落地执行靠指南。每一篇都写给独立创业者。'
+      : lang === 'ja'
+        ? 'ニュースで把握、レビューで判断、プレイブックで実行。すべて、ひとりで作る人のために。'
+        : 'News for awareness. Reviews for decisions. Playbooks for execution. Every piece is written for people building alone.',
+  daily: {
+    name: t('nav.daily'),
+    tagline: lang === 'zh' ? '每天 5 分钟，掌握真正重要的动态。' : lang === 'ja' ? '1日5分で、重要な動きを把握。' : 'Track what matters — in 5 minutes a day.',
+    cta: lang === 'zh' ? '打开简报' : lang === 'ja' ? 'ブリーフを開く' : 'Open the brief',
+    empty: lang === 'zh' ? '接入内容后，这里会显示当天最值得看的更新。' : lang === 'ja' ? '接続後、ここに今日の重要な更新が並びます。' : 'The latest important updates will appear here once content is connected.',
+  },
+  tools: {
+    name: t('nav.tools'),
+    tagline: lang === 'zh' ? '不用开 40 个标签页，也能选对工具。' : lang === 'ja' ? 'タブを40個開かずに、使うものを決める。' : 'Decide what to use — without 40 open tabs.',
+    cta: lang === 'zh' ? '浏览评测' : lang === 'ja' ? 'レビューを見る' : 'Browse reviews',
+    empty: lang === 'zh' ? '这里会集中展示值得认真比较的工具。' : lang === 'ja' ? 'ここには、比較して選ぶべきツールが並びます。' : 'This is where the tools worth proper evaluation should appear.',
+  },
+  playbooks: {
+    name: t('nav.playbooks'),
+    tagline: lang === 'zh' ? '一步步执行——不需要团队。' : lang === 'ja' ? 'ステップごとに実行。チームは不要。' : 'Execute step by step — no team required.',
+    cta: lang === 'zh' ? '打开指南' : lang === 'ja' ? 'プレイブックを開く' : 'Open playbooks',
+    empty: lang === 'zh' ? '这里会放按任务组织的指南，把读者从"知道"带到"做到"。' : lang === 'ja' ? 'ここでは、知ることから実行までをつなぐタスク別ガイドを並べます。' : 'Task-based guides that connect what readers know with what they can actually do next.',
+  },
+};
 ---
 
-<section class="section-block">
+<section class="section">
   <div class="container">
-    <div class="section-label">{lang === 'zh' ? '// 阅读路径' : lang === 'ja' ? '// 読み方' : '// READING PATHS'}</div>
-    <h2 class="section-title">
-      {lang === 'zh'
-        ? '从你的需求开始'
-        : lang === 'ja'
-          ? '目的から選ぶ'
-          : 'Start from what you need'}
-    </h2>
-    <p class="section-desc">
-      {lang === 'zh'
-        ? '看趋势、做决策、到实际执行。'
-        : lang === 'ja'
-          ? 'トレンド把握、意思決定、実行まで。'
-          : 'News for awareness. Reviews for decisions. Playbooks for execution.'}
-    </p>
-
-    <div class="desk-grid">
-      <article class="desk-card animate-in">
-        <div class="desk-topline">
-          <span class="desk-tag">01</span>
-          <a href={`/${lang}/daily/`} class="desk-link">
-            {lang === 'zh' ? '查看每日简报' : lang === 'ja' ? 'デイリーブリーフを見る' : 'Open daily brief'}
-          </a>
-        </div>
-        <div class="desk-intro">
-          <h3>{lang === 'zh' ? '每日简报' : lang === 'ja' ? 'デイリーブリーフ' : 'Daily Brief'}</h3>
-          <p>
-            {lang === 'zh'
-              ? '掌握当天关键 AI 动态。'
-              : lang === 'ja'
-                ? '今日の重要な動きを把握。'
-                : 'Track what matters today.'}
-          </p>
-        </div>
-        <ul class="desk-list" data-live-bento-briefs>
-          {briefs.length > 0 ? briefs.map((brief) => (
-            <li>
-              <a href={`/${lang}/daily/${brief.slug}/`}>{brief.title}</a>
-              <span>{brief.commentary || brief.category || (lang === 'zh' ? '关键信号' : lang === 'ja' ? '重要シグナル' : 'Signal')}</span>
-            </li>
-          )) : (
-            <li class="empty-row">
-              {lang === 'zh'
-                ? '接入内容后，这里会显示当天最值得看的更新。'
-                : lang === 'ja'
-                  ? '接続後、ここに今日の重要な更新が並びます。'
-                  : 'The latest important updates will appear here once content is connected.'}
-            </li>
+    <div class="sec-head">
+      <div>
+        <span class="sec-tag tag-pink">{ui.tag}</span>
+        <h2 class="sec-title">
+          {lang === 'zh' ? (
+            <>三条路径。<br />选你今天需要的。</>
+          ) : lang === 'ja' ? (
+            <>入り口は3つ。<br />今日必要なものを選ぶ。</>
+          ) : (
+            <>Three ways in.<br />Pick what you need today.</>
           )}
-        </ul>
-      </article>
+        </h2>
+      </div>
+      <p class="sec-sub">{ui.sub}</p>
+    </div>
 
-      <article class="desk-card animate-in delay-1">
-        <div class="desk-topline">
-          <span class="desk-tag">02</span>
-          <a href={`/${lang}/tools/`} class="desk-link">
-            {lang === 'zh' ? '浏览工具评测' : lang === 'ja' ? 'ツールレビューを見る' : 'Browse tool reviews'}
-          </a>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pillar-head c-yellow">
+          <span class="pillar-name">{ui.daily.name}</span>
+          <span class="pillar-badge">01</span>
         </div>
-        <div class="desk-intro">
-          <h3>{lang === 'zh' ? '工具评测' : lang === 'ja' ? 'ツールレビュー' : 'Tool Reviews'}</h3>
-          <p>
-            {lang === 'zh'
-              ? '选择真正好用的工具。'
-              : lang === 'ja'
-                ? '最適なツールを選ぶ。'
-                : 'Decide what to use.'}
-          </p>
+        <div class="pillar-body">
+          <div class="pillar-tagline">{ui.daily.tagline}</div>
+          <ul class="pillar-list" data-live-bento-briefs>
+            {briefs.length > 0 ? briefs.slice(0, 3).map((brief) => (
+              <li class="pillar-item">
+                <div>
+                  <a href={`/${lang}/daily/${brief.slug}/`} class="pillar-item-title">{brief.title}</a>
+                  <span class="pillar-item-meta">{[brief.category, brief.impact].filter(Boolean).join(' · ') || brief.commentary || ''}</span>
+                </div>
+              </li>
+            )) : (
+              <li class="pillar-item empty-row">{ui.daily.empty}</li>
+            )}
+          </ul>
+          <a href={`/${lang}/daily/`} class="pillar-cta">{ui.daily.cta} <span>→</span></a>
         </div>
-        <ul class="desk-list">
-          {tools.length > 0 ? tools.map((tool) => (
-            <li>
-              <a href={`/${lang}/tools/${tool.slug}/`}>{tool.title}</a>
-              <span>{tool.bestFor || tool.pricing || tool.category || 'AI'}</span>
-            </li>
-          )) : (
-            <li class="empty-row">
-              {lang === 'zh'
-                ? '这里会集中展示值得认真比较的工具。'
-                : lang === 'ja'
-                  ? 'ここには、比較して選ぶべきツールが並びます。'
-                  : 'This is where the tools worth proper evaluation should appear.'}
-            </li>
-          )}
-        </ul>
-      </article>
+      </div>
 
-      <article class="desk-card animate-in delay-2">
-        <div class="desk-topline">
-          <span class="desk-tag">03</span>
-          <a href={`/${lang}/playbooks/`} class="desk-link">
-            {lang === 'zh' ? '查看实战手册' : lang === 'ja' ? 'プレイブックを見る' : 'Open playbooks'}
-          </a>
+      <div class="pillar">
+        <div class="pillar-head c-blue">
+          <span class="pillar-name">{ui.tools.name}</span>
+          <span class="pillar-badge">02</span>
         </div>
-        <div class="desk-intro">
-          <h3>{lang === 'zh' ? '实战手册' : lang === 'ja' ? '実践プレイブック' : 'Playbooks'}</h3>
-          <p>
-            {lang === 'zh'
-              ? '一步步完成任务。'
-              : lang === 'ja'
-                ? '実際に使って実行する。'
-                : 'Execute step by step.'}
-          </p>
+        <div class="pillar-body">
+          <div class="pillar-tagline">{ui.tools.tagline}</div>
+          <ul class="pillar-list">
+            {tools.length > 0 ? tools.slice(0, 3).map((tool) => (
+              <li class="pillar-item">
+                <div>
+                  <a href={`/${lang}/tools/${tool.slug}/`} class="pillar-item-title">{tool.title}</a>
+                  <span class="pillar-item-meta">{tool.bestFor || tool.pricing || tool.category || 'AI'}</span>
+                </div>
+              </li>
+            )) : (
+              <li class="pillar-item empty-row">{ui.tools.empty}</li>
+            )}
+          </ul>
+          <a href={`/${lang}/tools/`} class="pillar-cta">{ui.tools.cta} <span>→</span></a>
         </div>
-        <ul class="desk-list">
-          {playbooks.length > 0 ? playbooks.map((playbook) => (
-            <li>
-              <a href={`/${lang}/playbooks/${playbook.slug}/`}>{playbook.title}</a>
-              <span>{localizePlaybookCategory(playbook.category)}</span>
-            </li>
-          )) : (
-            <li class="empty-row">
-              {lang === 'zh'
-                ? '这里会放按任务组织的指南，把读者从“知道”带到“做到”。'
-                : lang === 'ja'
-                  ? 'ここでは、知ることから実行までをつなぐタスク別ガイドを並べます。'
-                  : 'This is where task-based guides should connect what readers know with what they can actually do next.'}
-            </li>
-          )}
-        </ul>
-      </article>
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-head c-green">
+          <span class="pillar-name">{ui.playbooks.name}</span>
+          <span class="pillar-badge">03</span>
+        </div>
+        <div class="pillar-body">
+          <div class="pillar-tagline">{ui.playbooks.tagline}</div>
+          <ul class="pillar-list">
+            {playbooks.length > 0 ? playbooks.slice(0, 3).map((playbook) => (
+              <li class="pillar-item">
+                <div>
+                  <a href={`/${lang}/playbooks/${playbook.slug}/`} class="pillar-item-title">{playbook.title}</a>
+                  <span class="pillar-item-meta">{localizePlaybookCategory(playbook.category)}</span>
+                </div>
+              </li>
+            )) : (
+              <li class="pillar-item empty-row">{ui.playbooks.empty}</li>
+            )}
+          </ul>
+          <a href={`/${lang}/playbooks/`} class="pillar-cta">{ui.playbooks.cta} <span>→</span></a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-  .section-block { padding: 68px 0; }
-  .section-label {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 12px;
-  }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: clamp(2.1rem, 4vw, 3.4rem);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    margin-bottom: 16px;
-    line-height: 1;
-  }
-  .section-desc {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    margin-bottom: 40px;
-    max-width: 760px;
-    line-height: 1.75;
-  }
-  .desk-grid {
+  .section { padding: 88px 0; }
+  .tag-pink { background: var(--pink); }
+
+  .pillars {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
   }
-  .desk-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px;
-    padding: 24px;
-    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  .pillar {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: #fff;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: all 0.18s;
     display: flex;
     flex-direction: column;
-    min-height: 420px;
   }
-  .desk-intro {
-    margin-bottom: 18px;
-  }
-  .desk-card:hover {
-    transform: translateY(-4px);
-    background: var(--bg-card-hover);
-    border-color: var(--border-hover);
-  }
-  .desk-topline {
+  .pillar:hover { transform: translate(-3px,-3px); box-shadow: var(--shadow-lg); }
+  .pillar-head {
+    padding: 22px 26px;
+    border-bottom: 2px solid var(--ink);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 18px;
+    justify-content: space-between;
   }
-  .desk-tag {
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    color: var(--accent);
+  .pillar-head.c-yellow { background: var(--yellow); }
+  .pillar-head.c-blue { background: var(--blue); color: #fff; }
+  .pillar-head.c-green { background: var(--green); color: #fff; }
+  .pillar-name {
+    font-family: var(--display);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
-  .desk-link {
-    font-size: 0.84rem;
-    color: var(--text-muted);
+  .pillar-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--ink);
+    transform: rotate(6deg);
+    flex-shrink: 0;
   }
-  .desk-card h3 {
-    font-family: var(--font-display);
-    font-size: 2.2rem;
+  .pillar-body {
+    padding: 8px 26px 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .pillar-tagline {
+    font-size: 14px;
     font-weight: 600;
-    line-height: 0.98;
-    margin-bottom: 12px;
+    color: var(--ink-2);
+    padding: 14px 0 6px;
   }
-  .desk-card p {
-    color: var(--text-secondary);
-    font-size: 0.96rem;
-    line-height: 1.75;
-    margin-bottom: 0;
-  }
-  .desk-list {
+  .pillar-list {
+    flex: 1;
     list-style: none;
-    padding: 0;
     margin: 0;
-    display: grid;
-    gap: 12px;
+    padding: 0;
   }
-  .desk-list li {
-    display: grid;
-    gap: 6px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border-subtle);
+  .pillar-item {
+    padding: 13px 0 13px 24px;
+    border-bottom: 1.5px dashed rgba(27,26,23,0.2);
+    position: relative;
   }
-  .desk-list a {
-    color: var(--text-primary);
+  .pillar-item::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    top: 13px;
+    font-family: var(--display);
     font-weight: 700;
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+  .pillar-item:last-child { border-bottom: none; }
+  .pillar-item.empty-row::before { content: none; }
+  .pillar-item.empty-row {
+    padding-left: 0;
+    font-size: 13.5px;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+  .pillar-item-title {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 600;
     line-height: 1.4;
+    color: var(--ink);
   }
-  .desk-list span,
-  .empty-row {
-    font-size: 0.82rem;
-    color: var(--text-muted);
+  .pillar-item-title:hover { color: var(--coral); }
+  .pillar-item-meta {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-3);
+    margin-top: 2px;
   }
-  .empty-row {
-    line-height: 1.7;
+  .pillar-cta {
+    margin-top: 18px;
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.15s;
+    color: var(--ink);
+  }
+  .pillar:hover .pillar-cta { gap: 12px; color: var(--coral); }
+
+  @media (max-width: 960px) {
+    .pillars { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
-    .section-block { padding: 54px 0; }
-    .desk-grid { grid-template-columns: 1fr; }
-    .desk-card {
-      min-height: unset;
-      border-radius: 20px;
-    }
+    .section { padding: 64px 0; }
   }
 </style>

@@ -18,94 +18,102 @@ const paginationLabels = {
   page: lang === 'zh' ? '页码' : lang === 'ja' ? 'ページ' : 'Page',
   loadMore: lang === 'zh' ? '加载更多' : lang === 'ja' ? 'もっと見る' : 'Load more',
 };
+
+const visualColors = ['v-purple', 'v-coral', 'v-green', 'v-blue', 'v-yellow', 'v-pink'];
+const glyph = (tool: ToolReview) => (tool.category || tool.title || 'AI').replace(/\s/g, '').slice(0, 2);
+
+const categories = [...new Set(tools.map((tool) => tool.category).filter(Boolean))] as string[];
+
+const ui = {
+  home: t('nav.home'),
+  count: lang === 'zh' ? '评测与指南' : lang === 'ja' ? 'レビュー＆ガイド' : 'reviews & guides',
+  lede:
+    lang === 'zh'
+      ? '不用开 40 个标签页，也能选对工具。每篇评测都从一人公司的视角实测。'
+      : lang === 'ja'
+        ? 'タブを40個開かずに、使うものを決める。すべてのレビューは、ひとりビジネスの視点で検証済み。'
+        : 'Decide what to use — without 40 open tabs. Every review is tested through the lens of a one-person business.',
+  all: lang === 'zh' ? '全部' : lang === 'ja' ? 'すべて' : 'All',
+  latest: lang === 'zh' ? '最新' : lang === 'ja' ? '最新' : 'Latest',
+  readGuide: lang === 'zh' ? '阅读评测' : lang === 'ja' ? 'レビューを読む' : 'Read the guide',
+  bestFor: lang === 'zh' ? '适合：' : lang === 'ja' ? '向いている人：' : 'Best for:',
+};
 ---
 
-<section class="page-section">
+<header class="page-head c-blue">
   <div class="container">
-    <div class="page-header fade-in">
-      <p class="section-kicker">Review Desk</p>
+    <div class="crumb"><a href={`/${lang}/`}>{ui.home}</a> / {t('nav.tools')}</div>
+    <div class="page-title-row">
       <h1>{t('nav.tools')}</h1>
-      <p>{lang === 'zh' ? '把“有哪些工具”改成“哪些工具值得上手”，并且用价格、适配人群和工作流视角去写。' : lang === 'ja' ? '単なるツール一覧ではなく、誰に合うか、いくらか、どのワークフローに合うかで評価します。' : 'A review desk for deciding which AI tools are actually worth adopting, paying for, and integrating into a one-person business.'}</p>
+      <span class="count-pill">{tools.length + (leadTool ? 1 : 0)}+ {ui.count}</span>
     </div>
+    <p class="lede">{ui.lede}</p>
+  </div>
+</header>
 
-    {leadTool ? (
-      <div class="list-shell fade-in">
-        <article class="lead-entry">
-          {leadTool.coverImage && (
-            <div class="lead-entry-image">
-              <img src={leadTool.coverImage} alt={leadTool.title} loading="lazy" />
-            </div>
-          )}
-          <div class="lead-entry-meta">
-            {leadTool.category && <span class="card-badge">{leadTool.category}</span>}
-            {leadTool.bestFor
-              ? <span class="card-badge impact-notable">{leadTool.bestFor}</span>
-              : leadTool.pricing && <span class="card-badge impact-notable">{leadTool.pricing}</span>}
-          </div>
-          <div class="lead-entry-date">{leadTool.date}</div>
-          <h2>
-            <a href={`/${lang}/tools/${leadTool.slug || leadTool.id}/`}>{leadTool.title}</a>
-          </h2>
-          <p>{leadTool.snippet}</p>
-          <div class="lead-entry-actions">
-            <a href={`/${lang}/tools/${leadTool.slug || leadTool.id}/`} class="read-more">
-              {t('read.more')} →
-            </a>
-            <span class="lead-entry-note">{lang === 'zh' ? '标杆评测' : lang === 'ja' ? '基幹レビュー' : 'Cornerstone review'}</span>
-          </div>
-        </article>
-
-        <aside class="list-aside">
-          <div class="aside-card">
-            <h3>{lang === 'zh' ? '怎么判断一款工具' : lang === 'ja' ? 'ツールを見る視点' : 'How to judge a tool'}</h3>
-            <ul class="aside-list">
-              <li>{lang === 'zh' ? '是否替代现有人工流程' : lang === 'ja' ? '既存作業を置き換えられるか' : 'Can it replace real manual work?'}</li>
-              <li>{lang === 'zh' ? '价格是否适合独立创业者' : lang === 'ja' ? '個人起業家にとって価格が妥当か' : 'Is the pricing realistic for solo builders?'}</li>
-              <li>{lang === 'zh' ? '能否在一周内接入现有工作流' : lang === 'ja' ? '一週間以内に既存フローへ組み込めるか' : 'Can it fit into your workflow within a week?'}</li>
-            </ul>
-          </div>
-          <div class="aside-card">
-            <h3>{lang === 'zh' ? '从哪里开始' : lang === 'ja' ? 'どこから読むか' : 'Where to start'}</h3>
-            <p>{lang === 'zh' ? '先看首页主评，再按类别、价格和适用人群继续往下读。目标不是同时研究十款工具，而是带着一个“下一步要试什么”的答案离开。' : lang === 'ja' ? 'まず基幹レビューを読み、その後にカテゴリ、価格、向いている人で比較していく流れです。十個のタブを開くことではなく、次に試す一本を決めるための欄です。' : 'Start with the cornerstone review, then compare by category, pricing, and fit. The goal is not to research ten tools at once, but to leave with one clear next tool to test.'}</p>
-          </div>
-        </aside>
+{categories.length > 1 && (
+  <div class="filter-bar">
+    <div class="container">
+      <div class="filter-chips" data-filter-chips>
+        <button class="f-chip on" data-filter="*">{ui.all}</button>
+        {categories.map((category) => (
+          <button class="f-chip" data-filter={category}>{category}</button>
+        ))}
       </div>
-    ) : null}
+    </div>
+  </div>
+)}
 
-    <div class="card-grid editorial-list" data-paginated-list>
-      {tools.map((tool, i) => {
-        const rating = Number(tool.rating) || 0;
-        return (
-          <article class="content-card fade-in" style={`animation-delay: ${i * 60}ms`}>
-            {tool.coverImage && (
-              <div class="card-cover">
-                <img src={tool.coverImage} alt={tool.title} loading="lazy" />
-              </div>
-            )}
-            <div class="card-meta">
-              <span class="card-badge">{tool.category || 'AI'}</span>
-              {tool.bestFor
-                ? <span class="card-badge impact-notable">{tool.bestFor}</span>
-                : tool.pricing && <span class="card-badge impact-notable">{tool.pricing}</span>}
-            </div>
-            <div class="card-date">{tool.date}</div>
-            <h2>
-              <a href={`/${lang}/tools/${tool.slug || tool.id}/`}>{tool.title}</a>
-            </h2>
-            <p class="card-snippet">{tool.snippet}</p>
-            <div class="card-footer">
-              <a href={`/${lang}/tools/${tool.slug || tool.id}/`} class="read-more">
-                {t('read.more')} →
-              </a>
-              <span class="rating">
-                {[0, 1, 2, 3, 4].map((star) => (
-                  <span class={star < Math.floor(rating) ? '' : 'star-empty'}>★</span>
-                ))}
-              </span>
-            </div>
-          </article>
-        );
-      })}
+<main class="section">
+  <div class="container">
+    {leadTool && (
+      <a class="lead-review fade-in" href={`/${lang}/tools/${leadTool.slug || leadTool.id}/`}>
+        <div class={`lead-img ${leadTool.coverImage ? '' : 'v-blue'}`}>
+          {leadTool.coverImage && <img src={leadTool.coverImage} alt={leadTool.title} loading="lazy" />}
+          {leadTool.category && <span class="chip-float">{leadTool.category}</span>}
+        </div>
+        <div class="lead-body">
+          <div class="lead-kicker kicker-blue">{ui.latest}{leadTool.category ? ` · ${leadTool.category}` : ''}</div>
+          <h2>{leadTool.title}</h2>
+          <p>{leadTool.snippet}</p>
+          <div class="lead-meta">
+            {(leadTool.bestFor || '')
+              .split(/[,，、]/)
+              .map((item) => item.trim())
+              .filter(Boolean)
+              .slice(0, 3)
+              .map((pill) => (
+                <span class="meta-pill">{pill}</span>
+              ))}
+          </div>
+          <div class="lead-cta">{ui.readGuide} <span>→</span></div>
+        </div>
+      </a>
+    )}
+
+    <div class="card-grid" data-paginated-list>
+      {tools.map((tool, i) => (
+        <a
+          class="content-card fade-in"
+          style={`animation-delay: ${i * 60}ms`}
+          href={`/${lang}/tools/${tool.slug || tool.id}/`}
+          data-category={tool.category || ''}
+        >
+          <div class={`rv-visual ${visualColors[i % visualColors.length]}`}>
+            <span class="rv-glyph">{glyph(tool)}</span>
+            {tool.coverImage && <img src={tool.coverImage} alt={tool.title} loading="lazy" />}
+          </div>
+          <div class="card-meta">
+            <span class="card-badge">{tool.category || 'AI'}</span>
+            <span class="card-date">{tool.date}</span>
+          </div>
+          <h2>{tool.title}</h2>
+          <p class="card-snippet">{tool.snippet}</p>
+          {(tool.bestFor || tool.pricing) && (
+            <div class="rv-for"><b>{ui.bestFor}</b> {tool.bestFor || tool.pricing}</div>
+          )}
+        </a>
+      ))}
       {!leadTool && tools.length === 0 && (
         <div class="empty-state">No tool reviews yet.</div>
       )}
@@ -118,117 +126,41 @@ const paginationLabels = {
       labels={paginationLabels}
     />
   </div>
-</section>
+</main>
+
+<script is:inline>
+  (() => {
+    const chips = document.querySelectorAll('[data-filter-chips] .f-chip');
+    if (!chips.length) return;
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        chips.forEach((other) => other.classList.remove('on'));
+        chip.classList.add('on');
+        const filter = chip.dataset.filter;
+        document.querySelectorAll('[data-paginated-list] [data-category]').forEach((card) => {
+          card.style.display = filter === '*' || card.dataset.category === filter ? '' : 'none';
+        });
+      });
+    });
+  })();
+</script>
 
 <style>
-  .list-shell {
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.46fr);
-    gap: 18px;
-    margin-bottom: 28px;
+  .section { padding: 56px 0 88px; }
+  .kicker-blue { color: var(--blue); }
+  .content-card .card-date {
+    margin-bottom: 0;
+    font-size: 12px;
+    color: var(--ink-3);
   }
-  .lead-entry,
-  .aside-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px;
-    padding: 24px;
+  .content-card .card-meta { margin-bottom: 12px; }
+  .content-card h2 { margin-top: 0; }
+  .rv-for {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1.5px dashed rgba(27,26,23,0.2);
+    font-size: 12px;
+    color: var(--ink-3);
   }
-  .lead-entry {
-    box-shadow: 0 16px 40px rgba(32, 27, 24, 0.04);
-  }
-  .lead-entry-image {
-    margin: -8px -8px 18px;
-    border-radius: 18px;
-    overflow: hidden;
-    aspect-ratio: 16 / 8.6;
-    background: linear-gradient(135deg, rgba(177, 90, 53, 0.12), rgba(61, 100, 120, 0.14));
-  }
-  .lead-entry-image img,
-  .card-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .lead-entry-meta {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .lead-entry-date {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    margin-bottom: 16px;
-  }
-  .lead-entry h2 {
-    font-family: var(--font-display);
-    font-size: clamp(2.5rem, 5vw, 4.2rem);
-    line-height: 0.96;
-    letter-spacing: -0.05em;
-    margin-bottom: 14px;
-  }
-  .lead-entry p {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    line-height: 1.8;
-    max-width: 46rem;
-  }
-  .lead-entry-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-top: 22px;
-    padding-top: 18px;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .lead-entry-note {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  .list-aside {
-    display: grid;
-    gap: 18px;
-  }
-  .aside-card h3 {
-    font-family: var(--font-display);
-    font-size: 1.85rem;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    margin-bottom: 12px;
-  }
-  .aside-card p,
-  .aside-list li {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.75;
-  }
-  .aside-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 10px;
-  }
-  .aside-list li {
-    padding-top: 10px;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .card-cover {
-    margin: -6px -6px 18px;
-    border-radius: 16px;
-    overflow: hidden;
-    aspect-ratio: 16 / 9;
-    background: linear-gradient(135deg, rgba(177, 90, 53, 0.12), rgba(61, 100, 120, 0.14));
-  }
-  @media (max-width: 900px) {
-    .list-shell {
-      grid-template-columns: 1fr;
-    }
-  }
+  .rv-for b { color: var(--ink-2); font-weight: 600; }
 </style>
