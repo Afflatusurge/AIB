@@ -12,8 +12,9 @@
 // Used by /api/cron/ingest (Vercel Cron) and callable manually for smoke
 // tests via `curl -H "Authorization: Bearer $CRON_SECRET" …/api/cron/ingest`.
 
-import { generateDailyBriefs, type StructuredBrief } from './openai-brief';
-import { runQualityGate } from './brief-quality';
+import { discoverNews, editBriefs, type StructuredBrief, type DiscoveredItem } from './openai-brief';
+import { runQualityGate, verifySourceUrl, isPlausibleSourceUrl } from './brief-quality';
+import { discoverFromRss } from './rss-discover';
 import { supabaseAdmin } from './supabase';
 
 export interface IngestReport {
@@ -25,6 +26,7 @@ export interface IngestReport {
   failed: number;
   errors: Array<{ slug?: string; sourceUrl?: string; message: string }>;
   rejections: Array<{ title?: string; sourceUrl?: string; reasons: string[] }>;
+  discovery?: { llm: number; llmVerified: number; rss: number };
 }
 
 /**
@@ -78,12 +80,47 @@ export async function runIngest(opts: { max?: number } = {}): Promise<IngestRepo
     }
   }
 
-  // Call the LLM (one shot: search + summarize + translate).
-  const generatedBriefs = await generateDailyBriefs({
-    max: target,
-    excludeUrls,
-    excludeTitles,
-  });
+  // ── Discovery: LLM search first, RSS as deterministic backstop ──
+  //
+  // The search-preview model can silently fail its web search and fabricate
+  // stories with fake URLs. Verify every LLM-discovered URL is alive BEFORE
+  // it can occupy an editor slot; fill whatever is missing with real items
+  // from RSS feeds. Both paths still pass through the editor + quality gate.
+  let llmItems: DiscoveredItem[] = [];
+  try {
+    llmItems = await discoverNews({ max: target, excludeUrls, excludeTitles });
+  } catch (err) {
+    console.warn('[ingest] LLM discovery failed, falling back to RSS only:', err);
+  }
+
+  const verifiedItems: DiscoveredItem[] = [];
+  for (const item of llmItems) {
+    if (!isPlausibleSourceUrl(item.url)) continue;
+    const live = await verifySourceUrl(item.url);
+    if (live.ok) {
+      verifiedItems.push(item);
+    } else {
+      console.warn('[ingest] dropping LLM discovery item with dead URL:', item.url);
+    }
+    if (verifiedItems.length >= target) break;
+  }
+
+  let feed = verifiedItems;
+  if (feed.length < target) {
+    const rssItems = await discoverFromRss({
+      excludeUrls: [...excludeUrls, ...verifiedItems.map((i) => i.url)],
+      maxItems: target - feed.length,
+      maxAgeHours: 48,
+    });
+    feed = [...verifiedItems, ...rssItems];
+  }
+  report.discovery = {
+    llm: llmItems.length,
+    llmVerified: verifiedItems.length,
+    rss: feed.length - verifiedItems.length,
+  };
+
+  const generatedBriefs = feed.length > 0 ? await editBriefs(feed.slice(0, target)) : [];
   const structurallyValid = generatedBriefs.filter(isAcceptableBrief);
   report.generated = structurallyValid.length;
 
