@@ -14,7 +14,9 @@ export function getStaticPaths() {
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
-const playbooks = await getPlaybooks(lang as 'en' | 'ja' | 'zh');
+const all = await getPlaybooks(lang as 'en' | 'ja' | 'zh');
+const skills = all.filter((p) => p.kind === 'skill');
+const playbooks = all.filter((p) => p.kind !== 'skill');
 const leadPlaybook = playbooks[0];
 const supportingPlaybooks = playbooks.slice(1);
 
@@ -24,6 +26,9 @@ const chipClass = (category?: string) => {
     case 'Operations': return 'c-ops';
     case 'Media': return 'c-media';
     case 'Build': return 'c-build';
+    case 'Video': return 'c-media';
+    case 'Writing': return 'c-growth';
+    case 'Agents': return 'c-build';
     default: return 'c-default';
   }
 };
@@ -33,15 +38,26 @@ const ui = {
   count: lang === 'zh' ? '分步指南' : lang === 'ja' ? 'ステップガイド' : 'step-by-step',
   lede:
     lang === 'zh'
-      ? '从想法到落地。每篇指南把工具、案例和简报重组成一套真正可执行的工作流——写给一个人的团队。'
+      ? 'Skills 是能变成收入的具体能力：工作流、工具栈、成本和上手时间。Playbooks 是完整的生意配方。都写给一个人的团队。'
       : lang === 'ja'
-        ? 'アイデアから実行へ。レビュー、事例、ブリーフを実際に使えるワークフローに再構成。チーム1人のために。'
-        : 'From idea to execution. Step-by-step workflows you can actually use — written for a team of one.',
+        ? 'Skills は収入につながる具体的な能力（ワークフロー、ツール構成、コスト、習得時間）。Playbooks はビジネスのレシピ。どちらもチーム1人のために。'
+        : 'Skills are monetizable capabilities — workflow, stack, cost, ramp-up time. Playbooks are full business recipes. Both written for a team of one.',
   outcome: lang === 'zh' ? '能得到什么' : lang === 'ja' ? '得られる結果' : 'Outcome',
   bestFor: lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for',
   whyNow: lang === 'zh' ? '为什么现在' : lang === 'ja' ? '今読む理由' : 'Why now',
   open: lang === 'zh' ? '打开这份指南' : lang === 'ja' ? 'このプレイブックを開く' : 'Open the playbook',
   read: lang === 'zh' ? '查看 →' : lang === 'ja' ? '読む →' : 'Read →',
+  skillsTitle: lang === 'zh' ? 'Skills · 值得投入的能力' : lang === 'ja' ? 'Skills · 身につける価値のある能力' : 'Skills · Capabilities worth learning',
+  skillsSub:
+    lang === 'zh'
+      ? '每篇拆解一个能变成收入的能力：怎么做、用什么、花多少钱、多久能上手、做出什么。'
+      : lang === 'ja'
+        ? '収入につながる能力を1つずつ分解：やり方、ツール、コスト、習得時間、成果物。'
+        : 'One monetizable capability per entry: the workflow, the stack, the cost, the ramp-up, the deliverable.',
+  playbooksTitle: lang === 'zh' ? 'Playbooks · 完整生意配方' : lang === 'ja' ? 'Playbooks · ビジネスレシピ' : 'Playbooks · Full business recipes',
+  cost: lang === 'zh' ? '成本' : lang === 'ja' ? 'コスト' : 'Cost',
+  timeToLearn: lang === 'zh' ? '上手时间' : lang === 'ja' ? '習得時間' : 'Time to learn',
+  deliverable: lang === 'zh' ? '产出示例' : lang === 'ja' ? '成果物の例' : 'Deliverable',
 };
 ---
 
@@ -66,6 +82,40 @@ const ui = {
 
   <main class="section">
     <div class="container">
+      {skills.length > 0 && (
+        <section class="skills-band">
+          <div class="band-head">
+            <h2 class="band-title">{ui.skillsTitle}</h2>
+            <p class="band-sub">{ui.skillsSub}</p>
+          </div>
+          <div class="skill-grid">
+            {skills.map((skill) => (
+              <a class="skill-card fade-in" href={`/${lang}/playbooks/${skill.slug}/`}>
+                <div class="pbk-card-top">
+                  <span class={`pbk-chip ${chipClass(skill.category)}`}>{skill.category || 'Skill'}</span>
+                  <span class="pbk-read">{ui.read}</span>
+                </div>
+                <h3>{skill.title}</h3>
+                <p>{skill.snippet}</p>
+                <dl class="skill-facts">
+                  {skill.cost && (
+                    <div><dt>{ui.cost}</dt><dd>{skill.cost}</dd></div>
+                  )}
+                  {skill.timeToLearn && (
+                    <div><dt>{ui.timeToLearn}</dt><dd>{skill.timeToLearn}</dd></div>
+                  )}
+                  {skill.deliverable && (
+                    <div><dt>{ui.deliverable}</dt><dd>{skill.deliverable}</dd></div>
+                  )}
+                </dl>
+              </a>
+            ))}
+          </div>
+          <div class="band-head band-head-second">
+            <h2 class="band-title">{ui.playbooksTitle}</h2>
+          </div>
+        </section>
+      )}
       {leadPlaybook && (
         <a class="pbk-main fade-in" href={`/${lang}/playbooks/${leadPlaybook.slug}/`}>
           <span class="pbk-cat">{leadPlaybook.category || 'Playbook'}</span>
@@ -109,7 +159,7 @@ const ui = {
             )}
           </a>
         ))}
-        {playbooks.length === 0 && <div class="empty-state">No playbooks yet.</div>}
+        {all.length === 0 && <div class="empty-state">No entries yet.</div>}
       </div>
     </div>
   </main>
@@ -118,6 +168,86 @@ const ui = {
 
 <style>
   .section { padding: 56px 0 88px; }
+
+  /* ── Skills band ── */
+  .skills-band { margin-bottom: 48px; }
+  .band-head { margin-bottom: 22px; }
+  .band-head-second { margin-top: 56px; margin-bottom: 0; }
+  .band-title {
+    font-family: var(--display);
+    font-size: clamp(22px, 2.2vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .band-sub {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 620px;
+  }
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .skill-card {
+    border: 2px solid var(--ink);
+    border-radius: var(--r);
+    background: var(--yellow);
+    box-shadow: var(--shadow);
+    padding: 24px 28px;
+    transition: all 0.18s;
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
+  }
+  .skill-card:hover {
+    transform: translate(-3px,-3px);
+    box-shadow: var(--shadow-lg);
+    color: var(--ink);
+  }
+  .skill-card h3 {
+    font-family: var(--display);
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    margin-bottom: 8px;
+  }
+  .skill-card > p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    margin-bottom: 14px;
+  }
+  .skill-facts {
+    margin-top: auto;
+    display: grid;
+    gap: 8px;
+    border-top: 1.5px dashed var(--ink);
+    padding-top: 12px;
+  }
+  .skill-facts div {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 10px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .skill-facts dt {
+    font-family: var(--display);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--ink);
+  }
+  .skill-facts dd { color: var(--ink-2); margin: 0; }
+  @media (max-width: 900px) {
+    .skill-grid { grid-template-columns: 1fr; }
+  }
+
   .pbk-main {
     border: 2px solid var(--ink);
     border-radius: var(--r);

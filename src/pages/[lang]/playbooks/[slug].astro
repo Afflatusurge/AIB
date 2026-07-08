@@ -38,12 +38,18 @@ const stripLegacyNoteSection = (html: string) =>
   );
 const bodyHtml = await getPageContent(playbook.id);
 const renderedBody = stripLegacyNoteSection(stripLegacySourceSection(bodyHtml || getFallbackPlaybookContent(lang, slug)));
+const isSkill = playbook.kind === 'skill';
 const uiText = {
   outcome: lang === 'zh' ? '结果' : lang === 'ja' ? '成果' : 'Outcome',
   bestFor: lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for',
   useWhen: lang === 'zh' ? '适用时机' : lang === 'ja' ? '使いどき' : 'Use when',
-  playbookSnapshot: lang === 'zh' ? '指南速览' : lang === 'ja' ? 'プレイブック概要' : 'Playbook snapshot',
-  morePlaybooks: lang === 'zh' ? '更多指南' : lang === 'ja' ? 'さらに読むプレイブック' : 'More playbooks',
+  playbookSnapshot: isSkill
+    ? (lang === 'zh' ? 'Skill 速览' : lang === 'ja' ? 'スキル概要' : 'Skill snapshot')
+    : (lang === 'zh' ? '指南速览' : lang === 'ja' ? 'プレイブック概要' : 'Playbook snapshot'),
+  morePlaybooks: lang === 'zh' ? '更多内容' : lang === 'ja' ? 'さらに読む' : 'More from this desk',
+  cost: lang === 'zh' ? '成本' : lang === 'ja' ? 'コスト' : 'Cost',
+  timeToLearn: lang === 'zh' ? '上手时间' : lang === 'ja' ? '習得時間' : 'Time to learn',
+  deliverable: lang === 'zh' ? '产出示例' : lang === 'ja' ? '成果物の例' : 'Deliverable',
 } as const;
 ---
 
@@ -52,7 +58,7 @@ const uiText = {
     <div class="container">
       <article class="article-shell fade-in">
         <header class="article-hero playbook-hero">
-          <p class="playbook-tag">{playbook.category || 'Playbook'}</p>
+          <p class="playbook-tag">{isSkill ? `Skill · ${playbook.category || ''}`.replace(/ · $/, '') : (playbook.category || 'Playbook')}</p>
           <h1>{playbook.title}</h1>
           <p class="article-dek">{playbook.snippet}</p>
 
@@ -74,9 +80,18 @@ const uiText = {
               <p class="rail-label">{uiText.playbookSnapshot}</p>
               <ul class="rail-list">
                 <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.playbooks')}</span></li>
-                <li><strong>{lang === 'zh' ? '分类' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{playbook.category || 'Playbook'}</span></li>
+                <li><strong>{lang === 'zh' ? '分类' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{playbook.category || (isSkill ? 'Skill' : 'Playbook')}</span></li>
                 <li><strong>{lang === 'zh' ? '适合谁' : lang === 'ja' ? '対象' : uiText.bestFor}</strong><span>{playbook.bestFor}</span></li>
                 <li><strong>{lang === 'zh' ? '节奏' : lang === 'ja' ? 'タイミング' : uiText.useWhen}</strong><span>{playbook.useWhen}</span></li>
+                {isSkill && playbook.cost && (
+                  <li><strong>{uiText.cost}</strong><span>{playbook.cost}</span></li>
+                )}
+                {isSkill && playbook.timeToLearn && (
+                  <li><strong>{uiText.timeToLearn}</strong><span>{playbook.timeToLearn}</span></li>
+                )}
+                {isSkill && playbook.deliverable && (
+                  <li><strong>{uiText.deliverable}</strong><span>{playbook.deliverable}</span></li>
+                )}
               </ul>
             </div>
             {relatedPlaybooks.length > 0 && (

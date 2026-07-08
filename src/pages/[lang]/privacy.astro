@@ -20,7 +20,7 @@ const content = {
     dek: 'What AiandBusiness.com collects, why, and the choices you have.',
     sections: [
       ['What we collect', 'AiandBusiness.com is a read-only publication. We do not require accounts, and we do not ask for your name, email address, or payment details anywhere on the site. The only personal data processing on this site is web analytics, and it only runs if you consent.'],
-      ['Analytics and consent', 'We use Google Analytics 4 to understand which articles are read. Analytics is disabled by default and only activates after you accept it in the cookie notice. IP addresses are anonymized. You can withdraw consent at any time via "Cookie Settings" in the footer, which also removes existing analytics cookies from your browser.'],
+      ['Analytics and consent', 'We use Google Analytics 4 with Google Consent Mode. Until you accept measurement in the cookie notice, no analytics cookies are set and nothing is stored on your device; the site sends only anonymous, cookieless signals that Google uses to model aggregate traffic (no identifiers, IP addresses anonymized). If you accept, standard analytics cookies are enabled. You can withdraw consent at any time via "Cookie Settings" in the footer, which also removes existing analytics cookies from your browser.'],
       ['Cookies and local storage', 'Apart from analytics cookies (set only after consent), the site stores one value in your browser’s local storage: your cookie-consent choice itself, so we can remember it. No advertising cookies, no tracking pixels, no fingerprinting.'],
       ['Third-party services', 'The site is hosted on Vercel and serves some content from Supabase; both may process technical request data (such as IP addresses in server logs) as part of operating the infrastructure. Articles link to external websites, which have their own privacy practices we do not control.'],
       ['Data retention and sharing', 'We do not sell or share personal data. Analytics data is retained according to our Google Analytics settings and used only in aggregate to understand readership. We have no other databases of visitor information.'],
@@ -33,7 +33,7 @@ const content = {
     dek: '说明 AiandBusiness.com 收集什么、为什么收集，以及你可以做哪些选择。',
     sections: [
       ['我们收集什么', 'AiandBusiness.com 是一个只读的内容网站。全站不需要注册账号，也不会在任何地方要求你提供姓名、邮箱或支付信息。本站唯一涉及个人数据的处理是网站分析，并且只在你同意后才会运行。'],
-      ['分析工具与同意', '我们使用 Google Analytics 4 来了解哪些文章被阅读。分析默认关闭，只有当你在 Cookie 提示中同意后才会启用，并且 IP 地址会被匿名化。你可以随时通过页脚的"隐私设置"撤回同意，撤回时也会清除浏览器中已有的分析 Cookie。'],
+      ['分析工具与同意', '我们使用 Google Analytics 4 并启用了 Google Consent Mode。在你于 Cookie 提示中同意之前，网站不会写入任何分析 Cookie、不在你的设备上存储任何内容，只会发送匿名的无 Cookie 信号，供 Google 对整体流量做聚合建模（不含任何标识符，IP 地址匿名化）。同意后才会启用标准的分析 Cookie。你可以随时通过页脚的"隐私设置"撤回同意，撤回时也会清除浏览器中已有的分析 Cookie。'],
       ['Cookie 与本地存储', '除了（同意后才写入的）分析 Cookie 之外，本站只在浏览器本地存储中保存一个值：你的 Cookie 同意选择本身，以便下次记住你的偏好。没有广告 Cookie，没有追踪像素，没有浏览器指纹。'],
       ['第三方服务', '本站托管在 Vercel 上，部分内容由 Supabase 提供；作为基础设施运行的一部分，它们可能会处理技术性请求数据（例如服务器日志中的 IP 地址）。文章中会链接到外部网站，这些网站有各自的隐私实践，不在我们的控制范围内。'],
       ['数据保留与共享', '我们不出售、不共享个人数据。分析数据按照 Google Analytics 的设置保留，仅以汇总形式用于了解阅读情况。除此之外，我们没有任何访客信息数据库。'],
@@ -46,7 +46,7 @@ const content = {
     dek: 'AiandBusiness.com が何を収集し、なぜ収集するのか、そしてあなたが選べることを説明します。',
     sections: [
       ['収集する情報', 'AiandBusiness.com は閲覧専用のメディアです。アカウント登録は不要で、氏名、メールアドレス、支払い情報をお尋ねすることはありません。本サイトで個人データを扱うのはアクセス解析のみで、同意をいただいた場合にのみ動作します。'],
-      ['アクセス解析と同意', 'どの記事が読まれているかを把握するために Google Analytics 4 を使用しています。解析はデフォルトで無効になっており、Cookie 通知で同意した場合にのみ有効化されます。IP アドレスは匿名化されます。フッターの「Cookie設定」からいつでも同意を撤回でき、その際、既存の解析 Cookie もブラウザから削除されます。'],
+      ['アクセス解析と同意', 'Google Analytics 4 を Google Consent Mode とあわせて使用しています。Cookie 通知で同意いただくまでは、解析 Cookie は一切設定されず、端末に何も保存されません。送信されるのは匿名かつ Cookie を使わないシグナルのみで、Google が全体トラフィックの集計モデリングに利用します（識別子は含まれず、IP アドレスは匿名化されます）。同意後に標準の解析 Cookie が有効になります。フッターの「Cookie設定」からいつでも同意を撤回でき、その際、既存の解析 Cookie もブラウザから削除されます。'],
       ['Cookie とローカルストレージ', '（同意後にのみ設定される）解析 Cookie のほかに、本サイトがブラウザに保存するのは Cookie 同意の選択内容という 1 つの値だけです。広告 Cookie、トラッキングピクセル、フィンガープリンティングは使用していません。'],
       ['第三者サービス', '本サイトは Vercel でホストされ、一部のコンテンツは Supabase から配信されています。インフラ運用の一環として、これらのサービスが技術的なリクエストデータ（サーバーログの IP アドレスなど）を処理する場合があります。記事内の外部リンク先には、それぞれ独自のプライバシー慣行があります。'],
       ['データの保持と共有', '個人データの販売・共有は行いません。解析データは Google Analytics の設定に従って保持され、読者動向の把握のため集計値としてのみ利用します。それ以外に訪問者情報のデータベースはありません。'],

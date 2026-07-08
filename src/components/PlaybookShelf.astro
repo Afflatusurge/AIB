@@ -28,6 +28,9 @@ const localizeCategory = (category?: string) => {
     Media: { en: 'Media', ja: 'メディア', zh: '媒体' },
     Growth: { en: 'Growth', ja: '成長', zh: '增长' },
     Operations: { en: 'Operations', ja: '運営', zh: '运营' },
+    Video: { en: 'Video', ja: '動画', zh: '视频' },
+    Writing: { en: 'Writing', ja: 'ライティング', zh: '写作' },
+    Agents: { en: 'Agents', ja: 'エージェント', zh: '智能体' },
   };
 
   return labels[category]?.[lang as 'en' | 'ja' | 'zh'] ?? category;
@@ -43,15 +46,15 @@ const chipClass = (category?: string) => {
 };
 
 const ui = {
-  tag: lang === 'zh' ? '实战指南' : lang === 'ja' ? 'プレイブック' : 'Playbooks',
+  tag: lang === 'zh' ? '技能与实战' : lang === 'ja' ? 'スキル＆プレイブック' : 'Skills & Playbooks',
   title: lang === 'zh' ? '从想法到落地' : lang === 'ja' ? 'アイデアから実行へ' : 'From idea to execution',
   sub:
     lang === 'zh'
-      ? '真正可执行的分步工作流——写给一个人的团队。'
+      ? '能变成收入的技能，和完整的生意配方——写给一个人的团队。'
       : lang === 'ja'
-        ? '実際に使えるステップ形式のワークフロー。チーム1人のために。'
-        : 'Step-by-step workflows you can actually use — written for a team of one.',
-  all: lang === 'zh' ? '全部指南 →' : lang === 'ja' ? 'すべて見る →' : 'All playbooks →',
+        ? '収入につながるスキルと、ビジネスのレシピ。チーム1人のために。'
+        : 'Monetizable skills and full business recipes — written for a team of one.',
+  all: lang === 'zh' ? '全部技能与指南 →' : lang === 'ja' ? 'すべて見る →' : 'All skills & playbooks →',
   outcome: lang === 'zh' ? '能得到什么' : lang === 'ja' ? '得られる結果' : 'Outcome',
   bestFor: lang === 'zh' ? '适合谁' : lang === 'ja' ? '向いている人' : 'Best for',
   whyNow: lang === 'zh' ? '为什么现在' : lang === 'ja' ? '今読む理由' : 'Why now',

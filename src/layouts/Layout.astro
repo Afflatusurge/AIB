@@ -114,11 +114,41 @@ const isActive = (prefix: string) =>
 		</main>
     <ConsentBanner lang={lang} />
 		<script is:inline define:vars={{ GA_MEASUREMENT_ID }}>
+			// Google Consent Mode v2 (advanced).
+			//
+			// gtag.js loads for everyone, but starts with analytics_storage DENIED:
+			// no cookies are written and only anonymous, cookieless pings are sent,
+			// which GA4 uses for behavioral modeling. When the visitor accepts the
+			// consent banner, we upgrade to granted and full measurement begins.
+			// Ad-related signals stay denied permanently — this site runs no ads.
 			(() => {
 				const storageKey = 'aib-analytics-consent';
 				const measurementId = GA_MEASUREMENT_ID;
-				const scriptSrc = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-				const scriptSelector = `script[src="${scriptSrc}"]`;
+
+				window.dataLayer = window.dataLayer || [];
+				function gtag() { window.dataLayer.push(arguments); }
+				window.gtag = window.gtag || gtag;
+
+				const stored = window.localStorage.getItem(storageKey);
+				const granted = stored === 'yes';
+
+				// Consent defaults MUST be set before the config call.
+				window.gtag('consent', 'default', {
+					ad_storage: 'denied',
+					ad_user_data: 'denied',
+					ad_personalization: 'denied',
+					analytics_storage: granted ? 'granted' : 'denied',
+				});
+				// Preserve attribution through URL instead of cookies while denied.
+				window.gtag('set', 'url_passthrough', true);
+
+				window.gtag('js', new Date());
+				window.gtag('config', measurementId, { anonymize_ip: true });
+
+				const script = document.createElement('script');
+				script.async = true;
+				script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+				document.head.appendChild(script);
 
 				const getCookieNames = () =>
 					document.cookie
@@ -139,49 +169,17 @@ const isActive = (prefix: string) =>
 					document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
 				};
 
-				const disableAnalytics = () => {
-					window[`ga-disable-${measurementId}`] = true;
-					getCookieNames()
-						.filter((name) => name === '_ga' || name.startsWith('_ga_') || name === '_gid' || name.startsWith('_gat'))
-						.forEach(clearCookie);
-				};
-
-				const enableAnalytics = () => {
-					if (window.__aibAnalyticsLoaded) return;
-
-					window[`ga-disable-${measurementId}`] = false;
-					window.dataLayer = window.dataLayer || [];
-					window.gtag = window.gtag || function gtag(){ window.dataLayer.push(arguments); };
-					window.gtag('js', new Date());
-					window.gtag('config', measurementId, {
-						anonymize_ip: true,
-					});
-
-					const existingScript = document.querySelector(scriptSelector);
-					if (!existingScript) {
-						const script = document.createElement('script');
-						script.async = true;
-						script.src = scriptSrc;
-						document.head.appendChild(script);
-					}
-
-					window.__aibAnalyticsLoaded = true;
-				};
-
-				const applyConsent = (analyticsAllowed) => {
-					if (analyticsAllowed) {
-						enableAnalytics();
-						return;
-					}
-
-					disableAnalytics();
-				};
-
-				const existing = window.localStorage.getItem(storageKey);
-				applyConsent(existing === 'yes');
-
 				window.addEventListener('aib:consent-updated', (event) => {
-					applyConsent(!!event.detail?.analytics);
+					const allowed = !!event.detail?.analytics;
+					window.gtag('consent', 'update', {
+						analytics_storage: allowed ? 'granted' : 'denied',
+					});
+					if (!allowed) {
+						// Withdrawn consent: remove any GA cookies set while granted.
+						getCookieNames()
+							.filter((name) => name === '_ga' || name.startsWith('_ga_') || name === '_gid' || name.startsWith('_gat'))
+							.forEach(clearCookie);
+					}
 				});
 			})();
 		</script>

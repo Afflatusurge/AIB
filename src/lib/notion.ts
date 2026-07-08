@@ -437,6 +437,12 @@ export interface Playbook {
   featured?: boolean;
   coverImage?: string;
   status?: string;
+  /** 'skill' = a monetizable capability (workflow + stack + cost + ramp-up); 'playbook' = a business recipe. */
+  kind?: 'skill' | 'playbook';
+  /** Skill-only fields, read from Notion properties (Cost / Time to Learn / Deliverable). */
+  cost?: string;
+  timeToLearn?: string;
+  deliverable?: string;
 }
 
 export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
@@ -500,6 +506,7 @@ export async function getPlaybooks(lang: Lang = 'en'): Promise<Playbook[]> {
       .filter((page: any) => isVisibleEntry(page.properties))
       .map((page: any) => {
         const props = page.properties;
+        const kindRaw = getAnyText(props, ['Kind', 'Content Type', 'Format']);
         return {
           id: page.id,
           title: getAnyText(props, ['Title', 'Name']),
@@ -513,6 +520,10 @@ export async function getPlaybooks(lang: Lang = 'en'): Promise<Playbook[]> {
           featured: getAnyCheckbox(props, ['Featured', 'Lead', 'Homepage']),
           coverImage: getAnyText(props, ['Cover Image', 'Image', 'Thumbnail']),
           status: getStatus(props),
+          kind: (/skill/i.test(kindRaw) ? 'skill' : 'playbook') as 'skill' | 'playbook',
+          cost: getAnyText(props, ['Cost', 'Budget', 'Monthly Cost']),
+          timeToLearn: getAnyText(props, ['Time to Learn', 'Time To Learn', 'Ramp-up', 'Learning Time']),
+          deliverable: getAnyText(props, ['Deliverable', 'Deliverable Example', 'Output Example']),
         };
       })
       .filter((item) => !!(item.title && item.slug && item.snippet));
