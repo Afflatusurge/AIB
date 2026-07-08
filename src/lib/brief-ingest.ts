@@ -13,15 +13,18 @@
 // tests via `curl -H "Authorization: Bearer $CRON_SECRET" …/api/cron/ingest`.
 
 import { generateDailyBriefs, type StructuredBrief } from './openai-brief';
+import { runQualityGate } from './brief-quality';
 import { supabaseAdmin } from './supabase';
 
 export interface IngestReport {
   requested: number;
   generated: number;
+  rejected: number;   // failed the quality gate (vague content, dead URL, dupe title)
   skipped: number;    // returned by the model but already in Supabase (URL match)
   inserted: number;   // newly written
   failed: number;
   errors: Array<{ slug?: string; sourceUrl?: string; message: string }>;
+  rejections: Array<{ title?: string; sourceUrl?: string; reasons: string[] }>;
 }
 
 /**
@@ -34,10 +37,12 @@ export async function runIngest(opts: { max?: number } = {}): Promise<IngestRepo
   const report: IngestReport = {
     requested: target,
     generated: 0,
+    rejected: 0,
     skipped: 0,
     inserted: 0,
     failed: 0,
     errors: [],
+    rejections: [],
   };
 
   const db = supabaseAdmin();
@@ -79,8 +84,27 @@ export async function runIngest(opts: { max?: number } = {}): Promise<IngestRepo
     excludeUrls,
     excludeTitles,
   });
-  const briefs = generatedBriefs.filter(isAcceptableBrief);
-  report.generated = briefs.length;
+  const structurallyValid = generatedBriefs.filter(isAcceptableBrief);
+  report.generated = structurallyValid.length;
+
+  // Quality gate: verifiable entities, live source URLs, cross-day title
+  // dedupe. Publishing fewer briefs beats publishing hollow ones — anything
+  // that fails is dropped and logged, never "fixed up".
+  const gated = await runQualityGate(structurallyValid, excludeTitles);
+  const briefs: StructuredBrief[] = [];
+  for (const g of gated) {
+    if (g.ok) {
+      briefs.push(g.brief);
+    } else {
+      report.rejected++;
+      report.rejections.push({
+        title: g.brief.en?.title,
+        sourceUrl: g.brief.source_url,
+        reasons: g.reasons,
+      });
+      console.warn('[ingest] quality gate rejected', g.brief.en?.title, g.reasons);
+    }
+  }
   if (briefs.length === 0) return report;
 
   // Secondary dedupe by source_url (model can still overlap with our list).

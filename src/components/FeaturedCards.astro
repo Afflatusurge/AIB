@@ -50,7 +50,7 @@ const recentReads = [
 const ui = {
   tag: lang === 'zh' ? '值得你花时间' : lang === 'ja' ? '読む価値あり' : 'Worth your time',
   title: lang === 'zh' ? '本周深度内容' : lang === 'ja' ? '今週のディープダイブ' : "This week's deep dives",
-  library: lang === 'zh' ? '进入资料库 →' : lang === 'ja' ? 'ライブラリへ →' : 'Visit the library →',
+  library: lang === 'zh' ? '看全部评测 →' : lang === 'ja' ? 'レビュー一覧へ →' : 'All reviews →',
   leadKicker: lang === 'zh' ? '主打 · 工具评测' : lang === 'ja' ? 'リード · ツールレビュー' : 'Lead story · Tool review',
   leadFallbackTitle:
     lang === 'zh'
@@ -89,7 +89,7 @@ const ui = {
         <span class="sec-tag tag-yellow">{ui.tag}</span>
         <h2 class="sec-title">{ui.title}</h2>
       </div>
-      <a href="https://docs.aiandbusiness.com/" target="_blank" rel="noopener noreferrer" class="sec-link">{ui.library}</a>
+      <a href={`/${lang}/tools/`} class="sec-link">{ui.library}</a>
     </div>
 
     <div class="feat-grid">

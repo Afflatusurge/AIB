@@ -10,25 +10,27 @@ const { lang } = Astro.props;
     <div class="newsletter animate-in">
       <div class="newsletter-copy">
         <p class="newsletter-kicker">
-          {lang === 'zh' ? '订阅' : lang === 'ja' ? 'ニュースレター' : 'NEWSLETTER'}
+          {lang === 'zh' ? '每日简报' : lang === 'ja' ? 'デイリーブリーフ' : 'DAILY BRIEF'}
         </p>
         <h2>
           {lang === 'zh' ? '获取真正重要的信息' : lang === 'ja' ? '重要な情報だけを受け取る' : 'Get the signal, not the noise'}
         </h2>
         <p class="sub">
-          {lang === 'zh' ? 'AI、工具与商业趋势的精简总结。' : lang === 'ja' ? 'AI、ツール、ビジネス動向を簡潔にまとめて届けます。' : 'A concise briefing on AI, tools, and business impact.'}
+          {lang === 'zh' ? 'AI、工具与商业趋势的精简总结，每天更新。' : lang === 'ja' ? 'AI、ツール、ビジネス動向を毎日簡潔にまとめています。' : 'A concise briefing on AI, tools, and business impact — updated every day.'}
         </p>
       </div>
-      <form class="newsletter-form" onsubmit="return false;">
-        <input type="email" placeholder={lang === 'zh' ? '输入邮箱，接收每日简报' : lang === 'ja' ? 'メールアドレスを入力' : 'Enter your email for the daily brief'} />
-        <button class="btn-primary" type="submit">
-          {lang === 'zh' ? '订阅' : lang === 'ja' ? '登録する' : 'Subscribe'}
-        </button>
-      </form>
+      <div class="newsletter-form">
+        <a class="btn-primary" href={`/${lang}/daily/`}>
+          {lang === 'zh' ? '看今日简报' : lang === 'ja' ? '今日のブリーフを読む' : "Read today's brief"}
+        </a>
+        <a class="btn-secondary" href="/rss.xml">
+          {lang === 'zh' ? '通过 RSS 关注' : lang === 'ja' ? 'RSSでフォロー' : 'Follow via RSS'}
+        </a>
+      </div>
       <div class="newsletter-features">
         <div class="newsletter-feature">
           <span class="check">01</span>
-          {lang === 'zh' ? '每天一封精简总结' : lang === 'ja' ? '毎日、簡潔なまとめを1通' : 'One concise briefing each day'}
+          {lang === 'zh' ? '每天一次精简总结' : lang === 'ja' ? '毎日、簡潔なまとめを1本' : 'One concise briefing each day'}
         </div>
         <div class="newsletter-feature">
           <span class="check">02</span>
@@ -96,20 +98,27 @@ const { lang } = Astro.props;
     align-content: start;
     position: relative;
   }
-  .newsletter-form input {
-    flex: 1;
-    padding: 14px 20px;
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    padding: 14px 22px;
     background: rgba(255,255,255,0.52);
-    border: 1px solid var(--border-subtle);
-    border-radius: 999px;
     color: var(--text-primary);
-    font-size: 14px;
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 999px;
+    text-decoration: none;
+    border: 1px solid var(--border-subtle);
+    transition: all 0.3s;
     font-family: var(--font-sans);
-    outline: none;
-    transition: border-color 0.2s;
+    white-space: nowrap;
   }
-  .newsletter-form input:focus { border-color: var(--border-hover); }
-  .newsletter-form input::placeholder { color: var(--text-muted); }
+  .btn-secondary:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+  }
   .btn-primary {
     display: inline-flex;
     align-items: center;

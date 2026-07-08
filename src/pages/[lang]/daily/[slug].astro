@@ -75,7 +75,7 @@ const recommendationIntro = lang === 'zh'
     : 'Move from this signal into adjacent updates worth your attention.';
 ---
 
-<Layout title={`${brief.title} - ${t('site.name')}`}>
+<Layout title={`${brief.title} - ${t('site.name')}`} description={brief.snippet || brief.whyItMatters || undefined}>
   <section class="page-section">
     <div class="container">
       <article class="article-shell fade-in">

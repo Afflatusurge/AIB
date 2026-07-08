@@ -90,7 +90,7 @@ const recommendationIntro = lang === 'zh'
     : 'Keep going through adjacent tools, workflow fits, and real operator use cases.';
 ---
 
-<Layout title={`${tool.title} - ${t('site.name')}`}>
+<Layout title={`${tool.title} - ${t('site.name')}`} description={tool.snippet || undefined}>
   <section class="page-section">
     <div class="container">
       <article class="article-shell fade-in">

@@ -15,8 +15,7 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const keywordContent = Array.isArray(keywords) ? keywords.join(', ') : keywords;
 const GA_MEASUREMENT_ID = 'G-KRMNDMBYMK';
-const docsLabel = lang === 'zh' ? '资料库' : lang === 'ja' ? 'ライブラリ' : 'Library';
-const ctaLabel = lang === 'zh' ? '看今日简报' : lang === 'ja' ? 'ブリーフを読む' : 'Get the brief';
+const ctaLabel = lang === 'zh' ? '看今日简报' : lang === 'ja' ? 'ブリーフを読む' : "Read today's brief";
 const currentLanguageLabel = lang === 'zh' ? '中文' : lang === 'ja' ? '日本語' : 'EN';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -95,14 +94,6 @@ const isActive = (prefix: string) =>
                 </a>
             </nav>
             <div class="nav-right">
-              <a
-                href="https://docs.aiandbusiness.com/"
-                class="nav-lib"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {docsLabel} <span aria-hidden="true">↗</span>
-              </a>
               <details class="lang-wrap" aria-label="Language switcher">
                 <summary class="lang-btn">
                   <span aria-hidden="true">🌐</span>
@@ -110,9 +101,9 @@ const isActive = (prefix: string) =>
                   <span class="caret" aria-hidden="true">▾</span>
                 </summary>
                 <div class="lang-menu">
-                  <a href={`/en${pathWithoutLang ? '/' + pathWithoutLang : '/'}`} class={`lang-opt ${lang === 'en' ? 'selected' : ''}`}>English <span class="check">✓</span></a>
-                  <a href={`/zh${pathWithoutLang ? '/' + pathWithoutLang : '/'}`} class={`lang-opt ${lang === 'zh' ? 'selected' : ''}`}>中文 <span class="check">✓</span></a>
-                  <a href={`/ja${pathWithoutLang ? '/' + pathWithoutLang : '/'}`} class={`lang-opt ${lang === 'ja' ? 'selected' : ''}`}>日本語 <span class="check">✓</span></a>
+                  <a href={`/en${pathWithoutLang ? '/' + pathWithoutLang : '/'}`} class={`lang-opt ${lang === 'en' ? 'selected' : ''}`}>English {lang === 'en' && <span class="check">✓</span>}</a>
+                  <a href={`/zh${pathWithoutLang ? '/' + pathWithoutLang : '/'}`} class={`lang-opt ${lang === 'zh' ? 'selected' : ''}`}>中文 {lang === 'zh' && <span class="check">✓</span>}</a>
+                  <a href={`/ja${pathWithoutLang ? '/' + pathWithoutLang : '/'}`} class={`lang-opt ${lang === 'ja' ? 'selected' : ''}`}>日本語 {lang === 'ja' && <span class="check">✓</span>}</a>
                 </div>
               </details>
               <a href={`/${lang}/daily/`} class="nav-cta">{ctaLabel}</a>

@@ -69,6 +69,9 @@ Use the web search tool to find the most important AI / AI-business news from th
 
 RULES
 - Every item MUST have a real URL returned by the web search. Never fabricate URLs, titles, numbers, or quotes.
+- Every item MUST name at least one specific company, product, or model (e.g. "OpenAI", "Claude", "Cursor") in its title, and its summary MUST contain at least one concrete fact (a price, a number, a version, a date, a named feature).
+- NEVER write roundup-style or generic headlines such as "Major AI Tool Providers Announce Pricing Changes" or "Recent AI Research Offers Practical Solutions". One story = one named actor + one concrete event.
+- If you cannot find enough qualifying stories, return FEWER items. An empty or short list is a valid, correct answer; padded generic items are not.
 - Do not include template company names or placeholder entities such as XYZ, ABC, DEF, MNO, or JKL.
 - Prefer primary sources (company blog, official announcement) over aggregators, and reputable press (Bloomberg, Reuters, Ars Technica, The Information, The Verge) over low-quality blogs.
 - If you cannot find a credible source for a story, drop it.
@@ -286,6 +289,7 @@ EDITORIAL VOICE
 - No emojis. No "stay tuned". No "exciting". No filler lead-ins.
 - Do not invent facts, company names, numbers, or features that aren't supported by the provided summary.
 - Never use placeholder company names such as XYZ, ABC, DEF, MNO, or JKL.
+- Keep the specific named entities (company, product, model, price, number) from the source item in the title and body. Never generalize "OpenAI cuts GPT-4.1 price 30%" into "AI providers adjust pricing". If an item's summary contains no specific entity at all, SKIP that item entirely instead of writing around the gap.
 
 FIELDS (per brief)
 - source_url:   exactly the url provided.

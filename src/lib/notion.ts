@@ -413,6 +413,8 @@ export interface CaseStudy {
   slug: string;
   date: string;
   tags: string;
+  sourceUrl?: string;
+  sourceName?: string;
   problem?: string;
   problemType?: string;
   applicableTo?: string;
@@ -460,6 +462,8 @@ export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
         slug: getAnyText(props, ['Slug']),
         date: getAnyText(props, ['Publish Date', 'Date']),
         tags: getAnyText(props, ['AI Tools Used', 'Tags', 'Stack']),
+        sourceUrl: getAnyText(props, ['Source URL', 'Source Link', 'Original URL', 'Reference URL']),
+        sourceName: getAnyText(props, ['Source Name', 'Source']),
         problem: getAnyText(props, ['Problem', 'Core Problem']),
         problemType: getAnyText(props, ['Problem Type', 'Problem type']),
         applicableTo: getAnyText(props, ['Applicable To', 'Applicable to', 'Best For', 'Audience']),

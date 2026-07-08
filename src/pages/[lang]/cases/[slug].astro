@@ -87,9 +87,30 @@ const recommendationIntro = lang === 'zh'
   : lang === 'ja'
     ? '課題タイプ、成果、再現可能な学びで読み進められます。'
     : 'Continue by following adjacent problem types, outcomes, and reusable lessons.';
+
+// Source & verification disclosure. If the case has a Source URL in Notion we
+// link it; otherwise we state plainly that figures are self-reported. Numbers
+// without provenance read as fabricated — being explicit protects trust.
+const caseSourceUrl = (cs.sourceUrl || '').trim();
+let caseSourceHost = '';
+try {
+  caseSourceHost = caseSourceUrl ? new URL(caseSourceUrl).hostname.replace(/^www\./, '') : '';
+} catch { caseSourceHost = ''; }
+const sourceLabel = lang === 'zh' ? '来源与核实' : lang === 'ja' ? '出典と検証' : 'Source & verification';
+const sourceLinkText = cs.sourceName || caseSourceHost || (lang === 'zh' ? '查看原始来源 →' : lang === 'ja' ? '元の情報を見る →' : 'View original source →');
+const sourcedText = lang === 'zh'
+  ? '本案例中的数据来自以下来源，具体数字以当事人披露为准：'
+  : lang === 'ja'
+    ? '本ケースの数値は以下の情報源に基づいています。詳細は本人の開示によります：'
+    : 'Figures in this case are drawn from the source below, as disclosed by the operator:';
+const disclosureText = lang === 'zh'
+  ? '本案例基于公开报道、访谈或当事人自述整理，文中数据为当事人自报，未经我们独立核实。请把重点放在可复制的做法上，而不是具体数字。'
+  : lang === 'ja'
+    ? '本ケースは公開情報・インタビュー・本人の発信をもとに構成しています。数値は本人申告であり、当サイトによる独立した検証は行っていません。金額そのものより、再現できるやり方に注目してください。'
+    : 'This case is compiled from public accounts, interviews, or the operator’s own reporting. Figures are self-reported and have not been independently verified by us. Focus on the reusable moves, not the exact numbers.';
 ---
 
-<Layout title={`${cs.title} - ${t('site.name')}`}>
+<Layout title={`${cs.title} - ${t('site.name')}`} description={cs.snippet || undefined}>
   <section class="page-section">
     <div class="container">
       <article class="article-shell fade-in">
@@ -166,6 +187,17 @@ const recommendationIntro = lang === 'zh'
             <div class="article-body">
               {processedBodyHtml && <Fragment set:html={processedBodyHtml} />}
             </div>
+            <aside class="case-source-note">
+              <p class="case-source-label">{sourceLabel}</p>
+              {caseSourceUrl ? (
+                <p>
+                  {sourcedText}{' '}
+                  <a href={caseSourceUrl} target="_blank" rel="noopener noreferrer">{sourceLinkText}</a>
+                </p>
+              ) : (
+                <p>{disclosureText}</p>
+              )}
+            </aside>
           </div>
         </div>
 
@@ -221,3 +253,30 @@ const recommendationIntro = lang === 'zh'
   </section>
   <Footer lang={lang} />
 </Layout>
+
+<style>
+  .case-source-note {
+    margin-top: 32px;
+    padding: 18px 22px;
+    border: 1.5px dashed var(--ink, #201b18);
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--ink-2, #5c534d);
+    background: var(--paper-2, rgba(0, 0, 0, 0.03));
+  }
+  .case-source-label {
+    font-family: var(--display, inherit);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--ink, #201b18);
+  }
+  .case-source-note a {
+    font-weight: 600;
+    text-decoration: underline;
+    color: var(--ink, #201b18);
+  }
+</style>

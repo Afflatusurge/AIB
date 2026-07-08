@@ -1,0 +1,112 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Footer from '../../components/Footer.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'ja' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const content = {
+  en: {
+    title: 'Privacy Policy',
+    dek: 'What AiandBusiness.com collects, why, and the choices you have.',
+    sections: [
+      ['What we collect', 'AiandBusiness.com is a read-only publication. We do not require accounts, and we do not ask for your name, email address, or payment details anywhere on the site. The only personal data processing on this site is web analytics, and it only runs if you consent.'],
+      ['Analytics and consent', 'We use Google Analytics 4 to understand which articles are read. Analytics is disabled by default and only activates after you accept it in the cookie notice. IP addresses are anonymized. You can withdraw consent at any time via "Cookie Settings" in the footer, which also removes existing analytics cookies from your browser.'],
+      ['Cookies and local storage', 'Apart from analytics cookies (set only after consent), the site stores one value in your browser’s local storage: your cookie-consent choice itself, so we can remember it. No advertising cookies, no tracking pixels, no fingerprinting.'],
+      ['Third-party services', 'The site is hosted on Vercel and serves some content from Supabase; both may process technical request data (such as IP addresses in server logs) as part of operating the infrastructure. Articles link to external websites, which have their own privacy practices we do not control.'],
+      ['Data retention and sharing', 'We do not sell or share personal data. Analytics data is retained according to our Google Analytics settings and used only in aggregate to understand readership. We have no other databases of visitor information.'],
+      ['Your rights', 'Depending on where you live, you may have rights to access, correct, or delete personal data. Since we hold no directly identifying data about readers, most requests are resolved by declining analytics consent or clearing your browser storage. For anything else, contact us and we will help.'],
+    ],
+    closing: 'We may update this policy as the site evolves; material changes will be reflected on this page.',
+  },
+  zh: {
+    title: '隐私政策',
+    dek: '说明 AiandBusiness.com 收集什么、为什么收集，以及你可以做哪些选择。',
+    sections: [
+      ['我们收集什么', 'AiandBusiness.com 是一个只读的内容网站。全站不需要注册账号，也不会在任何地方要求你提供姓名、邮箱或支付信息。本站唯一涉及个人数据的处理是网站分析，并且只在你同意后才会运行。'],
+      ['分析工具与同意', '我们使用 Google Analytics 4 来了解哪些文章被阅读。分析默认关闭，只有当你在 Cookie 提示中同意后才会启用，并且 IP 地址会被匿名化。你可以随时通过页脚的"隐私设置"撤回同意，撤回时也会清除浏览器中已有的分析 Cookie。'],
+      ['Cookie 与本地存储', '除了（同意后才写入的）分析 Cookie 之外，本站只在浏览器本地存储中保存一个值：你的 Cookie 同意选择本身，以便下次记住你的偏好。没有广告 Cookie，没有追踪像素，没有浏览器指纹。'],
+      ['第三方服务', '本站托管在 Vercel 上，部分内容由 Supabase 提供；作为基础设施运行的一部分，它们可能会处理技术性请求数据（例如服务器日志中的 IP 地址）。文章中会链接到外部网站，这些网站有各自的隐私实践，不在我们的控制范围内。'],
+      ['数据保留与共享', '我们不出售、不共享个人数据。分析数据按照 Google Analytics 的设置保留，仅以汇总形式用于了解阅读情况。除此之外，我们没有任何访客信息数据库。'],
+      ['你的权利', '根据你所在的地区，你可能拥有访问、更正或删除个人数据的权利。由于我们不持有可直接识别读者身份的数据，大多数情况通过拒绝分析同意或清除浏览器存储即可解决。如有其他需求，欢迎联系我们。'],
+    ],
+    closing: '随着网站的发展，本政策可能会更新；重要变更会在本页面体现。',
+  },
+  ja: {
+    title: 'プライバシーポリシー',
+    dek: 'AiandBusiness.com が何を収集し、なぜ収集するのか、そしてあなたが選べることを説明します。',
+    sections: [
+      ['収集する情報', 'AiandBusiness.com は閲覧専用のメディアです。アカウント登録は不要で、氏名、メールアドレス、支払い情報をお尋ねすることはありません。本サイトで個人データを扱うのはアクセス解析のみで、同意をいただいた場合にのみ動作します。'],
+      ['アクセス解析と同意', 'どの記事が読まれているかを把握するために Google Analytics 4 を使用しています。解析はデフォルトで無効になっており、Cookie 通知で同意した場合にのみ有効化されます。IP アドレスは匿名化されます。フッターの「Cookie設定」からいつでも同意を撤回でき、その際、既存の解析 Cookie もブラウザから削除されます。'],
+      ['Cookie とローカルストレージ', '（同意後にのみ設定される）解析 Cookie のほかに、本サイトがブラウザに保存するのは Cookie 同意の選択内容という 1 つの値だけです。広告 Cookie、トラッキングピクセル、フィンガープリンティングは使用していません。'],
+      ['第三者サービス', '本サイトは Vercel でホストされ、一部のコンテンツは Supabase から配信されています。インフラ運用の一環として、これらのサービスが技術的なリクエストデータ（サーバーログの IP アドレスなど）を処理する場合があります。記事内の外部リンク先には、それぞれ独自のプライバシー慣行があります。'],
+      ['データの保持と共有', '個人データの販売・共有は行いません。解析データは Google Analytics の設定に従って保持され、読者動向の把握のため集計値としてのみ利用します。それ以外に訪問者情報のデータベースはありません。'],
+      ['あなたの権利', 'お住まいの地域によっては、個人データへのアクセス、訂正、削除を求める権利があります。当サイトは読者を直接特定できるデータを保持していないため、多くの場合は解析への同意を拒否するか、ブラウザのストレージを削除することで解決できます。その他のご要望はお問い合わせください。'],
+    ],
+    closing: 'サイトの発展に伴い本ポリシーは更新されることがあります。重要な変更は本ページに反映します。',
+  },
+} as const;
+
+const c = content[lang as keyof typeof content] || content.en;
+---
+
+<Layout title={`${c.title} - ${t('site.name')}`} description={c.dek}>
+  <section class="page-section legal-page">
+    <div class="container">
+      <div class="page-header fade-in">
+        <p class="section-kicker">Legal</p>
+        <h1>{c.title}</h1>
+        <p>{c.dek}</p>
+      </div>
+
+      <article class="legal-shell fade-in">
+        {c.sections.map(([heading, body]) => (
+          <section class="legal-section">
+            <h2>{heading}</h2>
+            <p>{body}</p>
+          </section>
+        ))}
+        <p class="legal-closing">{c.closing}</p>
+      </article>
+    </div>
+  </section>
+  <Footer lang={lang} />
+</Layout>
+
+<style>
+  .legal-shell {
+    max-width: 900px;
+    display: grid;
+    gap: 24px;
+  }
+  .legal-section {
+    padding-top: 22px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .legal-section h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 3vw, 2.8rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .legal-section p,
+  .legal-closing {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.85;
+    max-width: 54rem;
+  }
+  .legal-closing {
+    margin-top: 8px;
+  }
+</style>

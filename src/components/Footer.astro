@@ -11,9 +11,10 @@ const labels = {
   tools: lang === 'zh' ? '工具评测' : lang === 'ja' ? 'ツールレビュー' : 'Tool Reviews',
   playbooks: lang === 'zh' ? '实战指南' : lang === 'ja' ? 'プレイブック' : 'Playbooks',
   cases: lang === 'zh' ? '案例分析' : lang === 'ja' ? 'ケーススタディ' : 'Case Studies',
-  library: lang === 'zh' ? '资料库' : lang === 'ja' ? 'ライブラリ' : 'Library',
+  library: lang === 'zh' ? '资料库（存档）' : lang === 'ja' ? 'ライブラリ（アーカイブ）' : 'Library (archive)',
   about: lang === 'zh' ? '关于' : lang === 'ja' ? 'About' : 'About',
   terms: lang === 'zh' ? '服务条款' : lang === 'ja' ? '利用規約' : 'Terms of Service',
+  privacy: lang === 'zh' ? '隐私政策' : lang === 'ja' ? 'プライバシーポリシー' : 'Privacy Policy',
   cookies: lang === 'zh' ? '隐私设置' : lang === 'ja' ? 'Cookie設定' : 'Cookie Settings',
   tagline:
     lang === 'zh'
@@ -53,6 +54,7 @@ const labels = {
             <a href="https://docs.aiandbusiness.com/" target="_blank" rel="noopener noreferrer">{labels.library}</a>
             <a href={`/${lang}/about/`}>{labels.about}</a>
             <a href={`/${lang}/terms/`}>{labels.terms}</a>
+            <a href={`/${lang}/privacy/`}>{labels.privacy}</a>
             <button type="button" class="foot-link-button" data-open-consent>{labels.cookies}</button>
           </div>
         </div>
@@ -62,6 +64,7 @@ const labels = {
       <span class="foot-copy">© {new Date().getFullYear()} AIandBusiness.com · {labels.copy}</span>
       <div class="foot-legal">
         <a href={`/${lang}/terms/`}>{labels.terms}</a>
+        <a href={`/${lang}/privacy/`}>{labels.privacy}</a>
       </div>
     </div>
   </div>
