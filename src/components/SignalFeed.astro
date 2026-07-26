@@ -7,6 +7,7 @@ interface Brief {
   category: string;
   impact: string;
   date: string;
+  sourcePublishedDate?: string;
   whyItMatters?: string;
 }
 
@@ -19,11 +20,24 @@ interface Props {
 const { lang, briefs } = Astro.props;
 const editorialTimeZone = 'America/Los_Angeles';
 const editorialLocale = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-US';
+const latestEditionDate = briefs[0]?.sourcePublishedDate || briefs[0]?.date || '';
+const parsedEditionDate = latestEditionDate ? new Date(`${latestEditionDate}T12:00:00Z`) : new Date();
 const editionDay = new Intl.DateTimeFormat(editorialLocale, {
   timeZone: editorialTimeZone,
   month: 'short',
   day: 'numeric',
-}).format(new Date());
+}).format(parsedEditionDate);
+const todayParts = new Intl.DateTimeFormat('en-US', {
+  timeZone: editorialTimeZone,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).formatToParts(new Date());
+const todayPart = (type: string) => todayParts.find((part) => part.type === type)?.value || '';
+const todayKey = `${todayPart('year')}-${todayPart('month')}-${todayPart('day')}`;
+const editionPrefix = latestEditionDate === todayKey
+  ? (lang === 'zh' ? '今日' : lang === 'ja' ? '本日' : 'Today')
+  : (lang === 'zh' ? '最近一期' : lang === 'ja' ? '最新号' : 'Latest');
 
 const categoryClass: Record<string, string> = {
   'LLM': 'llm',
@@ -36,7 +50,7 @@ const categoryClass: Record<string, string> = {
 };
 
 const ui = {
-  tag: lang === 'zh' ? `今日 · ${editionDay}` : lang === 'ja' ? `本日 · ${editionDay}` : `Today · ${editionDay}`,
+  tag: `${editionPrefix} · ${editionDay}`,
   title: lang === 'zh' ? '只看信号，不看噪音。' : lang === 'ja' ? 'シグナルだけ。ノイズは無し。' : 'Signal, not noise.',
   sub:
     lang === 'zh'
@@ -54,7 +68,7 @@ const ui = {
   <div class="container">
     <div class="sec-head">
       <div>
-        <span class="sec-tag band-tag">{ui.tag}</span>
+        <span class="sec-tag band-tag" data-live-edition-tag>{ui.tag}</span>
         <h2 class="sec-title band-title">{ui.title}</h2>
         <p class="sec-sub band-sub">{ui.sub}</p>
       </div>

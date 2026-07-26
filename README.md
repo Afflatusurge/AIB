@@ -13,6 +13,8 @@ Astro front end for the new `aiandbusiness.com`, with Notion as CMS, Vercel depl
 npm install
 npm run dev
 npm run build
+npm run test:news
+npm run check:types
 npm run preview
 ```
 
@@ -41,6 +43,40 @@ NOTION_DB_PLAYBOOKS_ZH=
 ```
 
 If Notion is unavailable during build, the site falls back to mock data so the front end can still render.
+
+## Daily Brief 3.0
+
+Daily Brief is stored in Supabase and now has two server-side ingestion paths:
+
+- `/api/cron/ingest`: once-daily broad discovery, capped at three qualified stories.
+- `/api/cron/releases`: Watchlist monitor, scheduled by `vercel.json` every six hours.
+
+Both paths require `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+`OPENAI_API_KEY`, and `CRON_SECRET`. Public brief reads additionally require
+`SUPABASE_PUBLISHABLE_KEY`. Cron endpoints fail closed when `CRON_SECRET` is
+missing.
+
+Before deploying this code, apply the migrations in order:
+
+```text
+supabase/migrations/202607260001_news_pipeline.sql
+supabase/migrations/202607260002_news_pipeline_privileges.sql
+supabase/migrations/202607260003_mark_legacy_briefs_unverified.sql
+```
+
+Then run the legacy-content audit in dry-run mode:
+
+```bash
+npm run audit:briefs
+```
+
+Review its output before using `npm run audit:briefs -- --apply`, which moves
+flagged published rows back to draft without deleting them.
+
+The source and Watchlist policy lives in `src/config/news-sources.ts`. RSS,
+official sitemaps/pages, and official-domain search fallbacks all normalize
+into the same candidate pipeline. A source can be paused operationally by
+setting its `news_sources.enabled` row to `false`.
 
 ## Recommended Notion properties
 

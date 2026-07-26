@@ -11,20 +11,7 @@
 // and Atom (<entry>).
 
 import type { DiscoveredItem } from './openai-brief';
-
-interface Feed {
-  url: string;
-  source: string;
-}
-
-const FEEDS: Feed[] = [
-  { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', source: 'TechCrunch' },
-  { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', source: 'The Verge' },
-  { url: 'https://venturebeat.com/category/ai/feed/', source: 'VentureBeat' },
-  { url: 'https://openai.com/blog/rss.xml', source: 'OpenAI' },
-  { url: 'https://www.anthropic.com/rss.xml', source: 'Anthropic' },
-  { url: 'https://blog.google/technology/ai/rss/', source: 'Google' },
-];
+import { listDiscoveryFeeds } from '../config/news-sources';
 
 export interface RssDiscoverOptions {
   excludeUrls?: string[];
@@ -71,7 +58,7 @@ function extractLink(block: string): string {
   return candidate;
 }
 
-interface ParsedItem {
+export interface ParsedItem {
   title: string;
   url: string;
   publishedAt: Date | null;
@@ -89,7 +76,9 @@ export function parseFeed(xml: string): ParsedItem[] {
   for (const block of blocks) {
     const title = stripHtml(firstTag(block, ['title']));
     const url = extractLink(block);
-    const dateRaw = firstTag(block, ['pubDate', 'published', 'updated', 'dc:date']);
+    // `updated` is not a publication timestamp. If a feed does not expose
+    // pubDate/published/dc:date, strict-date policy drops the item.
+    const dateRaw = firstTag(block, ['pubDate', 'published', 'dc:date']);
     const date = dateRaw ? new Date(decodeEntities(dateRaw)) : null;
     const summaryRaw = firstTag(block, ['description', 'summary', 'content:encoded', 'content']);
     if (!title || !url) continue;
@@ -105,22 +94,53 @@ export function parseFeed(xml: string): ParsedItem[] {
 
 // ── Fetch + merge ────────────────────────────────────────────
 
-async function fetchFeed(feed: Feed, timeoutMs: number): Promise<ParsedItem[]> {
+export async function fetchFeedUrl(
+  feedUrl: string,
+  timeoutMs = 8000,
+  conditionalHeaders: { etag?: string; lastModified?: string } = {}
+): Promise<{
+  items: ParsedItem[];
+  notModified: boolean;
+  etag?: string;
+  lastModified?: string;
+  error?: string;
+}> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const resp = await fetch(feed.url, {
+    const resp = await fetch(feedUrl, {
       signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; AIandBusinessBot/1.0; +https://aiandbusiness.com)',
         Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8',
+        ...(conditionalHeaders.etag ? { 'If-None-Match': conditionalHeaders.etag } : {}),
+        ...(conditionalHeaders.lastModified ? { 'If-Modified-Since': conditionalHeaders.lastModified } : {}),
       },
       redirect: 'follow',
     });
-    if (!resp.ok) return [];
-    return parseFeed(await resp.text());
-  } catch {
-    return []; // a dead feed never blocks the run
+    if (resp.status === 304) {
+      return {
+        items: [],
+        notModified: true,
+        etag: conditionalHeaders.etag,
+        lastModified: conditionalHeaders.lastModified,
+      };
+    }
+    if (!resp.ok) {
+      return { items: [], notModified: false, error: `HTTP ${resp.status}` };
+    }
+    return {
+      items: parseFeed(await resp.text()),
+      notModified: false,
+      etag: resp.headers.get('etag') || undefined,
+      lastModified: resp.headers.get('last-modified') || undefined,
+    };
+  } catch (err: any) {
+    return {
+      items: [],
+      notModified: false,
+      error: String(err?.message || err),
+    }; // a dead feed never blocks the broader discovery run
   } finally {
     clearTimeout(timer);
   }
@@ -151,21 +171,27 @@ export async function discoverFromRss(opts: RssDiscoverOptions = {}): Promise<Di
   const exclude = new Set((opts.excludeUrls || []).map(normalizeUrl));
   const now = Date.now();
 
-  const results = await Promise.allSettled(FEEDS.map((f) => fetchFeed(f, timeoutMs)));
+  const feeds = listDiscoveryFeeds();
+  const results = await Promise.allSettled(
+    feeds.map((source) => fetchFeedUrl(source.feedUrl!, timeoutMs))
+  );
 
   // Per-feed: fresh, not already covered, newest first.
   const perFeed: DiscoveredItem[][] = results.map((r, i) => {
     if (r.status !== 'fulfilled') return [];
-    return r.value
+    return r.value.items
       .filter((item) => item.publishedAt && now - item.publishedAt.getTime() <= maxAgeMs)
       .filter((item) => !exclude.has(normalizeUrl(item.url)))
       .sort((a, b) => (b.publishedAt!.getTime() - a.publishedAt!.getTime()))
       .map((item) => ({
         url: item.url,
         title: item.title,
-        source_name: FEEDS[i].source,
+        source_name: feeds[i].name,
         published_at: item.publishedAt!.toISOString(),
         summary: item.summary || item.title,
+        source_kind: feeds[i].kind,
+        source_reliability: feeds[i].reliability,
+        source_independent: feeds[i].independent,
       }));
   });
 

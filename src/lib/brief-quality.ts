@@ -17,6 +17,7 @@
 //      don't zero out a good run.
 
 import type { StructuredBrief } from './openai-brief';
+import { findNewsSourceByUrl } from '../config/news-sources';
 
 export interface QualityVerdict {
   ok: boolean;
@@ -122,6 +123,22 @@ export function checkBriefContent(brief: StructuredBrief): QualityVerdict {
 
   if (!isPlausibleSourceUrl(brief.source_url)) {
     reasons.push(`implausible source_url: ${brief.source_url}`);
+  } else {
+    const policy = findNewsSourceByUrl(brief.source_url);
+    if (!policy) {
+      reasons.push('unapproved source domain');
+    } else if (!policy.allowDiscovery || policy.reliability === 'blocked') {
+      reasons.push(`source blocked by policy: ${policy.slug}`);
+    } else if (policy.reliability === 'C' || policy.kind === 'vendor_marketing') {
+      reasons.push(`source requires rejection or manual approval: ${policy.slug}`);
+    }
+  }
+
+  const publishedAt = new Date(brief.published_at);
+  if (Number.isNaN(publishedAt.getTime())) {
+    reasons.push('missing or invalid exact source publication date');
+  } else if (publishedAt.getTime() > Date.now() + 6 * 60 * 60 * 1000) {
+    reasons.push('source publication date is implausibly in the future');
   }
 
   return { ok: reasons.length === 0, reasons };

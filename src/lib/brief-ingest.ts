@@ -16,6 +16,8 @@ import { discoverNews, editBriefs, type StructuredBrief, type DiscoveredItem } f
 import { runQualityGate, verifySourceUrl, isPlausibleSourceUrl } from './brief-quality';
 import { discoverFromRss } from './rss-discover';
 import { supabaseAdmin } from './supabase';
+import { findNewsSourceByUrl } from '../config/news-sources';
+import { load } from 'cheerio';
 
 export interface IngestReport {
   requested: number;
@@ -32,10 +34,10 @@ export interface IngestReport {
 /**
  * Run one autonomous ingest pass.
  *
- * @param opts.max  Target number of briefs (1..12). Default 6.
+ * @param opts.max  Maximum number of briefs (1..12). Default 3.
  */
 export async function runIngest(opts: { max?: number } = {}): Promise<IngestReport> {
-  const target = Math.min(Math.max(opts.max ?? 6, 1), 12);
+  const target = Math.min(Math.max(opts.max ?? 3, 1), 12);
   const report: IngestReport = {
     requested: target,
     generated: 0,
@@ -96,6 +98,17 @@ export async function runIngest(opts: { max?: number } = {}): Promise<IngestRepo
   const verifiedItems: DiscoveredItem[] = [];
   for (const item of llmItems) {
     if (!isPlausibleSourceUrl(item.url)) continue;
+    const policy = findNewsSourceByUrl(item.url);
+    if (
+      !policy ||
+      !policy.allowDiscovery ||
+      policy.reliability === 'blocked' ||
+      policy.reliability === 'C' ||
+      policy.kind === 'vendor_marketing'
+    ) {
+      console.warn('[ingest] dropping discovery item from unapproved source:', item.url);
+      continue;
+    }
     const live = await verifySourceUrl(item.url);
     if (live.ok) {
       verifiedItems.push(item);
@@ -158,7 +171,7 @@ export async function runIngest(opts: { max?: number } = {}): Promise<IngestRepo
       continue;
     }
     try {
-      await upsertBrief(brief);
+      await publishBrief(brief);
       report.inserted++;
       alreadySeen.add(brief.source_url);
     } catch (err: any) {
@@ -184,13 +197,35 @@ function isAcceptableBrief(brief: StructuredBrief): boolean {
   if (Number.isNaN(published.getTime())) return false;
 
   const ageHours = (Date.now() - published.getTime()) / (1000 * 60 * 60);
-  if (ageHours > 72) return false;
+  if (ageHours > 72 || ageHours < -6) return false;
 
   return true;
 }
 
-async function upsertBrief(s: StructuredBrief): Promise<void> {
+function sanitizeBriefHtml(raw: string): string {
+  const $ = load(`<div data-brief-root>${raw || ''}</div>`, null, false);
+  const root = $('[data-brief-root]');
+  root.find('script, style, iframe, object, embed, form, input, button, img, svg').remove();
+  const allowed = new Set([
+    'h2', 'h3', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'blockquote', 'br',
+  ]);
+  root.find('*').each((_, element) => {
+    const tag = String((element as any).tagName || '').toLowerCase();
+    if (!allowed.has(tag)) {
+      $(element).replaceWith($(element).contents());
+      return;
+    }
+    for (const attribute of Object.keys((element as any).attribs || {})) {
+      $(element).removeAttr(attribute);
+    }
+  });
+  return root.html() || '';
+}
+
+export async function publishBrief(s: StructuredBrief): Promise<void> {
   const db = supabaseAdmin();
+  const sourcePolicy = findNewsSourceByUrl(s.source_url);
+  if (!sourcePolicy) throw new Error(`cannot publish unapproved source: ${s.source_url}`);
 
   // Slug collision guard — if another brief already uses this slug, append a
   // short deterministic suffix derived from the URL.
@@ -215,7 +250,24 @@ async function upsertBrief(s: StructuredBrief): Promise<void> {
     impact: s.impact,
     status: 'published' as const,
     featured: false,
-    published_at: s.published_at,
+    published_at: new Date().toISOString(),
+    candidate_id: s.candidate_id || null,
+    content_kind: s.content_kind || 'signal',
+    editorial_status: 'published',
+    source_kind: s.source_kind || sourcePolicy.kind,
+    source_reliability: s.source_reliability || sourcePolicy.reliability,
+    source_independent: s.source_independent ?? sourcePolicy.independent,
+    source_published_at: s.published_at,
+    verified_at: new Date().toISOString(),
+    verification_status: s.verification_status || 'source_verified',
+    confidence: s.confidence ||
+      (sourcePolicy.kind === 'official_release' ? 'official_source' : 'reported'),
+    quality_score: s.quality_score ?? null,
+    editorial_flags: {
+      ...(s.event_type ? { event_type: s.event_type } : {}),
+      ...(s.event_priority ? { event_priority: s.event_priority } : {}),
+      ...(sourcePolicy.kind === 'official_release' ? { vendor_claims_possible: true } : {}),
+    },
   };
 
   const { data: inserted, error } = await db
@@ -232,7 +284,27 @@ async function upsertBrief(s: StructuredBrief): Promise<void> {
     snippet: s[lang].snippet,
     commentary: s[lang].commentary,
     why_it_matters: s[lang].why_it_matters,
-    body_html: s[lang].body_html,
+    body_html: sanitizeBriefHtml(s[lang].body_html),
+    what_happened: s[lang].snippet || null,
+    key_facts: [],
+    action_now: s[lang].why_it_matters || null,
+    watch_next: null,
+    caveat: sourcePolicy.kind === 'official_release'
+      ? (lang === 'zh'
+          ? '发布事实来自官方；性能与基准结论仍属于厂商口径，等待独立测试。'
+          : lang === 'ja'
+            ? 'リリース自体は公式情報で確認済みですが、性能やベンチマークはベンダー側の主張であり、独立検証が必要です。'
+            : 'The release is confirmed by the official source; performance and benchmark claims still require independent testing.')
+      : null,
+    source_note: sourcePolicy.kind === 'official_release'
+      ? (lang === 'zh'
+          ? `官方来源：${s.source_name}`
+          : lang === 'ja'
+            ? `公式情報源：${s.source_name}`
+            : `Official source: ${s.source_name}`)
+      : null,
+    translation_status: 'generated',
+    translation_quality_flags: [],
   })).filter((t) => t.title);
 
   if (translations.length === 0) throw new Error('model returned no translations');

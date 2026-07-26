@@ -26,8 +26,18 @@ export const GET: APIRoute = async ({ url }) => {
       category: b.category,
       impact: b.impact,
       date: b.date,
+      sourcePublishedDate: b.sourcePublishedDate,
       commentary: b.commentary,
+      whyItMatters: b.whyItMatters,
       sourceName: b.sourceName,
+      sourceKind: b.sourceKind,
+      sourceReliability: b.sourceReliability,
+      sourceIndependent: b.sourceIndependent,
+      verificationStatus: b.verificationStatus,
+      confidence: b.confidence,
+      contentKind: b.contentKind,
+      eventType: b.eventType,
+      eventPriority: b.eventPriority,
     }));
     return new Response(JSON.stringify({ ok: true, lang, briefs: payload }), {
       status: 200,

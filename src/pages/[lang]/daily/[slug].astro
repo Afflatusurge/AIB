@@ -54,6 +54,14 @@ const uiText = {
   summary: lang === 'zh' ? '摘要' : lang === 'ja' ? '要約' : 'Summary',
   editorialNote: lang === 'zh' ? '编辑说明' : lang === 'ja' ? '編集コメント' : 'Editorial note',
   source: lang === 'zh' ? '来源' : lang === 'ja' ? '参照元' : 'Source',
+  sourceType: lang === 'zh' ? '来源类型' : lang === 'ja' ? '情報源の種類' : 'Source type',
+  verification: lang === 'zh' ? '核实状态' : lang === 'ja' ? '確認状況' : 'Verification',
+  officialSource: lang === 'zh' ? '官方来源' : lang === 'ja' ? '公式情報源' : 'Official source',
+  release: lang === 'zh' ? '重要更新' : lang === 'ja' ? '重要アップデート' : 'Major update',
+  sourcePublished: lang === 'zh' ? '原文发布' : lang === 'ja' ? '元記事公開' : 'Source published',
+  actionNow: lang === 'zh' ? '现在怎么做' : lang === 'ja' ? '今やること' : 'What to do now',
+  watchNext: lang === 'zh' ? '接下来观察' : lang === 'ja' ? '次に見ること' : 'What to watch next',
+  caveat: lang === 'zh' ? '边界与口径' : lang === 'ja' ? '留意点' : 'Caveat',
   readOriginalCoverage: lang === 'zh' ? '查看原始报道 →' : lang === 'ja' ? '元記事を読む →' : 'Read the original coverage →',
 } as const;
 
@@ -73,6 +81,24 @@ const recommendationIntro = lang === 'zh'
   : lang === 'ja'
     ? 'いまのシグナルから、次に読むべき更新へつなげます。'
     : 'Move from this signal into adjacent updates worth your attention.';
+
+const sourceKindLabel = brief.sourceKind === 'official_release'
+  ? uiText.officialSource
+  : brief.sourceKind === 'primary_research'
+    ? (lang === 'zh' ? '一手研究' : lang === 'ja' ? '一次研究' : 'Primary research')
+    : brief.sourceKind === 'specialist_media'
+      ? (lang === 'zh' ? '专业媒体' : lang === 'ja' ? '専門メディア' : 'Specialist media')
+      : brief.sourceKind === 'media'
+        ? (lang === 'zh' ? '媒体报道' : lang === 'ja' ? 'メディア報道' : 'Media coverage')
+        : brief.sourceKind;
+
+const verificationLabel = brief.verificationStatus === 'official_release_verified'
+  ? (lang === 'zh' ? '官方发布已核实' : lang === 'ja' ? '公式リリース確認済み' : 'Official release verified')
+  : brief.verificationStatus === 'source_verified'
+    ? (lang === 'zh' ? '来源已核实' : lang === 'ja' ? '情報源確認済み' : 'Source verified')
+    : brief.verificationStatus === 'legacy_unverified'
+      ? (lang === 'zh' ? '历史内容，尚未核实' : lang === 'ja' ? '過去記事・未確認' : 'Legacy content, unverified')
+      : brief.verificationStatus;
 ---
 
 <Layout title={`${brief.title} - ${t('site.name')}`} description={brief.snippet || brief.whyItMatters || undefined}>
@@ -83,6 +109,8 @@ const recommendationIntro = lang === 'zh'
           <div class="article-tags">
             <span class="card-badge">{brief.category || 'AI'}</span>
             {brief.impact && <span class="card-badge impact-major">{brief.impact}</span>}
+            {brief.contentKind === 'release' && <span class="card-badge release-badge">{uiText.release}</span>}
+            {brief.sourceKind === 'official_release' && <span class="card-badge source-badge">{uiText.officialSource}</span>}
           </div>
           <h1>{brief.title}</h1>
           {brief.snippet && <p class="article-dek">{brief.snippet}</p>}
@@ -91,8 +119,8 @@ const recommendationIntro = lang === 'zh'
             <span>·</span>
             <span>{brief.category}</span>
             {brief.sourceName && <><span>·</span><span>{brief.sourceName}</span></>}
-            {brief.sourcePublishedDate && brief.sourcePublishedDate !== brief.date && (
-              <><span>·</span><span>{lang === 'zh' ? `来源日期 ${brief.sourcePublishedDate}` : lang === 'ja' ? `元記事日付 ${brief.sourcePublishedDate}` : `Source date ${brief.sourcePublishedDate}`}</span></>
+            {brief.sourcePublishedDate && (
+              <><span>·</span><span>{uiText.sourcePublished} {brief.sourcePublishedDate}</span></>
             )}
           </div>
           <div class="article-lead-grid">
@@ -115,6 +143,8 @@ const recommendationIntro = lang === 'zh'
                 <li><strong>{lang === 'zh' ? '栏目' : lang === 'ja' ? '欄' : 'Desk'}</strong><span>{t('nav.daily')}</span></li>
                 <li><strong>{lang === 'zh' ? '类别' : lang === 'ja' ? '分類' : 'Category'}</strong><span>{brief.category || 'AI'}</span></li>
                 <li><strong>{lang === 'zh' ? '影响' : lang === 'ja' ? '影響' : 'Impact'}</strong><span>{brief.impact || 'Notable'}</span></li>
+                {sourceKindLabel && <li><strong>{uiText.sourceType}</strong><span>{sourceKindLabel}</span></li>}
+                {verificationLabel && <li><strong>{uiText.verification}</strong><span>{verificationLabel}</span></li>}
               </ul>
               {brief.sourceUrl && (
                 <a class="rail-link" href={brief.sourceUrl} target="_blank" rel="noopener">
@@ -145,6 +175,13 @@ const recommendationIntro = lang === 'zh'
           </aside>
 
           <div class="article-column">
+            {(sourceKindLabel || verificationLabel) && (
+              <div class="article-trust-strip">
+                {sourceKindLabel && <span>{sourceKindLabel}</span>}
+                {brief.sourceReliability && <span>{lang === 'zh' ? '来源等级' : lang === 'ja' ? '情報源レベル' : 'Source tier'} {brief.sourceReliability}</span>}
+                {verificationLabel && <span>{uiText.verification}: {verificationLabel}</span>}
+              </div>
+            )}
             <div class="summary-grid">
               {summaryCards.map((card) => (
                 <section class="summary-card">
@@ -189,6 +226,28 @@ const recommendationIntro = lang === 'zh'
                 </>
               )}
             </div>
+            {(brief.actionNow || brief.watchNext || brief.caveat) && (
+              <div class="article-decision-grid">
+                {brief.actionNow && (
+                  <section class="article-decision-card">
+                    <p class="summary-label">{uiText.actionNow}</p>
+                    <p>{brief.actionNow}</p>
+                  </section>
+                )}
+                {brief.watchNext && (
+                  <section class="article-decision-card">
+                    <p class="summary-label">{uiText.watchNext}</p>
+                    <p>{brief.watchNext}</p>
+                  </section>
+                )}
+                {brief.caveat && (
+                  <section class="article-decision-card caveat">
+                    <p class="summary-label">{uiText.caveat}</p>
+                    <p>{brief.caveat}</p>
+                  </section>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

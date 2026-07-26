@@ -7,7 +7,7 @@
 // invocations can pass `?secret=<CRON_SECRET>` for convenience during dev.
 //
 // Query params:
-//   max=<1..12>   target number of briefs (default 6)
+//   max=<1..12>   maximum number of briefs (default 3)
 
 import type { APIRoute } from 'astro';
 import { runIngest } from '../../../lib/brief-ingest';
@@ -17,6 +17,13 @@ export const prerender = false;
 function unauthorized(message: string) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
     status: 401,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function unavailable(message: string) {
+  return new Response(JSON.stringify({ ok: false, error: message }), {
+    status: 503,
     headers: { 'Content-Type': 'application/json' },
   });
 }
@@ -36,24 +43,25 @@ function extractProvidedSecret(request: Request, url: URL): string | null {
 
 export const GET: APIRoute = async ({ request, url }) => {
   const expected = getCronSecret();
-  if (expected) {
-    const provided = extractProvidedSecret(request, url);
-    if (!provided || provided !== expected) {
-      return unauthorized('missing or invalid cron secret');
-    }
+  if (!expected) {
+    return unavailable('CRON_SECRET is not configured');
+  }
+  const provided = extractProvidedSecret(request, url);
+  if (!provided || provided !== expected) {
+    return unauthorized('missing or invalid cron secret');
   }
 
-  const max = Number(url.searchParams.get('max') || '6');
+  const max = Number(url.searchParams.get('max') || '3');
   try {
-    const report = await runIngest({ max: Number.isFinite(max) && max > 0 ? Math.min(max, 12) : 6 });
+    const report = await runIngest({ max: Number.isFinite(max) && max > 0 ? Math.min(max, 12) : 3 });
     const noNewBriefs = report.inserted === 0;
     if (noNewBriefs) {
-      console.error('[cron/ingest] no briefs inserted', report);
+      console.info('[cron/ingest] completed with no qualifying new briefs', report);
     } else {
       console.log('[cron/ingest] success', report);
     }
     return new Response(JSON.stringify({ ok: true, report }, null, 2), {
-      status: noNewBriefs ? 500 : 200,
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: any) {

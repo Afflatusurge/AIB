@@ -35,6 +35,16 @@ export interface StructuredBrief {
   category: BriefCategory;
   impact: BriefImpact;
   slug: string;
+  candidate_id?: string;
+  content_kind?: 'signal' | 'release' | 'deep_dive';
+  source_kind?: string;
+  source_reliability?: string;
+  source_independent?: boolean;
+  verification_status?: string;
+  confidence?: string;
+  quality_score?: number;
+  event_type?: string;
+  event_priority?: string;
   en: BriefLangBlock;
   zh: BriefLangBlock;
   ja: BriefLangBlock;
@@ -46,12 +56,26 @@ export interface DiscoveredItem {
   source_name: string;
   published_at: string;
   summary: string;     // 2-4 sentence neutral summary, used by the editor
+  source_text?: string;
+  source_kind?: string;
+  source_reliability?: string;
+  source_independent?: boolean;
+  event_type?: string;
+  event_priority?: string;
 }
 
 export interface GenerateOptions {
-  max?: number;                    // desired number of briefs (1..12). Default 6.
+  max?: number;                    // maximum number of briefs (1..12). Default 3.
   excludeUrls?: string[];
   excludeTitles?: string[];
+}
+
+export interface WatchedSourceSearch {
+  name: string;
+  domains: string[];
+  products?: string[];
+  max?: number;
+  maxAgeHours?: number;
 }
 
 function env(name: string): string | undefined {
@@ -92,20 +116,22 @@ Schema:
       "url":          "https://...",
       "title":        "concise, accurate headline",
       "source_name":  "publisher name",
-      "published_at": "ISO 8601 timestamp if available, otherwise today's date at 12:00 UTC",
+      "published_at": "exact ISO 8601 source publication timestamp",
       "summary":      "2-4 sentences, neutral, factual"
     }
   ]
 }
 
+If an exact publication date is unavailable, DROP the item. Never substitute today's date.
 Keep each summary under ~500 characters. Do not add any extra fields.`;
 
 function buildDiscoveryUser(opts: GenerateOptions): string {
-  const target = Math.min(Math.max(opts.max ?? 6, 1), 12);
+  const target = Math.min(Math.max(opts.max ?? 3, 1), 12);
   const today = new Date().toISOString().slice(0, 10);
   const lines: string[] = [
     `Today is ${today} (UTC).`,
-    `Find exactly ${target} distinct stories from the last 24 hours that matter to solo operators / indie builders.`,
+    `Find up to ${target} distinct stories from the last 24 hours that matter to solo operators / indie builders.`,
+    `Return fewer items, including zero, when the source, exact publication date, or practical value is uncertain.`,
     `Use the web search tool aggressively — do NOT rely on prior knowledge.`,
   ];
   if (opts.excludeUrls?.length) {
@@ -117,7 +143,7 @@ function buildDiscoveryUser(opts: GenerateOptions): string {
   return lines.join('\n');
 }
 
-export async function discoverNews(opts: GenerateOptions = {}): Promise<DiscoveredItem[]> {
+async function runDiscoverySearch(userPrompt: string, label: string): Promise<DiscoveredItem[]> {
   const apiKey = env('OPENAI_API_KEY');
   if (!apiKey) throw new Error('OPENAI_API_KEY missing');
   const model = env('OPENAI_SEARCH_MODEL') || 'gpt-4o-mini-search-preview';
@@ -135,7 +161,7 @@ export async function discoverNews(opts: GenerateOptions = {}): Promise<Discover
     max_tokens: 6000,
     messages: [
       { role: 'system', content: DISCOVERY_SYSTEM },
-      { role: 'user', content: buildDiscoveryUser(opts) },
+      { role: 'user', content: userPrompt },
     ],
   };
 
@@ -149,16 +175,51 @@ export async function discoverNews(opts: GenerateOptions = {}): Promise<Discover
   });
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(`[discover] ${model} error ${resp.status}: ${text.slice(0, 600)}`);
+    throw new Error(`[${label}] ${model} error ${resp.status}: ${text.slice(0, 600)}`);
   }
   const json: any = await resp.json();
   const raw = json?.choices?.[0]?.message?.content || '';
-  if (!raw) throw new Error('[discover] empty response');
+  if (!raw) throw new Error(`[${label}] empty response`);
   const items = extractItems(raw);
   if (items === null) {
-    throw new Error(`[discover] non-JSON response: ${String(raw).slice(0, 400)}`);
+    throw new Error(`[${label}] non-JSON response: ${String(raw).slice(0, 400)}`);
   }
   return items.map(normalizeDiscovered).filter(Boolean) as DiscoveredItem[];
+}
+
+export async function discoverNews(opts: GenerateOptions = {}): Promise<DiscoveredItem[]> {
+  return runDiscoverySearch(buildDiscoveryUser(opts), 'discover');
+}
+
+/**
+ * Search fallback for a must-watch official source whose site blocks
+ * server-side crawlers. Returned URLs are still restricted to the configured
+ * official domains and pass through the normal date, URL, and quality gates.
+ */
+export async function discoverWatchedSource(
+  source: WatchedSourceSearch
+): Promise<DiscoveredItem[]> {
+  const max = Math.min(Math.max(source.max ?? 6, 1), 12);
+  const maxAgeHours = Math.min(Math.max(source.maxAgeHours ?? 72, 6), 168);
+  const prompt = [
+    `Today is ${new Date().toISOString()} (UTC).`,
+    `Search only for official release announcements from ${source.name}.`,
+    `Allowed official domains: ${source.domains.join(', ')}.`,
+    `Watch products: ${source.products?.length ? source.products.join(', ') : source.name}.`,
+    `Find up to ${max} model launches, major versions, general availability changes, API changes, pricing changes, license changes, or deprecations published in the last ${maxAgeHours} hours.`,
+    `Every URL must be on one of the allowed official domains. Return the exact source publication timestamp; if unavailable, drop the item.`,
+    `Do not return partnerships, company news, hiring, opinions, rumors, or customer stories.`,
+    `Return fewer items, including zero, rather than broadening the domain or inventing a date.`,
+  ].join('\n');
+  const items = await runDiscoverySearch(prompt, `watch:${source.name}`);
+  return items.filter((item) => {
+    try {
+      const host = new URL(item.url).hostname.toLowerCase().replace(/^www\./, '');
+      return source.domains.some((domain) => host === domain || host.endsWith(`.${domain}`));
+    } catch {
+      return false;
+    }
+  });
 }
 
 /**
@@ -266,11 +327,13 @@ function salvageItems(s: string): any[] | null {
 function normalizeDiscovered(x: any): DiscoveredItem | null {
   if (!x || typeof x !== 'object') return null;
   if (!x.url || !x.title) return null;
+  const publishedAt = toIso(x.published_at);
+  if (!publishedAt) return null;
   return {
     url: String(x.url).trim(),
     title: String(x.title).trim(),
     source_name: String(x.source_name || '').trim() || 'Unknown',
-    published_at: toIso(x.published_at) || new Date().toISOString(),
+    published_at: publishedAt,
     summary: String(x.summary || '').trim(),
   };
 }
@@ -288,6 +351,8 @@ EDITORIAL VOICE
 - Tie everything back to: what this changes for a solo operator, what decision or experiment it unlocks, or why they can ignore it.
 - No emojis. No "stay tuned". No "exciting". No filler lead-ins.
 - Do not invent facts, company names, numbers, or features that aren't supported by the provided summary.
+- When source_text is provided, treat it as the authoritative source pack. Do not add facts that are absent from summary or source_text.
+- source_kind "official_release" confirms that a release happened, but performance and benchmark claims remain vendor claims. State that limitation plainly.
 - Never use placeholder company names such as XYZ, ABC, DEF, MNO, or JKL.
 - Keep the specific named entities (company, product, model, price, number) from the source item in the title and body. Never generalize "OpenAI cuts GPT-4.1 price 30%" into "AI providers adjust pricing". If an item's summary contains no specific entity at all, SKIP that item entirely instead of writing around the gap.
 
@@ -305,7 +370,7 @@ FIELD RULES
 - snippet:        one sentence, <= 180 chars. Summarize what happened.
 - commentary:     1-2 sentences, editor voice.
 - why_it_matters: 1-2 sentences, addressed to indie builders / small teams.
-- body_html:      120-220 words of valid HTML. Use 2-4 <p>. May include at most one <h2>. No <script>, no inline styles, no images, no external links inside the body.
+- body_html:      160-280 words of valid HTML. Use short sections for what happened, concrete facts, why it matters, what to do, and caveats. No <script>, inline styles, images, or external links inside the body.
 
 LANGUAGE
 - en: natural American English.
@@ -422,7 +487,7 @@ export async function generateDailyBriefs(opts: GenerateOptions = {}): Promise<S
   const discovered = await discoverNews(opts);
   if (discovered.length === 0) return [];
   // Cap editor input to requested max (discovery may over-deliver).
-  const cap = Math.min(Math.max(opts.max ?? 6, 1), 12);
+  const cap = Math.min(Math.max(opts.max ?? 3, 1), 12);
   const feed = discovered.slice(0, cap);
   return await editBriefs(feed);
 }
@@ -445,11 +510,13 @@ function slugify(s: string): string {
 function normalizeStructured(b: any): StructuredBrief | null {
   if (!b || typeof b !== 'object') return null;
   if (!b.source_url || !b.en?.title) return null;
+  const publishedAt = toIso(b.published_at);
+  if (!publishedAt) return null;
 
   return {
     source_url: String(b.source_url).trim(),
     source_name: String(b.source_name || '').trim() || 'Unknown',
-    published_at: toIso(b.published_at) || new Date().toISOString(),
+    published_at: publishedAt,
     category: (['LLM', 'Agent', 'Business', 'Coding', 'Hardware', 'Image', 'Video', 'Research', 'Funding']
       .includes(b.category) ? b.category : 'LLM') as BriefCategory,
     impact: (['major', 'notable', 'routine'].includes(b.impact) ? b.impact : 'notable') as BriefImpact,

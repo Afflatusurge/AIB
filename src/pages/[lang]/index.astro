@@ -154,6 +154,30 @@ const homepageKeywords = lang === 'en'
         const entries = briefs.slice(0, 4);
         if (!entries.length || !rows.length) return;
 
+        const editionTag = document.querySelector('[data-live-edition-tag]');
+        const editionDate = entries[0]?.sourcePublishedDate || entries[0]?.date;
+        if (editionTag && editionDate) {
+          const locale = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-US';
+          const timeZone = 'America/Los_Angeles';
+          const displayDate = new Intl.DateTimeFormat(locale, {
+            timeZone,
+            month: 'short',
+            day: 'numeric',
+          }).format(new Date(`${editionDate}T12:00:00Z`));
+          const todayParts = new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }).formatToParts(new Date());
+          const part = (type) => todayParts.find((item) => item.type === type)?.value || '';
+          const today = `${part('year')}-${part('month')}-${part('day')}`;
+          const prefix = editionDate === today
+            ? (lang === 'zh' ? '今日' : lang === 'ja' ? '本日' : 'Today')
+            : (lang === 'zh' ? '最近一期' : lang === 'ja' ? '最新号' : 'Latest');
+          editionTag.textContent = `${prefix} · ${displayDate}`;
+        }
+
         const categoryClass = {
           LLM: 'llm',
           Agent: 'agent',
