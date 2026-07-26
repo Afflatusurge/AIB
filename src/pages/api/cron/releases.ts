@@ -6,6 +6,7 @@
 
 import type { APIRoute } from 'astro';
 import { runReleaseMonitor } from '../../../lib/news/release-monitor';
+import { supabaseAdmin } from '../../../lib/supabase';
 
 export const prerender = false;
 
@@ -22,6 +23,21 @@ function providedSecret(request: Request, url: URL): string | null {
   return bearer || url.searchParams.get('secret');
 }
 
+async function providedSupabaseCronSecretIsValid(request: Request): Promise<boolean> {
+  const candidate = request.headers.get('x-aiandbusiness-release-secret')?.trim();
+  if (!candidate) return false;
+
+  const { data, error } = await supabaseAdmin().rpc(
+    'verify_release_cron_secret',
+    { candidate }
+  );
+  if (error) {
+    console.error('[cron/releases] Supabase Cron authentication failed', error.message);
+    return false;
+  }
+  return data === true;
+}
+
 function json(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload, null, 2), {
     status,
@@ -31,10 +47,15 @@ function json(payload: unknown, status = 200): Response {
 
 export const GET: APIRoute = async ({ request, url }) => {
   const expected = getCronSecret();
-  if (!expected) {
+  const vercelCronAuthorized = !!expected && providedSecret(request, url) === expected;
+  const supabaseCronAuthorized = vercelCronAuthorized
+    ? false
+    : await providedSupabaseCronSecretIsValid(request);
+
+  if (!expected && !request.headers.has('x-aiandbusiness-release-secret')) {
     return json({ ok: false, error: 'CRON_SECRET is not configured' }, 503);
   }
-  if (providedSecret(request, url) !== expected) {
+  if (!vercelCronAuthorized && !supabaseCronAuthorized) {
     return json({ ok: false, error: 'missing or invalid cron secret' }, 401);
   }
 

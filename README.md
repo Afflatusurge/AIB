@@ -49,7 +49,7 @@ If Notion is unavailable during build, the site falls back to mock data so the f
 Daily Brief is stored in Supabase and now has two server-side ingestion paths:
 
 - `/api/cron/ingest`: once-daily broad discovery, capped at three qualified stories.
-- `/api/cron/releases`: Watchlist monitor, scheduled by `vercel.json` every six hours.
+- `/api/cron/releases`: Watchlist monitor, scheduled by Supabase Cron every six hours.
 
 Both paths require `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 `OPENAI_API_KEY`, and `CRON_SECRET`. Public brief reads additionally require
@@ -62,7 +62,13 @@ Before deploying this code, apply the migrations in order:
 supabase/migrations/202607260001_news_pipeline.sql
 supabase/migrations/202607260002_news_pipeline_privileges.sql
 supabase/migrations/202607260003_mark_legacy_briefs_unverified.sql
+supabase/migrations/202607260004_supabase_release_cron.sql
 ```
+
+The release schedule runs at `00:00`, `06:00`, `12:00`, and `18:00` UTC.
+Supabase Vault owns the scheduler secret; the application validates it through
+a service-role-only RPC. This keeps the four-times-daily monitor compatible
+with Vercel Hobby while leaving the broad ingest on Vercel's daily Cron.
 
 Then run the legacy-content audit in dry-run mode:
 
