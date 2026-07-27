@@ -24,7 +24,7 @@ Astro.response.headers.set(
     <meta name="robots" content="noindex,nofollow,noarchive" />
     <title>Editorial Desk · AIandBusiness</title>
     <link rel="icon" href="/favicon.svg" />
-    <style>
+    <style is:global>
       :root {
         color-scheme: light;
         --ink: #171714;
@@ -123,10 +123,12 @@ Astro.response.headers.set(
       .toolbar {
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 14px;
-        margin: 26px 0 20px;
+        margin: 26px 0 18px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--line);
       }
       .filters { display: flex; flex-wrap: wrap; gap: 8px; }
       .filter {
@@ -136,8 +138,22 @@ Astro.response.headers.set(
         font-weight: 750;
       }
       .filter.is-active { background: var(--yellow); box-shadow: 2px 2px 0 var(--ink); }
-      .desk-status { color: var(--muted); font-size: .9rem; }
-      .toolbar-actions { display: flex; align-items: center; gap: 10px; }
+      .desk-status {
+        flex: 1 0 100%;
+        color: var(--muted);
+        font-size: .78rem;
+        line-height: 1.4;
+        text-align: right;
+      }
+      .toolbar-actions {
+        display: flex;
+        flex: 1;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px 10px;
+        min-width: min(100%, 320px);
+      }
       .sync-button {
         border: 1.5px solid var(--ink);
         background: var(--blue);
@@ -157,9 +173,14 @@ Astro.response.headers.set(
         padding: 14px 16px;
         border: 1.5px solid var(--ink);
         background: var(--card);
+        box-shadow: 2px 2px 0 rgba(23, 23, 20, .72);
       }
       .summary-card strong { display: block; font-size: 1.7rem; }
       .summary-card span { color: var(--muted); font-size: .82rem; }
+      .summary-card:nth-child(1) { border-top: 5px solid var(--yellow); }
+      .summary-card:nth-child(2) { border-top: 5px solid var(--blue); }
+      .summary-card:nth-child(3) { border-top: 5px solid var(--red); }
+      .summary-card:nth-child(4) { border-top: 5px solid var(--green); }
 
       .candidate-list { display: grid; gap: 18px; }
       .candidate {
@@ -196,16 +217,16 @@ Astro.response.headers.set(
       .status-published { background: var(--green); }
       .status-rejected { background: #ddd7cc; }
       .candidate-date { margin-left: auto; color: var(--muted); font-size: .78rem; }
-      .candidate-body { padding: 20px; }
+      .candidate-body { padding: 22px; }
       .source-line { margin: 0 0 8px; color: var(--muted); font-size: .82rem; }
       .source-line a { color: inherit; font-weight: 750; }
       .candidate h2 { margin: 0 0 10px; font-size: clamp(1.2rem, 2.6vw, 1.65rem); line-height: 1.24; }
       .summary-text { max-width: 82ch; margin: 0; color: #45443e; line-height: 1.6; }
       .facts {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
-        margin-top: 16px;
+        margin-top: 18px;
       }
       .fact {
         min-width: 0;
@@ -258,15 +279,27 @@ Astro.response.headers.set(
         color: var(--muted);
       }
 
+      @media (max-width: 960px) {
+        .toolbar-actions {
+          flex-basis: 100%;
+          justify-content: flex-start;
+        }
+        .desk-status { text-align: left; }
+        .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
       @media (max-width: 700px) {
         .shell { width: min(100% - 20px, 1180px); padding-top: 16px; }
         .masthead { align-items: flex-start; }
+        .brand { align-items: flex-start; }
+        .mark { flex: 0 0 auto; }
         .login { margin-top: 8vh; padding: 20px; }
         .login-row { flex-direction: column; }
         .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .facts { grid-template-columns: 1fr; }
         .candidate-head { align-items: flex-start; }
         .candidate-date { width: 100%; margin-left: 0; }
+        .candidate-body { padding: 16px; }
       }
     </style>
   </head>
