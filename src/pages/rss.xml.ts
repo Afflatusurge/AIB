@@ -1,11 +1,15 @@
-import { getDailyBriefs, getToolReviews, getCaseStudies } from '../lib/notion';
+import { listCaseStudies, listToolReviews } from '../lib/content';
+import { listPublishedBriefs } from '../lib/supabase';
 
 const SITE_URL = import.meta.env.SITE_URL || 'https://aiandbusiness.com';
+export const prerender = false;
 
 export async function GET() {
-  const dailyBriefs = await getDailyBriefs();
-  const toolReviews = await getToolReviews();
-  const caseStudies = await getCaseStudies();
+  const [dailyBriefs, toolReviews, caseStudies] = await Promise.all([
+    listPublishedBriefs('en', 120),
+    listToolReviews('en'),
+    listCaseStudies('en'),
+  ]);
 
   // Combine all content and sort by date
   const allContent = [
@@ -68,7 +72,7 @@ export async function GET() {
   return new Response(rssContent, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
+      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
     },
   });
 }

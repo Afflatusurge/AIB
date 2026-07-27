@@ -1,30 +1,22 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import Footer from '../../../components/Footer.astro';
-import { getFallbackPlaybookContent, getPageContent, getPlaybooks } from '../../../lib/notion';
+import { getPlaybookBySlug, listPlaybooks } from '../../../lib/content';
+import { getFallbackPlaybookContent } from '../../../lib/notion';
 import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 
-export async function getStaticPaths() {
-  const langs: Array<'en' | 'ja' | 'zh'> = ['en', 'ja', 'zh'];
-  const all: Array<{ params: { lang: string; slug: string }; props: { playbook: any; playbooks: any[] } }> = [];
-
-  for (const lang of langs) {
-    const playbooks = await getPlaybooks(lang);
-    playbooks.forEach((playbook) => {
-      all.push({
-        params: { lang, slug: playbook.slug || playbook.id },
-        props: { playbook, playbooks },
-      });
-    });
-  }
-
-  return all;
-}
+export const prerender = false;
 
 const lang = getLangFromUrl(Astro.url) as 'en' | 'ja' | 'zh';
 const t = useTranslations(lang);
-const { playbook, playbooks: allPlaybooks } = Astro.props;
-const slug = playbook.slug || Astro.params.slug || '';
+const slug = String(Astro.params.slug || '').trim();
+if (!slug) return Astro.redirect(`/${lang}/playbooks/`);
+
+const document = await getPlaybookBySlug(slug, lang);
+if (!document) return new Response('Not found', { status: 404 });
+
+const playbook = document.item;
+const allPlaybooks = await listPlaybooks(lang);
 const relatedPlaybooks = allPlaybooks.filter((item) => item.slug !== slug).slice(0, 3);
 const stripLegacySourceSection = (html: string) =>
   html.replace(
@@ -36,7 +28,7 @@ const stripLegacyNoteSection = (html: string) =>
     /<h2>(What this playbook should become|最終的に目指す形|这一篇最终应该长成什么)<\/h2>[\s\S]*?(?=<h2>|$)/g,
     '',
   );
-const bodyHtml = await getPageContent(playbook.id);
+const bodyHtml = document.bodyHtml;
 const renderedBody = stripLegacyNoteSection(stripLegacySourceSection(bodyHtml || getFallbackPlaybookContent(lang, slug)));
 const isSkill = playbook.kind === 'skill';
 const uiText = {
@@ -51,6 +43,8 @@ const uiText = {
   timeToLearn: lang === 'zh' ? '上手时间' : lang === 'ja' ? '習得時間' : 'Time to learn',
   deliverable: lang === 'zh' ? '产出示例' : lang === 'ja' ? '成果物の例' : 'Deliverable',
 } as const;
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
 ---
 
 <Layout title={`${playbook.title} - ${t('nav.playbooks')} - ${t('site.name')}`} description={playbook.snippet}>

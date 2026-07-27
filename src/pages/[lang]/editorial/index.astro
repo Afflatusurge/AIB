@@ -137,6 +137,15 @@ Astro.response.headers.set(
       }
       .filter.is-active { background: var(--yellow); box-shadow: 2px 2px 0 var(--ink); }
       .desk-status { color: var(--muted); font-size: .9rem; }
+      .toolbar-actions { display: flex; align-items: center; gap: 10px; }
+      .sync-button {
+        border: 1.5px solid var(--ink);
+        background: var(--blue);
+        padding: 9px 12px;
+        font-weight: 800;
+        box-shadow: 2px 2px 0 var(--ink);
+      }
+      .sync-button:disabled { cursor: wait; opacity: .65; }
 
       .summary {
         display: grid;
@@ -300,7 +309,10 @@ Astro.response.headers.set(
             <button class="filter" data-status="published" type="button">已发布</button>
             <button class="filter" data-status="rejected" type="button">已拒绝</button>
           </div>
-          <div id="desk-status" class="desk-status" aria-live="polite">准备加载…</div>
+          <div class="toolbar-actions">
+            <button id="sync-content" class="sync-button" type="button">同步 Notion 栏目</button>
+            <div id="desk-status" class="desk-status" aria-live="polite">准备加载…</div>
+          </div>
         </div>
 
         <div id="summary" class="summary"></div>
@@ -320,6 +332,7 @@ Astro.response.headers.set(
       const list = document.querySelector('#candidate-list');
       const summary = document.querySelector('#summary');
       const deskStatus = document.querySelector('#desk-status');
+      const syncButton = document.querySelector('#sync-content');
       const filterButtons = Array.from(document.querySelectorAll('[data-status]'));
 
       let token = window.sessionStorage.getItem(TOKEN_KEY) || '';
@@ -575,6 +588,44 @@ Astro.response.headers.set(
         }
       };
 
+      const syncNotionContent = async () => {
+        syncButton.disabled = true;
+        const originalLabel = syncButton.textContent;
+        syncButton.textContent = '正在同步…';
+        deskStatus.textContent = '正在把工具、案例和 Playbooks 同步到发布数据库…';
+        try {
+          const response = await fetch('/api/editorial/content-sync', {
+            method: 'POST',
+            headers: {
+              accept: 'application/json',
+              authorization: `Bearer ${token}`,
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({}),
+            cache: 'no-store',
+          });
+          const payload = await response.json().catch(() => ({ ok: false, error: '响应格式错误' }));
+          if (response.status === 401) {
+            window.sessionStorage.removeItem(TOKEN_KEY);
+            token = '';
+            showLogin('访问令牌无效或已失效。');
+            return;
+          }
+          if (!response.ok || !payload.ok) {
+            throw new Error(payload.error || `同步失败 (${response.status})`);
+          }
+          const reports = payload.reports || [];
+          const changed = reports.reduce((sum, item) => sum + (item.changed || 0), 0);
+          const failed = reports.reduce((sum, item) => sum + (item.failed || 0), 0);
+          deskStatus.textContent = `栏目同步完成 · 更新 ${changed} 条${failed ? ` · 失败 ${failed} 条` : ''} · ${formatDate(new Date().toISOString())}`;
+        } catch (error) {
+          deskStatus.textContent = error instanceof Error ? error.message : String(error);
+        } finally {
+          syncButton.disabled = false;
+          syncButton.textContent = originalLabel;
+        }
+      };
+
       loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         loginMessage.textContent = '正在验证…';
@@ -605,6 +656,8 @@ Astro.response.headers.set(
           await loadCandidates();
         });
       });
+
+      syncButton.addEventListener('click', syncNotionContent);
 
       if (token) {
         loadCandidates();

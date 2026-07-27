@@ -1,36 +1,25 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import Footer from '../../../components/Footer.astro';
-import { getCaseStudies, getPageContent } from '../../../lib/notion';
+import { getCaseStudyBySlug, listCaseStudies } from '../../../lib/content';
 import { useTranslations, getLangFromUrl } from '../../../i18n/utils';
 
-export async function getStaticPaths() {
-  const langs: Array<'en' | 'ja' | 'zh'> = ['en', 'ja', 'zh'];
-  const all: any[] = [];
-  for (const l of langs) {
-    const cases = await getCaseStudies(l);
-    cases.forEach((cs, idx) => {
-      all.push({
-        params: { lang: l, slug: cs.slug || cs.id },
-        props: { cs, cases, idx },
-      });
-    });
-  }
-  return all;
-}
+export const prerender = false;
 
-interface Props {
-  cs: any;
-  cases: any[];
-  idx: number;
-}
-
-const { cs, cases, idx } = Astro.props;
-const lang = getLangFromUrl(Astro.url);
+const lang = getLangFromUrl(Astro.url) as 'en' | 'zh' | 'ja';
 const t = useTranslations(lang);
+const slug = String(Astro.params.slug || '').trim();
+if (!slug) return Astro.redirect(`/${lang}/cases/`);
+
+const document = await getCaseStudyBySlug(slug, lang);
+if (!document) return new Response('Not found', { status: 404 });
+
+const cs = document.item;
+const cases = await listCaseStudies(lang);
+const idx = cases.findIndex((item) => item.id === cs.id);
 const prevCase = idx > 0 ? cases[idx - 1] : null;
-const nextCase = idx < cases.length - 1 ? cases[idx + 1] : null;
-const bodyHtml = await getPageContent(cs.id);
+const nextCase = idx >= 0 && idx < cases.length - 1 ? cases[idx + 1] : null;
+const bodyHtml = document.bodyHtml;
 const relatedCases = cases.filter((item) => item.id !== cs.id).slice(0, 3);
 const caseHeadingMatches = Array.from(bodyHtml.matchAll(/<h2>(.*?)<\/h2>/g));
 const caseHeadingItems = caseHeadingMatches.map((match, i) => ({
@@ -108,6 +97,8 @@ const disclosureText = lang === 'zh'
   : lang === 'ja'
     ? '本ケースは公開情報・インタビュー・本人の発信をもとに構成しています。数値は本人申告であり、当サイトによる独立した検証は行っていません。金額そのものより、再現できるやり方に注目してください。'
     : 'This case is compiled from public accounts, interviews, or the operator’s own reporting. Figures are self-reported and have not been independently verified by us. Focus on the reusable moves, not the exact numbers.';
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
 ---
 
 <Layout title={`${cs.title} - ${t('site.name')}`} description={cs.snippet || undefined}>

@@ -1,37 +1,26 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import Footer from '../../../components/Footer.astro';
-import { getToolReviews, getPageContent } from '../../../lib/notion';
+import { getToolReviewBySlug, listToolReviews } from '../../../lib/content';
 import { useTranslations, getLangFromUrl } from '../../../i18n/utils';
 
-export async function getStaticPaths() {
-  const langs: Array<'en' | 'ja' | 'zh'> = ['en', 'ja', 'zh'];
-  const all: any[] = [];
-  for (const l of langs) {
-    const tools = await getToolReviews(l);
-    tools.forEach((tool, idx) => {
-      all.push({
-        params: { lang: l, slug: tool.slug || tool.id },
-        props: { tool, tools, idx },
-      });
-    });
-  }
-  return all;
-}
+export const prerender = false;
 
-interface Props {
-  tool: any;
-  tools: any[];
-  idx: number;
-}
-
-const { tool, tools, idx } = Astro.props;
-const lang = getLangFromUrl(Astro.url);
+const lang = getLangFromUrl(Astro.url) as 'en' | 'zh' | 'ja';
 const t = useTranslations(lang);
+const slug = String(Astro.params.slug || '').trim();
+if (!slug) return Astro.redirect(`/${lang}/tools/`);
+
+const document = await getToolReviewBySlug(slug, lang);
+if (!document) return new Response('Not found', { status: 404 });
+
+const tool = document.item;
+const tools = await listToolReviews(lang);
+const idx = tools.findIndex((item) => item.id === tool.id);
 const prevTool = idx > 0 ? tools[idx - 1] : null;
-const nextTool = idx < tools.length - 1 ? tools[idx + 1] : null;
+const nextTool = idx >= 0 && idx < tools.length - 1 ? tools[idx + 1] : null;
 const rating = Number(tool.rating) || 0;
-const bodyHtml = await getPageContent(tool.id);
+const bodyHtml = document.bodyHtml;
 const relatedTools = tools.filter((item) => item.id !== tool.id).slice(0, 3);
 const toolHeadingMatches = Array.from(bodyHtml.matchAll(/<h2>(.*?)<\/h2>/g));
 const toolHeadingItems = toolHeadingMatches.map((match, i) => ({
@@ -88,6 +77,8 @@ const recommendationIntro = lang === 'zh'
   : lang === 'ja'
     ? 'ツール、ワークフロー、実運用の流れで読み進められます。'
     : 'Keep going through adjacent tools, workflow fits, and real operator use cases.';
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
 ---
 
 <Layout title={`${tool.title} - ${t('site.name')}`} description={tool.snippet || undefined}>

@@ -7,17 +7,11 @@ import SignalFeed from '../../components/SignalFeed.astro';
 import FeaturedCards from '../../components/FeaturedCards.astro';
 import PlaybookShelf from '../../components/PlaybookShelf.astro';
 import Footer from '../../components/Footer.astro';
-import { getToolReviews, getCaseStudies, getPlaybooks } from '../../lib/notion';
+import { listToolReviews, listCaseStudies, listPlaybooks } from '../../lib/content';
 import { listPublishedBriefs } from '../../lib/supabase';
 import { useTranslations, getLangFromUrl } from '../../i18n/utils';
 
-export function getStaticPaths() {
-  return [
-    { params: { lang: 'en' } },
-    { params: { lang: 'ja' } },
-    { params: { lang: 'zh' } },
-  ];
-}
+export const prerender = false;
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -30,10 +24,15 @@ try {
 }
 
 const [toolReviews, caseStudies, playbooks] = await Promise.all([
-  getToolReviews(lang as 'en' | 'zh' | 'ja'),
-  getCaseStudies(lang as 'en' | 'zh' | 'ja'),
-  getPlaybooks(lang as 'en' | 'zh' | 'ja'),
+  listToolReviews(lang as 'en' | 'zh' | 'ja'),
+  listCaseStudies(lang as 'en' | 'zh' | 'ja'),
+  listPlaybooks(lang as 'en' | 'zh' | 'ja'),
 ]);
+
+Astro.response.headers.set(
+  'Cache-Control',
+  'public, s-maxage=300, stale-while-revalidate=3600',
+);
 
 const leadBrief = dailyBriefs.find((item) => item.featured) || dailyBriefs[0];
 const leadTool = toolReviews.find((item) => item.featured) || toolReviews[0];

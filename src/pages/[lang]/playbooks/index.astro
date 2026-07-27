@@ -1,24 +1,20 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import Footer from '../../../components/Footer.astro';
-import { getPlaybooks } from '../../../lib/notion';
+import { listPlaybooks } from '../../../lib/content';
 import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 
-export function getStaticPaths() {
-  return [
-    { params: { lang: 'en' } },
-    { params: { lang: 'ja' } },
-    { params: { lang: 'zh' } },
-  ];
-}
+export const prerender = false;
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
-const all = await getPlaybooks(lang as 'en' | 'ja' | 'zh');
+const all = await listPlaybooks(lang as 'en' | 'ja' | 'zh');
 const skills = all.filter((p) => p.kind === 'skill');
 const playbooks = all.filter((p) => p.kind !== 'skill');
 const leadPlaybook = playbooks[0];
 const supportingPlaybooks = playbooks.slice(1);
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
 
 const chipClass = (category?: string) => {
   switch (category) {

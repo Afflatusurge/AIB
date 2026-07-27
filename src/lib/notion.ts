@@ -10,8 +10,9 @@ const notion = new Client({
   auth: import.meta.env.NOTION_API_KEY || '',
 });
 
-type Lang = 'en' | 'zh' | 'ja';
+export type Lang = 'en' | 'zh' | 'ja';
 type ContentType = 'daily' | 'tools' | 'cases' | 'playbooks';
+export type CmsSection = Exclude<ContentType, 'daily'>;
 
 // Notion now exposes both a database object id and a nested data source / collection id.
 // The SDK's databases.query endpoint needs the database id, but it's easy to accidentally
@@ -358,39 +359,36 @@ export interface ToolReview {
   status?: string;
 }
 
+function mapToolReviewPage(page: any): ToolReview {
+  const props = page.properties || {};
+  return {
+    id: page.id,
+    title: getAnyText(props, ['Tool Name', 'Title', 'Name']),
+    snippet: getAnyText(props, ['Tagline', 'Summary', 'Dek', 'Subtitle']),
+    rating: parseFloat(getAnyText(props, ['Rating', 'Score'])) || 4,
+    pricing: getAnyText(props, ['Pricing', 'Price', 'Pricing Notes']),
+    slug: getAnyText(props, ['Slug']),
+    date: getAnyText(props, ['Publish Date', 'Date']),
+    category: getAnyText(props, ['Category', 'Type']),
+    url: getAnyText(props, ['Official URL', 'URL', 'Website']),
+    verdict: getAnyText(props, ['Verdict', 'Recommendation']),
+    bestFor: getAnyText(props, ['Best For', 'Best for', 'Audience']),
+    workflowFit: getAnyText(props, ['Workflow Fit', 'Workflow fit', 'Use Case', 'Use case']),
+    takeaway: getAnyText(props, ['Key Takeaway', 'Takeaway', 'Why It Matters']),
+    featured: getAnyCheckbox(props, ['Featured', 'Lead', 'Homepage']),
+    coverImage: getAnyText(props, ['Cover Image', 'Image', 'Thumbnail']),
+    status: getStatus(props),
+  };
+}
+
 export async function getToolReviews(lang: Lang = 'en'): Promise<ToolReview[]> {
   if (!isConfigured() || !DB.tools[lang]) return getMockToolReviews();
 
   try {
-    const response = await notion.databases.query({
-      database_id: DB.tools[lang],
-      sorts: [{ property: 'Publish Date', direction: 'descending' }],
-      page_size: 100,
-    });
-
-    const reviews = response.results
-      .filter((page: any) => isVisibleEntry(page.properties))
-      .map((page: any) => {
-      const props = page.properties;
-      return {
-        id: page.id,
-        title: getAnyText(props, ['Tool Name', 'Title', 'Name']),
-        snippet: getAnyText(props, ['Tagline', 'Summary', 'Dek', 'Subtitle']),
-        rating: parseFloat(getAnyText(props, ['Rating', 'Score'])) || 4,
-        pricing: getAnyText(props, ['Pricing', 'Price', 'Pricing Notes']),
-        slug: getAnyText(props, ['Slug']),
-        date: getAnyText(props, ['Publish Date', 'Date']),
-        category: getAnyText(props, ['Category', 'Type']),
-        url: getAnyText(props, ['Official URL', 'URL', 'Website']),
-        verdict: getAnyText(props, ['Verdict', 'Recommendation']),
-        bestFor: getAnyText(props, ['Best For', 'Best for', 'Audience']),
-        workflowFit: getAnyText(props, ['Workflow Fit', 'Workflow fit', 'Use Case', 'Use case']),
-        takeaway: getAnyText(props, ['Key Takeaway', 'Takeaway', 'Why It Matters']),
-        featured: getAnyCheckbox(props, ['Featured', 'Lead', 'Homepage']),
-        coverImage: getAnyText(props, ['Cover Image', 'Image', 'Thumbnail']),
-        status: getStatus(props),
-      };
-      })
+    const entries = await getNotionContentSnapshot('tools', lang);
+    const reviews = entries
+      .filter((entry) => entry.visible)
+      .map((entry) => entry.item as ToolReview)
       .filter(hasRenderableContent);
 
     return dedupeBySlug(sortByEditorialPriority(reviews), `tool reviews (${lang})`);
@@ -445,40 +443,120 @@ export interface Playbook {
   deliverable?: string;
 }
 
+function mapCaseStudyPage(page: any): CaseStudy {
+  const props = page.properties || {};
+  return {
+    id: page.id,
+    title: getAnyText(props, ['Title', 'Name']),
+    snippet: getAnyText(props, ['Subtitle', 'Summary', 'Dek']),
+    industry: getAnyText(props, ['Industry', 'Category', 'Problem']),
+    revenue: getAnyText(props, ['Revenue Impact', 'Revenue', 'Outcome']),
+    slug: getAnyText(props, ['Slug']),
+    date: getAnyText(props, ['Publish Date', 'Date']),
+    tags: getAnyText(props, ['AI Tools Used', 'Tags', 'Stack']),
+    sourceUrl: getAnyText(props, ['Source URL', 'Source Link', 'Original URL', 'Reference URL']),
+    sourceName: getAnyText(props, ['Source Name', 'Source']),
+    problem: getAnyText(props, ['Problem', 'Core Problem']),
+    problemType: getAnyText(props, ['Problem Type', 'Problem type']),
+    applicableTo: getAnyText(props, ['Applicable To', 'Applicable to', 'Best For', 'Audience']),
+    takeaway: getAnyText(props, ['Key Takeaway', 'Takeaway', 'Lesson']),
+    featured: getAnyCheckbox(props, ['Featured', 'Lead', 'Homepage']),
+    coverImage: getAnyText(props, ['Cover Image', 'Image', 'Thumbnail']),
+    status: getStatus(props),
+  };
+}
+
+function mapPlaybookPage(page: any): Playbook {
+  const props = page.properties || {};
+  const kindRaw = getAnyText(props, ['Kind', 'Content Type', 'Format']);
+  return {
+    id: page.id,
+    title: getAnyText(props, ['Title', 'Name']),
+    snippet: getAnyText(props, ['Summary', 'Dek', 'Subtitle']),
+    category: getAnyText(props, ['Category', 'Type']),
+    outcome: getAnyText(props, ['Outcome', 'Result']),
+    bestFor: getAnyText(props, ['Best For', 'Best for', 'Audience']),
+    useWhen: getAnyText(props, ['Use When', 'Use when', 'Cadence']),
+    slug: getAnyText(props, ['Slug']),
+    date: getAnyText(props, ['Publish Date', 'Date']),
+    featured: getAnyCheckbox(props, ['Featured', 'Lead', 'Homepage']),
+    coverImage: getAnyText(props, ['Cover Image', 'Image', 'Thumbnail']),
+    status: getStatus(props),
+    kind: (/skill/i.test(kindRaw) ? 'skill' : 'playbook') as 'skill' | 'playbook',
+    cost: getAnyText(props, ['Cost', 'Budget', 'Monthly Cost']),
+    timeToLearn: getAnyText(props, ['Time to Learn', 'Time To Learn', 'Ramp-up', 'Learning Time']),
+    deliverable: getAnyText(props, ['Deliverable', 'Deliverable Example', 'Output Example']),
+  };
+}
+
+export type CmsContentItem = ToolReview | CaseStudy | Playbook;
+
+export interface NotionContentSnapshotEntry {
+  section: CmsSection;
+  lang: Lang;
+  databaseId: string;
+  pageId: string;
+  lastEditedAt: string;
+  visible: boolean;
+  item: CmsContentItem;
+}
+
+async function queryAllDatabasePages(section: CmsSection, lang: Lang): Promise<any[]> {
+  const results: any[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const response: any = await notion.databases.query({
+      database_id: DB[section][lang],
+      sorts: [{ property: 'Publish Date', direction: 'descending' }],
+      page_size: 100,
+      start_cursor: cursor,
+    });
+    results.push(...response.results);
+    cursor = response.has_more ? response.next_cursor : undefined;
+  } while (cursor);
+
+  return results;
+}
+
+export async function getNotionContentSnapshot(
+  section: CmsSection,
+  lang: Lang,
+): Promise<NotionContentSnapshotEntry[]> {
+  if (!isConfigured()) {
+    throw new Error('NOTION_API_KEY is not configured');
+  }
+
+  const pages = await queryAllDatabasePages(section, lang);
+  return pages
+    .map((page: any) => {
+      const item = section === 'tools'
+        ? mapToolReviewPage(page)
+        : section === 'cases'
+          ? mapCaseStudyPage(page)
+          : mapPlaybookPage(page);
+
+      return {
+        section,
+        lang,
+        databaseId: DB[section][lang],
+        pageId: page.id,
+        lastEditedAt: page.last_edited_time,
+        visible: isVisibleEntry(page.properties || {}),
+        item,
+      } satisfies NotionContentSnapshotEntry;
+    })
+    .filter((entry) => !!(entry.item.title && entry.item.slug));
+}
+
 export async function getCaseStudies(lang: Lang = 'en'): Promise<CaseStudy[]> {
   if (!isConfigured() || !DB.cases[lang]) return getMockCaseStudies();
 
   try {
-    const response = await notion.databases.query({
-      database_id: DB.cases[lang],
-      sorts: [{ property: 'Publish Date', direction: 'descending' }],
-      page_size: 100,
-    });
-
-    const studies = response.results
-      .filter((page: any) => isVisibleEntry(page.properties))
-      .map((page: any) => {
-      const props = page.properties;
-      return {
-        id: page.id,
-        title: getAnyText(props, ['Title', 'Name']),
-        snippet: getAnyText(props, ['Subtitle', 'Summary', 'Dek']),
-        industry: getAnyText(props, ['Industry', 'Category', 'Problem']),
-        revenue: getAnyText(props, ['Revenue Impact', 'Revenue', 'Outcome']),
-        slug: getAnyText(props, ['Slug']),
-        date: getAnyText(props, ['Publish Date', 'Date']),
-        tags: getAnyText(props, ['AI Tools Used', 'Tags', 'Stack']),
-        sourceUrl: getAnyText(props, ['Source URL', 'Source Link', 'Original URL', 'Reference URL']),
-        sourceName: getAnyText(props, ['Source Name', 'Source']),
-        problem: getAnyText(props, ['Problem', 'Core Problem']),
-        problemType: getAnyText(props, ['Problem Type', 'Problem type']),
-        applicableTo: getAnyText(props, ['Applicable To', 'Applicable to', 'Best For', 'Audience']),
-        takeaway: getAnyText(props, ['Key Takeaway', 'Takeaway', 'Lesson']),
-        featured: getAnyCheckbox(props, ['Featured', 'Lead', 'Homepage']),
-        coverImage: getAnyText(props, ['Cover Image', 'Image', 'Thumbnail']),
-        status: getStatus(props),
-      };
-      })
+    const entries = await getNotionContentSnapshot('cases', lang);
+    const studies = entries
+      .filter((entry) => entry.visible)
+      .map((entry) => entry.item as CaseStudy)
       .filter(hasRenderableContent);
 
     return dedupeBySlug(sortByEditorialPriority(studies), `case studies (${lang})`);
@@ -496,36 +574,10 @@ export async function getPlaybooks(lang: Lang = 'en'): Promise<Playbook[]> {
   if (!isConfigured() || !DB.playbooks[lang]) return getMockPlaybooks(lang);
 
   try {
-    const response = await notion.databases.query({
-      database_id: DB.playbooks[lang],
-      sorts: [{ property: 'Publish Date', direction: 'descending' }],
-      page_size: 100,
-    });
-
-    const playbooks = response.results
-      .filter((page: any) => isVisibleEntry(page.properties))
-      .map((page: any) => {
-        const props = page.properties;
-        const kindRaw = getAnyText(props, ['Kind', 'Content Type', 'Format']);
-        return {
-          id: page.id,
-          title: getAnyText(props, ['Title', 'Name']),
-          snippet: getAnyText(props, ['Summary', 'Dek', 'Subtitle']),
-          category: getAnyText(props, ['Category', 'Type']),
-          outcome: getAnyText(props, ['Outcome', 'Result']),
-          bestFor: getAnyText(props, ['Best For', 'Best for', 'Audience']),
-          useWhen: getAnyText(props, ['Use When', 'Use when', 'Cadence']),
-          slug: getAnyText(props, ['Slug']),
-          date: getAnyText(props, ['Publish Date', 'Date']),
-          featured: getAnyCheckbox(props, ['Featured', 'Lead', 'Homepage']),
-          coverImage: getAnyText(props, ['Cover Image', 'Image', 'Thumbnail']),
-          status: getStatus(props),
-          kind: (/skill/i.test(kindRaw) ? 'skill' : 'playbook') as 'skill' | 'playbook',
-          cost: getAnyText(props, ['Cost', 'Budget', 'Monthly Cost']),
-          timeToLearn: getAnyText(props, ['Time to Learn', 'Time To Learn', 'Ramp-up', 'Learning Time']),
-          deliverable: getAnyText(props, ['Deliverable', 'Deliverable Example', 'Output Example']),
-        };
-      })
+    const entries = await getNotionContentSnapshot('playbooks', lang);
+    const playbooks = entries
+      .filter((entry) => entry.visible)
+      .map((entry) => entry.item as Playbook)
       .filter((item) => !!(item.title && item.slug && item.snippet));
 
     return dedupeBySlug(sortByEditorialPriority(playbooks), `playbooks (${lang})`);
@@ -848,6 +900,18 @@ export async function getPageContent(pageId: string): Promise<string> {
     console.error(`[Notion] Failed to fetch page content (${blockId}):`, err);
     return '';
   }
+}
+
+/** Sync-only variant: let the caller retain the previous snapshot on failure. */
+export async function getPageContentForSync(pageId: string): Promise<string> {
+  if (!isConfigured()) throw new Error('NOTION_API_KEY is not configured');
+  const blockId = formatUuid(pageId);
+  if (normalizeId(blockId).length !== 32) {
+    throw new Error(`Invalid Notion page id: ${pageId}`);
+  }
+  const rootBlocks = await fetchBlockChildren(blockId);
+  const hydratedBlocks = await hydrateBlocks(rootBlocks);
+  return blocksToHtml(hydratedBlocks);
 }
 
 // ══════════════════════════════════════════════════════════════
