@@ -54,6 +54,14 @@ interface CandidateFactSheet {
   conflictsOfInterest: string[];
 }
 
+export interface PublishedReleaseCandidate {
+  candidateId: string;
+  briefId: string;
+  slug: string;
+  title: string;
+  sourceUrl: string;
+}
+
 function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
 }
@@ -312,7 +320,7 @@ async function setCandidateStatus(
   reasons: string[] = []
 ): Promise<void> {
   const db = supabaseAdmin();
-  await db
+  const { error: candidateError } = await db
     .from('news_candidates')
     .update({
       editorial_status: status,
@@ -320,13 +328,19 @@ async function setCandidateStatus(
       updated_at: new Date().toISOString(),
     })
     .eq('id', candidateId);
-  await db
+  if (candidateError) {
+    throw new Error(`candidate status update failed: ${candidateError.message}`);
+  }
+  const { error: entryError } = await db
     .from('source_entries')
     .update({
       status: status === 'published' ? 'published' : status === 'failed' ? 'failed' : 'candidate',
       updated_at: new Date().toISOString(),
     })
     .eq('id', sourceEntryId);
+  if (entryError) {
+    throw new Error(`source entry status update failed: ${entryError.message}`);
+  }
 }
 
 async function writeReleaseBrief(args: {
@@ -373,6 +387,124 @@ async function writeReleaseBrief(args: {
   const [gate] = await runQualityGate([brief], args.recentTitles);
   if (!gate?.ok) throw new Error(`release quality gate: ${(gate?.reasons || []).join('; ')}`);
   return brief;
+}
+
+/**
+ * Publish a stored review candidate on an explicit editor action.
+ *
+ * The operation is idempotent: if a brief already exists for the candidate,
+ * the editorial state is repaired to `published` and the existing brief is
+ * returned instead of invoking the model again.
+ */
+export async function publishReleaseCandidate(
+  candidateId: string
+): Promise<PublishedReleaseCandidate> {
+  const db = supabaseAdmin();
+
+  const { data: candidate, error: candidateError } = await db
+    .from('news_candidates')
+    .select(`
+      id, source_entry_id, event_type, priority, editorial_status,
+      total_score, fact_sheet
+    `)
+    .eq('id', candidateId)
+    .single();
+  if (candidateError || !candidate) {
+    throw new Error(`candidate lookup failed: ${candidateError?.message || 'not found'}`);
+  }
+
+  const { data: existingBrief } = await db
+    .from('briefs')
+    .select('id, slug, source_url, source_name')
+    .eq('candidate_id', candidateId)
+    .maybeSingle();
+  if (existingBrief) {
+    await setCandidateStatus(candidate.id, candidate.source_entry_id, 'published');
+    const { data: translation } = await db
+      .from('brief_translations')
+      .select('title')
+      .eq('brief_id', existingBrief.id)
+      .eq('lang', 'en')
+      .maybeSingle();
+    return {
+      candidateId,
+      briefId: existingBrief.id,
+      slug: existingBrief.slug,
+      title: translation?.title || existingBrief.source_name || 'Published release',
+      sourceUrl: existingBrief.source_url || '',
+    };
+  }
+
+  if (candidate.editorial_status === 'rejected') {
+    throw new Error('rejected candidate must be reopened before publishing');
+  }
+
+  const { data: entry, error: entryError } = await db
+    .from('source_entries')
+    .select(`
+      id, source_id, canonical_url, title, summary, article_text,
+      content_hash, source_published_at, source_updated_at
+    `)
+    .eq('id', candidate.source_entry_id)
+    .single();
+  if (entryError || !entry) {
+    throw new Error(`source entry lookup failed: ${entryError?.message || 'not found'}`);
+  }
+
+  const { data: storedSource, error: sourceError } = await db
+    .from('news_sources')
+    .select('slug')
+    .eq('id', entry.source_id)
+    .single();
+  if (sourceError || !storedSource) {
+    throw new Error(`news source lookup failed: ${sourceError?.message || 'not found'}`);
+  }
+
+  const source = NEWS_SOURCES.find((item) => item.slug === storedSource.slug);
+  if (!source) throw new Error(`source definition missing: ${storedSource.slug}`);
+
+  const collectedEntry: CollectedSourceEntry = {
+    url: entry.canonical_url,
+    title: entry.title,
+    summary: entry.summary || '',
+    articleText: entry.article_text || '',
+    contentHash: entry.content_hash,
+    publishedAt: entry.source_published_at,
+    updatedAt: entry.source_updated_at || undefined,
+  };
+  const factSheet =
+    candidate.fact_sheet &&
+    typeof candidate.fact_sheet === 'object' &&
+    Object.keys(candidate.fact_sheet).length > 0
+      ? (candidate.fact_sheet as CandidateFactSheet)
+      : buildFactSheet(source, collectedEntry, undefined);
+  const recentTitles = await recentEnglishTitles();
+
+  try {
+    const brief = await writeReleaseBrief({
+      source,
+      entry: collectedEntry,
+      candidateId,
+      factSheet,
+      eventType: candidate.event_type,
+      priority: candidate.priority,
+      qualityScore: candidate.total_score ?? 0,
+      recentTitles,
+    });
+    const published = await publishBrief(brief);
+    await setCandidateStatus(candidateId, entry.id, 'published');
+    return {
+      candidateId,
+      briefId: published.id,
+      slug: published.slug,
+      title: brief.en.title,
+      sourceUrl: brief.source_url,
+    };
+  } catch (error: any) {
+    const message = error?.message || String(error);
+    await setCandidateStatus(candidateId, entry.id, 'failed', [message]);
+    throw error;
+  }
 }
 
 export async function runReleaseMonitor(

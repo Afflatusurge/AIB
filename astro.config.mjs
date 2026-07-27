@@ -17,6 +17,7 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
+      filter: (page) => !page.includes('/editorial'),
       i18n: {
         defaultLocale: 'en',
         locales: {

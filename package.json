@@ -11,7 +11,7 @@
     "check:types": "tsc --noEmit",
     "preview": "astro preview",
     "astro": "astro",
-    "test:news": "node --experimental-strip-types --test tests/release-classifier.test.ts",
+    "test:news": "node --experimental-strip-types --test tests/*.test.ts",
     "migrate:briefs": "node scripts/migrate-briefs-to-supabase.mjs",
     "fetch:notion-briefs": "node scripts/fetch-notion-briefs.mjs",
     "audit:briefs": "node scripts/audit-existing-briefs.mjs"

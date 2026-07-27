@@ -10,7 +10,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 // Env var names:
 //   SUPABASE_URL                    – https://<project>.supabase.co
 //   SUPABASE_PUBLISHABLE_KEY        – sb_publishable_... (public / safe)
-//   SUPABASE_SERVICE_ROLE_KEY       – eyJhbGciOi... (server-only, secret)
+//   SUPABASE_SECRET_KEY             – sb_secret_... (preferred server key)
+//   SUPABASE_SERVICE_ROLE_KEY       – legacy JWT server key (fallback)
 //
 // `PUBLIC_*` mirrors are optional for client-side bundling.
 
@@ -51,7 +52,7 @@ export function getPublishableKey(): string {
 }
 
 export function getServiceRoleKey(): string {
-  return resolve('SUPABASE_SERVICE_ROLE_KEY');
+  return resolve('SUPABASE_SECRET_KEY') || resolve('SUPABASE_SERVICE_ROLE_KEY');
 }
 
 let readClient: SupabaseClient | null = null;
@@ -78,7 +79,9 @@ export function supabaseAdmin(): SupabaseClient {
   const url = getSupabaseUrl();
   const key = getServiceRoleKey();
   if (!url || !key) {
-    throw new Error('Supabase admin not configured: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+    throw new Error(
+      'Supabase admin not configured: set SUPABASE_URL and SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY)'
+    );
   }
   writeClient = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },

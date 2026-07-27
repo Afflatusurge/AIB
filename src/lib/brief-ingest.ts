@@ -222,7 +222,9 @@ function sanitizeBriefHtml(raw: string): string {
   return root.html() || '';
 }
 
-export async function publishBrief(s: StructuredBrief): Promise<void> {
+export async function publishBrief(
+  s: StructuredBrief
+): Promise<{ id: string; slug: string }> {
   const db = supabaseAdmin();
   const sourcePolicy = findNewsSourceByUrl(s.source_url);
   if (!sourcePolicy) throw new Error(`cannot publish unapproved source: ${s.source_url}`);
@@ -313,6 +315,8 @@ export async function publishBrief(s: StructuredBrief): Promise<void> {
     .from('brief_translations')
     .upsert(translations, { onConflict: 'brief_id,lang' });
   if (trErr) throw new Error(`brief_translations upsert: ${trErr.message}`);
+
+  return { id: inserted.id, slug };
 }
 
 function urlSuffix(url: string): string {
